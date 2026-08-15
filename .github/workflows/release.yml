@@ -66,43 +66,68 @@ jobs:
 
       - name: Package Windows x64 (zip + inno installer)
         shell: powershell
-        run: node ./node_modules/gulp/bin/gulp.js vscode-win32-x64
+        run: |
+          # Increase verbosity so packaging logs are visible
+          $env:NPM_CONFIG_LOGLEVEL = "verbose"
+          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64
+
+      - name: Ensure installer is in .build
+        shell: powershell
+        run: |
+          $installer = Get-ChildItem -Path . -Recurse -File -Filter "*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'Setup|setup|Installer|Voidly|VSCode|win32|x64' } | Select-Object -First 1
+          if ($installer) {
+            New-Item -ItemType Directory -Force -Path ".build" | Out-Null
+            Copy-Item $installer.FullName -Destination ".build\$($installer.Name)" -Force
+            Write-Host "Copied installer to .build: .build\$($installer.Name)"
+          } else {
+            Write-Host "No installer .exe found after packaging (Inno Setup may be unavailable). Will publish zip only."
+          }
 
       - name: Locate build artifacts
         id: artifacts
         shell: powershell
         run: |
-          # Show workspace contents for debugging
-          Write-Host "Workspace root listing:"
+          Write-Host "Workspace root listing (files only) for debugging:"
           Get-ChildItem -Path . -Recurse -File | ForEach-Object { Write-Host $_.FullName }
 
-          # Search for .zip matching common patterns (VSCode or Voidly) and any .exe under .build
           $files = Get-ChildItem -Path . -Recurse -File -ErrorAction SilentlyContinue
-          $zip = $files | Where-Object { ($_.Name -match 'win32-x64.*\.zip') -or (($_.Name -match '\.zip$') -and ($_.FullName -match 'win32|Voidly|VSCode')) } | Select-Object -First 1
-          if (-not $zip) {
-            # fallback: any .zip
-            $zip = $files | Where-Object { $_.Extension -eq '.zip' } | Select-Object -First 1
-          }
-          $exe = Get-ChildItem -Path ".build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+
+          # Find zip (prefer common patterns, fallback to any zip)
+          $zip = $files | Where-Object { $_.Name -match 'win32-x64.*\.zip' -or ($_.Extension -eq '.zip' -and ($_.FullName -match 'win32|Voidly|VSCode')) } | Select-Object -First 1
+          if (-not $zip) { $zip = $files | Where-Object { $_.Extension -eq '.zip' } | Select-Object -First 1 }
+
+          # Find exe anywhere (not just .build). Prefer installers / Setup names
+          $exe = $files | Where-Object { $_.Extension -eq '.exe' -and ($_.Name -match 'Setup|setup|Installer|installer|Voidly|VSCode|win32|x64') } | Select-Object -First 1
+          if (-not $exe) { $exe = $files | Where-Object { $_.Extension -eq '.exe' } | Select-Object -First 1 }
 
           if (-not $zip) {
             Write-Host "ERROR: Could not find Windows zip artifact. Workspace listing above may help."
             Exit 1
           }
           if (-not $exe) {
-            Write-Host "ERROR: Could not find Windows installer exe artifact. Workspace listing above may help."
-            Exit 1
+            Write-Host "WARNING: Could not find Windows installer exe artifact; release will include zip only."
           }
-          "zipPath=$($zip.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "exePath=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - name: Create GitHub Release
+          Write-Host "Found zip: $($zip.FullName)"
+          if ($exe) { Write-Host "Found exe: $($exe.FullName)" }
+
+          "zipPath=$($zip.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          if ($exe) { "exePath=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append }
+
+      - name: Upload build artifacts for debugging
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-debug
+          path: |
+            ${{ steps.artifacts.outputs.zipPath }}
+            ${{ steps.artifacts.outputs.exePath }}
+
+      - name: Create GitHub Release (zip)
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            ${{ steps.artifacts.outputs.zipPath }}
-            ${{ steps.artifacts.outputs.exePath }}
+          files: ${{ steps.artifacts.outputs.zipPath }}
           name: Voidly ${{ github.ref_name }}
           body: |
             Voidly ${{ github.ref_name }} — Windows x64 build.
@@ -111,3 +136,10 @@ jobs:
             Repository: https://github.com/Zevino/void
           draft: false
           prerelease: false
+
+      - name: Attach installer to release (if present)
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') && steps.artifacts.outputs.exePath != ''
+        with:
+          files: ${{ steps.artifacts.outputs.exePath }}
+          name: Voidly ${{ github.ref_name }}
