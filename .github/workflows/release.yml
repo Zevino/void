@@ -64,48 +64,54 @@ jobs:
         shell: powershell
         run: npm run compile
 
-      - name: Package Windows x64 (zip + inno installer)
+      - name: Package Windows x64 (zip)
         shell: powershell
         run: |
           # Increase verbosity so packaging logs are visible
           $env:NPM_CONFIG_LOGLEVEL = "verbose"
+          # Produces VSCode-win32-x64.zip (and VSCode-win32-x64/ dir) at repo root
           node ./node_modules/gulp/bin/gulp.js vscode-win32-x64
 
-      - name: Ensure installer is in .build
+      - name: Install Inno Setup
         shell: powershell
         run: |
-          $installer = Get-ChildItem -Path . -Recurse -File -Filter "*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'Setup|setup|Installer|Voidly|VSCode|win32|x64' } | Select-Object -First 1
-          if ($installer) {
-            New-Item -ItemType Directory -Force -Path ".build" | Out-Null
-            Copy-Item $installer.FullName -Destination ".build\$($installer.Name)" -Force
-            Write-Host "Copied installer to .build: .build\$($installer.Name)"
+          # Inno Setup is required to build the .exe installer
+          if (-not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) {
+            Write-Host "Installing Inno Setup via Chocolatey..."
+            choco install innosetup -y --no-progress
           } else {
-            Write-Host "No installer .exe found after packaging (Inno Setup may be unavailable). Will publish zip only."
+            Write-Host "Inno Setup already present."
           }
+
+      - name: Build installer (user setup)
+        continue-on-error: true
+        shell: powershell
+        run: |
+          # Produces .exe installer under .build/win32-x64/user-setup/
+          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-user-setup
 
       - name: Locate build artifacts
         id: artifacts
         shell: powershell
         run: |
-          Write-Host "Workspace root listing (files only) for debugging:"
-          Get-ChildItem -Path . -Recurse -File | ForEach-Object { Write-Host $_.FullName }
+          Write-Host "Searching for build artifacts..."
 
-          $files = Get-ChildItem -Path . -Recurse -File -ErrorAction SilentlyContinue
+          # The zip is produced at the repo root by the packaging task
+          $zip = Get-ChildItem -Path "." -Filter "VSCode-win32-x64.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $zip) {
+            $zip = Get-ChildItem -Path "." -Recurse -Filter "VSCode-win32-x64.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
 
-          # Find zip (prefer common patterns, fallback to any zip)
-          $zip = $files | Where-Object { $_.Name -match 'win32-x64.*\.zip' -or ($_.Extension -eq '.zip' -and ($_.FullName -match 'win32|Voidly|VSCode')) } | Select-Object -First 1
-          if (-not $zip) { $zip = $files | Where-Object { $_.Extension -eq '.zip' } | Select-Object -First 1 }
-
-          # Find exe anywhere (not just .build). Prefer installers / Setup names
-          $exe = $files | Where-Object { $_.Extension -eq '.exe' -and ($_.Name -match 'Setup|setup|Installer|installer|Voidly|VSCode|win32|x64') } | Select-Object -First 1
-          if (-not $exe) { $exe = $files | Where-Object { $_.Extension -eq '.exe' } | Select-Object -First 1 }
+          # The installer .exe is produced by the inno setup task under .build/win32-x64/*-setup/
+          $exe = Get-ChildItem -Path ".build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
 
           if (-not $zip) {
-            Write-Host "ERROR: Could not find Windows zip artifact. Workspace listing above may help."
+            Write-Host "ERROR: Could not find VSCode-win32-x64.zip. Workspace tree:"
+            Get-ChildItem -Path . -Recurse -File | ForEach-Object { Write-Host $_.FullName }
             Exit 1
           }
           if (-not $exe) {
-            Write-Host "WARNING: Could not find Windows installer exe artifact; release will include zip only."
+            Write-Host "WARNING: Could not find installer .exe; release will include zip only."
           }
 
           Write-Host "Found zip: $($zip.FullName)"
