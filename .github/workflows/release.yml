@@ -64,13 +64,36 @@ jobs:
         shell: powershell
         run: npm run compile
 
-      - name: Package Windows x64 (zip)
+      - name: Package Windows x64 (app directory)
         shell: powershell
         run: |
-          # Increase verbosity so packaging logs are visible
           $env:NPM_CONFIG_LOGLEVEL = "verbose"
-          # Produces VSCode-win32-x64.zip (and VSCode-win32-x64/ dir) at repo root
-          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64
+          # Captures output to packaging.log for diagnostics.
+          # NOTE: this task writes the built app to <workspace-parent>/VSCode-win32-x64
+          # (because gulpfile uses path.dirname(repoRoot) as the destination), NOT inside the repo.
+          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64 > packaging.log 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Packaging task failed — see packaging.log"
+            Exit $LASTEXITCODE
+          }
+
+      - name: Zip the packaged app
+        shell: powershell
+        run: |
+          # The packaged directory lives one level ABOVE the workspace (parent of repo root).
+          $wsParent = [System.IO.Path]::GetDirectoryName($env:GITHUB_WORKSPACE)
+          $appDir = Join-Path $wsParent "VSCode-win32-x64"
+          if (-not (Test-Path $appDir)) {
+            Write-Host "ERROR: packaged app directory not found at $appDir"
+            Write-Host "Workspace parent listing:"
+            Get-ChildItem $wsParent | ForEach-Object { Write-Host $_.FullName }
+            Exit 1
+          }
+          New-Item -ItemType Directory -Force -Path "dist" | Out-Null
+          $zipOut = Join-Path "dist" "Voidly-win32-x64.zip"
+          Write-Host "Compressing $appDir -> $zipOut"
+          Compress-Archive -Path "$appDir\*" -DestinationPath $zipOut -Force
+          Write-Host "Created $zipOut ($([math]::Round((Get-Item $zipOut).Length/1MB,1)) MB)"
 
       - name: Install Inno Setup
         shell: powershell
@@ -87,7 +110,7 @@ jobs:
         continue-on-error: true
         shell: powershell
         run: |
-          # Produces .exe installer under .build/win32-x64/user-setup/
+          # Produces .exe installer under <workspace-parent>/.build/win32-x64/*-setup/
           node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-user-setup
 
       - name: Locate build artifacts
@@ -96,18 +119,16 @@ jobs:
         run: |
           Write-Host "Searching for build artifacts..."
 
-          # The zip is produced at the repo root by the packaging task
-          $zip = Get-ChildItem -Path "." -Filter "VSCode-win32-x64.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $zip) {
-            $zip = Get-ChildItem -Path "." -Recurse -Filter "VSCode-win32-x64.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
-          }
+          # zip is produced by the Zip step into ./dist
+          $zip = Get-ChildItem -Path "dist" -Filter "Voidly-win32-x64.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
 
-          # The installer .exe is produced by the inno setup task under .build/win32-x64/*-setup/
-          $exe = Get-ChildItem -Path ".build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          # installer .exe is produced by the inno setup task under <workspace-parent>/.build/win32-x64/*-setup/
+          $wsParent = [System.IO.Path]::GetDirectoryName($env:GITHUB_WORKSPACE)
+          $exe = Get-ChildItem -Path (Join-Path $wsParent ".build") -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
 
           if (-not $zip) {
-            Write-Host "ERROR: Could not find VSCode-win32-x64.zip. Workspace tree:"
-            Get-ChildItem -Path . -Recurse -File | ForEach-Object { Write-Host $_.FullName }
+            Write-Host "ERROR: Could not find dist/Voidly-win32-x64.zip. Workspace tree (top 200):"
+            Get-ChildItem -Path . -Recurse -File | Select-Object -First 200 | ForEach-Object { Write-Host $_.FullName }
             Exit 1
           }
           if (-not $exe) {
@@ -128,6 +149,7 @@ jobs:
           path: |
             ${{ steps.artifacts.outputs.zipPath }}
             ${{ steps.artifacts.outputs.exePath }}
+            packaging.log
 
       - name: Create GitHub Release (zip)
         uses: softprops/action-gh-release@v2
