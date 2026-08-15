@@ -46,7 +46,10 @@ jobs:
       - name: Configure npm cache & install
         shell: powershell
         run: |
-          npm config set msvs_version 2022
+          # Ensure node-gyp picks up the Visual Studio version
+          $env:GYP_MSVS_VERSION = '2022'
+          # Also set npm_config_msvs_version so legacy consumers see the setting
+          $env:npm_config_msvs_version = '2022'
           npm ci --no-audit --no-fund
         env:
           # Keep build clean (avoid any external safe-delete shims interfering)
@@ -69,16 +72,27 @@ jobs:
         id: artifacts
         shell: powershell
         run: |
-          # The build produces:
-          #   - VSCode-win32-x64/  (unpacked app, at repo root) and VSCode-win32-x64.zip
-          #   - .build/win32-x64/*-setup/Voidly-*.exe  (inno installer)
-          $zip = Get-ChildItem -Path "." -Filter "VSCode-win32-x64.zip" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          # Show workspace contents for debugging
+          Write-Host "Workspace root listing:"
+          Get-ChildItem -Path . -Recurse -File | ForEach-Object { Write-Host $_.FullName }
+
+          # Search for .zip matching common patterns (VSCode or Voidly) and any .exe under .build
+          $files = Get-ChildItem -Path . -Recurse -File -ErrorAction SilentlyContinue
+          $zip = $files | Where-Object { ($_.Name -match 'win32-x64.*\.zip') -or (($_.Name -match '\.zip$') -and ($_.FullName -match 'win32|Voidly|VSCode')) } | Select-Object -First 1
           if (-not $zip) {
-            $zip = Get-ChildItem -Path "." -Filter "*.zip" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like "*win32-x64*" } | Select-Object -First 1
+            # fallback: any .zip
+            $zip = $files | Where-Object { $_.Extension -eq '.zip' } | Select-Object -First 1
           }
           $exe = Get-ChildItem -Path ".build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $zip) { Write-Error "Could not find Windows zip artifact" }
-          if (-not $exe) { Write-Error "Could not find Windows installer exe artifact" }
+
+          if (-not $zip) {
+            Write-Host "ERROR: Could not find Windows zip artifact. Workspace listing above may help."
+            Exit 1
+          }
+          if (-not $exe) {
+            Write-Host "ERROR: Could not find Windows installer exe artifact. Workspace listing above may help."
+            Exit 1
+          }
           "zipPath=$($zip.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "exePath=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
