@@ -1,0 +1,99 @@
+name: Release Voidly (Windows x64)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-x64:
+    name: Build Windows x64
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.18.2'
+          cache: 'npm'
+
+      # VS2022 with Desktop C++ workload + Spectre-mitigated libs (matches local build env)
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Install Windows SDK / Spectre libs
+        shell: powershell
+        run: |
+          # Install the Spectre-mitigated ATL/MFC libs for v143 (required by node-gyp native builds)
+          # This uses the VS installer to add the Spectre components without a full re-install.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & "$vswhere" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $installer = "$vsPath\Common7\IDE\VSInstaller.exe"
+          if (Test-Path $installer) {
+            Start-Process -Wait -FilePath $installer -ArgumentList "modify --installPath `"$vsPath`" --add Microsoft.VisualStudio.Component.VC.ATLMFC.Spectre --add Microsoft.VisualStudio.Component.VC.Tools.Spectre.x86.x64 --quiet --norestart"
+          } else {
+            Write-Host "VSInstaller.exe not found at $installer; assuming Spectre libs already present."
+          }
+
+      - name: Configure npm cache & install
+        shell: powershell
+        run: |
+          npm config set msvs_version 2022
+          npm ci --no-audit --no-fund
+        env:
+          # Keep build clean (avoid any external safe-delete shims interfering)
+          CODEBUDDY_SAFE_DELETE_ENABLED: '0'
+          NODE_OPTIONS: ''
+
+      - name: Build React products
+        shell: powershell
+        run: npm run buildreact
+
+      - name: Compile
+        shell: powershell
+        run: npm run compile
+
+      - name: Package Windows x64 (zip + inno installer)
+        shell: powershell
+        run: node ./node_modules/gulp/bin/gulp.js vscode-win32-x64
+
+      - name: Locate build artifacts
+        id: artifacts
+        shell: powershell
+        run: |
+          # The build produces:
+          #   - VSCode-win32-x64/  (unpacked app, at repo root) and VSCode-win32-x64.zip
+          #   - .build/win32-x64/*-setup/Voidly-*.exe  (inno installer)
+          $zip = Get-ChildItem -Path "." -Filter "VSCode-win32-x64.zip" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $zip) {
+            $zip = Get-ChildItem -Path "." -Filter "*.zip" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like "*win32-x64*" } | Select-Object -First 1
+          }
+          $exe = Get-ChildItem -Path ".build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $zip) { Write-Error "Could not find Windows zip artifact" }
+          if (-not $exe) { Write-Error "Could not find Windows installer exe artifact" }
+          "zipPath=$($zip.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "exePath=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ${{ steps.artifacts.outputs.zipPath }}
+            ${{ steps.artifacts.outputs.exePath }}
+          name: Voidly ${{ github.ref_name }}
+          body: |
+            Voidly ${{ github.ref_name }} — Windows x64 build.
+
+            Independently developed and distributed by Zevino.
+            Repository: https://github.com/Zevino/void
+          draft: false
+          prerelease: false

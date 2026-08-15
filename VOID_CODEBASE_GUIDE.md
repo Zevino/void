@@ -1,10 +1,12 @@
-# Void Codebase Guide
+# Voidly Codebase Guide
 
-The Void codebase is not as intimidating as it seems!
+The Voidly codebase is not as intimidating as it seems!
 
-Most of Void's code lives in the folder `src/vs/workbench/contrib/void/`.
+Voidly is a personal maintained and distributed fork of [Void](https://github.com/voideditor/void), independently developed by **Zevino**. Its repository lives at [github.com/Zevino/void](https://github.com/Zevino/void).
 
-The purpose of this document is to explain how Void's codebase works. If you want build instructions instead, see [Contributing](https://github.com/voideditor/void/blob/main/HOW_TO_CONTRIBUTE.md).
+Most of Voidly's code lives in the folder `src/vs/workbench/contrib/void/`.
+
+The purpose of this document is to explain how Voidly's codebase works. If you want build instructions instead, see [Contributing](https://github.com/Zevino/void/blob/main/HOW_TO_CONTRIBUTE.md).
 
 
 
@@ -126,7 +128,7 @@ Here's a guide to some of the terminology we're using:
 
 
 ### Build process
-If you want to know how our build pipeline works, see our build repo [here](https://github.com/voideditor/void-builder).
+See [HOW_TO_CONTRIBUTE](https://github.com/Zevino/void/blob/main/HOW_TO_CONTRIBUTE.md) for build instructions on this distribution.
 
 
 

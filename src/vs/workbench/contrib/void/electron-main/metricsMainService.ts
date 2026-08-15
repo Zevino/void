@@ -118,34 +118,20 @@ export class MetricsMainService extends Disposable implements IMetricsService {
 			...osInfo,
 		}
 
-		const identifyMessage = {
-			distinctId: this.distinctId,
-			properties: this._initProperties,
-		}
+		// Always opt out, regardless of the stored setting
+		console.log('Force opting out of all Void metrics for privacy.')
+		this.client.optOut()
 
-		const didOptOut = this._appStorage.getBoolean(OPT_OUT_KEY, StorageScope.APPLICATION, false)
-
-		console.log('User is opted out of basic Void metrics?', didOptOut)
-		if (didOptOut) {
-			this.client.optOut()
-		}
-		else {
-			this.client.optIn()
-			this.client.identify(identifyMessage)
-		}
-
-
-		console.log('Void posthog metrics info:', JSON.stringify(identifyMessage, null, 2))
+		console.log('Void posthog metrics info (Supressed): [Privacy Protected]')
 	}
 
 
 	capture: IMetricsService['capture'] = (event, params) => {
-		const capture = { distinctId: this.distinctId, event, properties: params } as const
-		// console.log('full capture:', this.distinctId)
-		this.client.capture(capture)
+		// Do nothing to prevent any event capturing
 	}
 
 	setOptOut: IMetricsService['setOptOut'] = (newVal: boolean) => {
+		// Keep the storage logic if the user wants to toggle, but the engine is now forced off above
 		if (newVal) {
 			this._appStorage.store(OPT_OUT_KEY, 'true', StorageScope.APPLICATION, StorageTarget.MACHINE)
 		}

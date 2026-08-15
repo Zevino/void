@@ -1,41 +1,40 @@
-# Welcome to Void.
+# Welcome to Voidly.
 
 <div align="center">
 	<img
 		src="./src/vs/workbench/browser/parts/editor/media/slice_of_void.png"
-	 	alt="Void Welcome"
+	 	alt="Voidly Welcome"
 		width="300"
 	 	height="300"
 	/>
 </div>
 
-Void is the open-source Cursor alternative.
+Voidly is an AI code editor — a personal maintained and distributed fork of [Void](https://github.com/voideditor/void).
 
-Use AI agents on your codebase, checkpoint and visualize changes, and bring any model or host locally. Void sends messages directly to providers without retaining your data.
+Use AI agents on your codebase, checkpoint and visualize changes, and bring any model or host locally. Voidly sends messages directly to providers without retaining your data.
 
-This repo contains the full sourcecode for Void. If you're new, welcome!
+This repo contains the full sourcecode for Voidly, maintained and distributed independently by Zevino. If you're new, welcome!
 
-- 🧭 [Website](https://voideditor.com)
+- 📦 [Repository](https://github.com/Zevino/void)
 
-- 👋 [Discord](https://discord.gg/RSNjgaugJs)
-
-- 🚙 [Project Board](https://github.com/orgs/voideditor/projects/2)
+- 🛠 [Project Board](https://github.com/Zevino/void/projects)
 
 
 ## Note
 
-We've paused work on the Void IDE (this repo) to explore a few novel coding ideas. We want to focus on innovation over feature-parity. Void will continue running, but without maintenance some existing features might stop working over time. Depending on the direction of our new work, we might not resume Void as an IDE.
-
-We won't be actively reviewing Issues and PRs, but we will respond to all [email](mailto:hello@voideditor.com) inquiries on building and maintaining your own version of Void while we're paused. 
+Voidly is an independently developed distribution. It is based on the open-source Void project and maintained as a personal branch by Zevino. Features and updates are provided on a best-effort basis.
 
 ## Reference
 
-Void is a fork of the [vscode](https://github.com/microsoft/vscode) repository. For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/voideditor/void/blob/main/VOID_CODEBASE_GUIDE.md).
+Voidly is a fork of the [vscode](https://github.com/microsoft/vscode) repository (via [Void](https://github.com/voideditor/void)). For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/Zevino/void/blob/main/VOID_CODEBASE_GUIDE.md).
 
-For a guide on how to develop your own version of Void, see [HOW_TO_CONTRIBUTE](https://github.com/voideditor/void/blob/main/HOW_TO_CONTRIBUTE.md) and [void-builder](https://github.com/voideditor/void-builder).
-
-
+For a guide on how to develop your own version, see [HOW_TO_CONTRIBUTE](https://github.com/Zevino/void/blob/main/HOW_TO_CONTRIBUTE.md).
 
 
-## Support
-You can always reach us in our Discord server or contact us via email: hello@voideditor.com.
+
+
+## Contact
+
+This project is independently developed and distributed by **Zevino**.
+
+If you need to reach the author, please open an Issue on the [repository](https://github.com/Zevino/void) or contact via email.
