@@ -13,6 +13,17 @@ jobs:
   build-windows-x64:
     name: Build Windows x64
     runs-on: windows-2022
+    env:
+      # Disable CodeBuddy safe-delete shim (harmless on GitHub-hosted runners,
+      # required when running locally under CodeBuddy). Without this, gulp's
+      # rimraf batch deletes get blocked.
+      CODEBUDDY_SAFE_DELETE_ENABLED: '0'
+      # VS Code-scale builds need a large heap; the default 2 GB cap makes the
+      # gulp packaging step OOM-crash after a few minutes. Mirror the local
+      # `--max-old-space-size=8192` used by the `gulp` npm script.
+      NODE_OPTIONS: '--max-old-space-size=8192'
+      GYP_MSVS_VERSION: '2022'
+      npm_config_msvs_version: '2022'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,14 +49,7 @@ jobs:
 
       - name: Configure npm cache & install
         shell: powershell
-        run: |
-          # Ensure node-gyp picks up the Visual Studio version
-          $env:GYP_MSVS_VERSION = '2022'
-          $env:npm_config_msvs_version = '2022'
-          npm ci --no-audit --no-fund
-        env:
-          CODEBUDDY_SAFE_DELETE_ENABLED: '0'
-          NODE_OPTIONS: ''
+        run: npm ci --no-audit --no-fund
 
       # Build Void's React subproject (required; gulp does NOT cover this)
       - name: Build React products
@@ -55,12 +59,17 @@ jobs:
       # Package Windows x64. The gulp task compiles src->out-build internally,
       # so the separate `npm run compile` step was redundant and is removed.
       # Output goes to <workspace-parent>/VSCode-win32-x64 (gulpfile quirk).
+      #
+      # We DO NOT silence stderr. The previous `> packaging.log 2>&1` hid the
+      # real failure reason behind a generic `NativeCommandError`, making the
+      # build impossible to diagnose. Logs are still captured (tee) and uploaded
+      # on failure, but the error is now visible inline.
       - name: Package Windows x64
         shell: powershell
         run: |
-          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64 > packaging.log 2>&1
+          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64 2>&1 | Tee-Object -FilePath packaging.log
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "Packaging task failed - see packaging.log"
+            Write-Host "::error::Packaging task failed - see packaging.log"
             Exit $LASTEXITCODE
           }
 
@@ -70,18 +79,18 @@ jobs:
       - name: Build Inno Setup updater (tools dir)
         shell: powershell
         run: |
-          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-inno-updater > inno-updater.log 2>&1
+          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-inno-updater 2>&1 | Tee-Object -FilePath inno-updater.log
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "Inno updater task failed - see inno-updater.log"
+            Write-Host "::error::Inno updater task failed - see inno-updater.log"
             Exit $LASTEXITCODE
           }
 
       - name: Build Windows x64 System Setup (.exe)
         shell: powershell
         run: |
-          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-system-setup > setup.log 2>&1
+          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-system-setup 2>&1 | Tee-Object -FilePath setup.log
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "Setup task failed - see setup.log"
+            Write-Host "::error::Setup task failed - see setup.log"
             Exit $LASTEXITCODE
           }
 
