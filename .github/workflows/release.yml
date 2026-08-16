@@ -25,6 +25,17 @@ jobs:
           node-version: '20.18.2'
           cache: 'npm'
 
+      - name: Setup Python (needed by some native node-gyp deps)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # windows-2022 ships Visual Studio 2022 + Windows SDK. Activating the MSVC
+      # dev environment explicitly makes node-gyp reliably pick up the compiler
+      # for native modules (node-pty, native-keymap, etc.) during the build.
+      - name: Enable MSVC developer environment
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Configure npm cache & install
         shell: powershell
         run: |
@@ -53,9 +64,33 @@ jobs:
             Exit $LASTEXITCODE
           }
 
-      - name: Zip the packaged app
+      # The Inno Setup script expects a `tools` directory inside the packaged
+      # app (inno_updater.exe + vcruntime140.dll). It is produced by a separate
+      # gulp task and is NOT a dependency of the setup tasks.
+      - name: Build Inno Setup updater (tools dir)
         shell: powershell
         run: |
+          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-inno-updater > inno-updater.log 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Inno updater task failed - see inno-updater.log"
+            Exit $LASTEXITCODE
+          }
+
+      - name: Build Windows x64 System Setup (.exe)
+        shell: powershell
+        run: |
+          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-system-setup > setup.log 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Setup task failed - see setup.log"
+            Exit $LASTEXITCODE
+          }
+
+      - name: Collect release artifacts
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "dist" | Out-Null
+
+          # Portable zip (from the gulp output dir, one level above workspace)
           $wsParent = [System.IO.Path]::GetDirectoryName($env:GITHUB_WORKSPACE)
           $appDir = Join-Path $wsParent "VSCode-win32-x64"
           if (-not (Test-Path $appDir)) {
@@ -63,29 +98,47 @@ jobs:
             Get-ChildItem $wsParent | ForEach-Object { Write-Host $_.FullName }
             Exit 1
           }
-          New-Item -ItemType Directory -Force -Path "dist" | Out-Null
           $zipOut = Join-Path "dist" "Voidly-win32-x64.zip"
           Write-Host "Compressing $appDir -> $zipOut"
           Compress-Archive -Path "$appDir\*" -DestinationPath $zipOut -Force
           Write-Host "Created $zipOut ($([math]::Round((Get-Item $zipOut).Length/1MB,1)) MB)"
 
+          # System installer .exe (inside repo: .build/win32-x64/system-setup)
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $setupSrc = ".build\win32-x64\system-setup\VSCodeSetup.exe"
+          if (-not (Test-Path $setupSrc)) {
+            Write-Host "ERROR: installer not found at $setupSrc"
+            Exit 1
+          }
+          $setupOut = Join-Path "dist" "VoidlySetup-x64-$version.exe"
+          Copy-Item -Path $setupSrc -Destination $setupOut -Force
+          Write-Host "Created $setupOut ($([math]::Round((Get-Item $setupOut).Length/1MB,1)) MB)"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: dist/Voidly-win32-x64.zip
+          files: |
+            dist/Voidly-win32-x64.zip
+            dist/VoidlySetup-x64-*.exe
           name: Voidly ${{ github.ref_name }}
           body: |
             Voidly ${{ github.ref_name }} - Windows x64 build.
+
+            - **VoidlySetup-x64-*.exe** — System installer
+            - **Voidly-win32-x64.zip** — Portable build
 
             Independently developed and distributed by Zevino.
             Repository: https://github.com/Zevino/void
           draft: false
           prerelease: false
 
-      - name: Upload packaging log on failure
+      - name: Upload logs on failure
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: packaging-log
-          path: packaging.log
+          name: build-logs
+          path: |
+            packaging.log
+            inno-updater.log
+            setup.log
