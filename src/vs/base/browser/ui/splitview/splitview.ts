@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -591,7 +591,7 @@ export class SplitView<TLayoutContext = undefined, TView extends IView<TLayoutCo
 			horizontal: this.orientation === Orientation.HORIZONTAL ? (options.scrollbarVisibility ?? ScrollbarVisibility.Auto) : ScrollbarVisibility.Hidden
 		}, this.scrollable));
 
-		// https://github.com/microsoft/vscode/issues/157737
+		// https://github.com/voidly/voidly/issues/157737
 		const onDidScrollViewContainer = this._register(new DomEmitter(this.viewContainer, 'scroll')).event;
 		this._register(onDidScrollViewContainer(_ => {
 			const position = this.scrollableElement.getScrollPosition();

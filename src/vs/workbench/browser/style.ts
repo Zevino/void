@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -18,7 +18,7 @@ registerThemingParticipant((theme, collector) => {
 	const workbenchBackground = WORKBENCH_BACKGROUND(theme);
 	collector.addRule(`.monaco-workbench { background-color: ${workbenchBackground}; }`);
 
-	// Selection (do NOT remove - https://github.com/microsoft/vscode/issues/169662)
+	// Selection (do NOT remove - https://github.com/voidly/voidly/issues/169662)
 	const windowSelectionBackground = theme.getColor(selectionBackground);
 	if (windowSelectionBackground) {
 		collector.addRule(`.monaco-workbench ::selection { background-color: ${windowSelectionBackground}; }`);

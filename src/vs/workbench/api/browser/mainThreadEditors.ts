@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -247,7 +247,7 @@ export class MainThreadTextEditors implements MainThreadTextEditorsShape {
 			pinned: options.pinned,
 			selection: options.selection,
 			// preserve pre 1.38 behaviour to not make group active when preserveFocus: true
-			// but make sure to restore the editor to fix https://github.com/microsoft/vscode/issues/79633
+			// but make sure to restore the editor to fix https://github.com/voidly/voidly/issues/79633
 			activation: options.preserveFocus ? EditorActivation.RESTORE : undefined,
 			override: EditorResolution.EXCLUSIVE_ONLY
 		};

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -88,7 +88,7 @@ export abstract class ResourceWorkingCopy extends Disposable implements IResourc
 			if (newInOrphanModeGuess) {
 
 				// We have received reports of users seeing delete events even though the file still
-				// exists (network shares issue: https://github.com/microsoft/vscode/issues/13665).
+				// exists (network shares issue: https://github.com/voidly/voidly/issues/13665).
 				// Since we do not want to mark the working copy as orphaned, we have to check if the
 				// file is really gone and not just a faulty file event.
 				await timeout(100, CancellationToken.None);

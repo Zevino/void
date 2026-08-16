@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -23,7 +23,7 @@ export class LanguageService extends Disposable implements ILanguageService {
 	private readonly _onDidRequestRichLanguageFeatures = this._register(new Emitter<string>());
 	public readonly onDidRequestRichLanguageFeatures = this._onDidRequestRichLanguageFeatures.event;
 
-	protected readonly _onDidChange = this._register(new Emitter<void>({ leakWarningThreshold: 200 /* https://github.com/microsoft/vscode/issues/119968 */ }));
+	protected readonly _onDidChange = this._register(new Emitter<void>({ leakWarningThreshold: 200 /* https://github.com/voidly/voidly/issues/119968 */ }));
 	public readonly onDidChange: Event<void> = this._onDidChange.event;
 
 	private readonly _requestedBasicLanguages = new Set<string>();

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -248,7 +248,7 @@ export class TextAreaEditContext extends AbstractEditContext {
 					// on macOS, write current selection into textarea will allow system text services pick selected text,
 					// but we still want to limit the amount of text given Chromium handles very poorly text even of a few
 					// thousand chars
-					// (https://github.com/microsoft/vscode/issues/27799)
+					// (https://github.com/voidly/voidly/issues/27799)
 					const LIMIT_CHARS = 500;
 					if (platform.isMacintosh && !selection.isEmpty() && simpleModel.getValueLengthInRange(selection, EndOfLinePreference.TextDefined) < LIMIT_CHARS) {
 						const text = simpleModel.getValueInRange(selection, EndOfLinePreference.TextDefined);
@@ -615,7 +615,7 @@ export class TextAreaEditContext extends AbstractEditContext {
 		this._selections = e.selections.slice(0);
 		this._modelSelections = e.modelSelections.slice(0);
 		// We must update the <textarea> synchronously, otherwise long press IME on macos breaks.
-		// See https://github.com/microsoft/vscode/issues/165821
+		// See https://github.com/voidly/voidly/issues/165821
 		this._textAreaInput.writeNativeTextAreaContent('selection changed');
 		return true;
 	}
@@ -721,7 +721,7 @@ export class TextAreaEditContext extends AbstractEditContext {
 
 				let scrollLeft = this._visibleTextArea.widthOfHiddenLineTextBefore;
 				let left = (this._contentLeft + visibleStart.left - this._scrollLeft);
-				// See https://github.com/microsoft/vscode/issues/141725#issuecomment-1050670841
+				// See https://github.com/voidly/voidly/issues/141725#issuecomment-1050670841
 				// Here we are adding +1 to avoid flickering that might be caused by having a width that is too small.
 				// This could be caused by rounding errors that might only show up with certain font families.
 				// In other words, a pixel might be lost when doing something like

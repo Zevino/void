@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -75,7 +75,7 @@ export function getNotificationFromContext(listService: IListService, context?: 
 				// the notification list might have received focus
 				// via keyboard and might not have a focused element.
 				// in that case just return the first element
-				// https://github.com/microsoft/vscode/issues/191705
+				// https://github.com/voidly/voidly/issues/191705
 				element = list.element(0);
 			}
 		}

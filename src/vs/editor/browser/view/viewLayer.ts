@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -513,7 +513,7 @@ class ViewLayerRenderer<T extends IVisibleLine> {
 		}
 		const lastChild = <HTMLElement>this._domNode.lastChild;
 		if (domNodeIsEmpty || !lastChild) {
-			this._domNode.innerHTML = newLinesHTML as string; // explains the ugly casts -> https://github.com/microsoft/vscode/issues/106396#issuecomment-692625393;
+			this._domNode.innerHTML = newLinesHTML as string; // explains the ugly casts -> https://github.com/voidly/voidly/issues/106396#issuecomment-692625393;
 		} else {
 			lastChild.insertAdjacentHTML('afterend', newLinesHTML as string);
 		}

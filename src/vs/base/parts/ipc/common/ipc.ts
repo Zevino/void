@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -345,7 +345,7 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 	registerChannel(channelName: string, channel: IServerChannel<TContext>): void {
 		this.channels.set(channelName, channel);
 
-		// https://github.com/microsoft/vscode/issues/72531
+		// https://github.com/voidly/voidly/issues/72531
 		setTimeout(() => this.flushPendingRequests(channelName), 0);
 	}
 

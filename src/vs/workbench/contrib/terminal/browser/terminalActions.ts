@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1196,7 +1196,7 @@ export function registerTerminalActions() {
 			// of prompt shell binding
 			primary: 0,
 			// Technically this doesn't need to be here as it will fall back to this
-			// behavior anyway when handed to xterm.js, having this handled by VS Code
+			// behavior anyway when handed to xterm.js, having this handled by Voidly
 			// makes it easier for users to see how it works though.
 			mac: { primary: KeyMod.CtrlCmd | KeyCode.KeyA },
 			weight: KeybindingWeight.WorkbenchContrib,

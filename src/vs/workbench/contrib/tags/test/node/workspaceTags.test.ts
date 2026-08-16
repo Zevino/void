@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -42,14 +42,14 @@ suite('Telemetry - WorkspaceTags', () => {
 	});
 
 	test('Multiple remotes hashed', async function () {
-		const config = ['https://github.com/microsoft/vscode.git', 'https://git.example.com/gitproject.git'].map(remote).join(' ');
-		assert.deepStrictEqual(await getHashedRemotesFromConfig(config), [hash('github.com/microsoft/vscode.git'), hash('git.example.com/gitproject.git')]);
+		const config = ['https://github.com/voidly/voidly.git', 'https://git.example.com/gitproject.git'].map(remote).join(' ');
+		assert.deepStrictEqual(await getHashedRemotesFromConfig(config), [hash('github.com/voidly/voidly.git'), hash('git.example.com/gitproject.git')]);
 
 		// Strip .git
-		assert.deepStrictEqual(await getHashedRemotesFromConfig(config, true), [hash('github.com/microsoft/vscode'), hash('git.example.com/gitproject')]);
+		assert.deepStrictEqual(await getHashedRemotesFromConfig(config, true), [hash('github.com/voidly/voidly'), hash('git.example.com/gitproject')]);
 
 		// Compare Striped .git with no .git
-		const noDotGitConfig = ['https://github.com/microsoft/vscode', 'https://git.example.com/gitproject'].map(remote).join(' ');
+		const noDotGitConfig = ['https://github.com/voidly/voidly', 'https://git.example.com/gitproject'].map(remote).join(' ');
 		assert.deepStrictEqual(await getHashedRemotesFromConfig(config, true), await getHashedRemotesFromConfig(noDotGitConfig));
 	});
 

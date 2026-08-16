@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -744,7 +744,7 @@ export class CompositionOperation {
 
 	private static _compositionType(model: ITextModel, selection: Selection, text: string, replacePrevCharCnt: number, replaceNextCharCnt: number, positionDelta: number): ICommand | null {
 		if (!selection.isEmpty()) {
-			// looks like https://github.com/microsoft/vscode/issues/2773
+			// looks like https://github.com/voidly/voidly/issues/2773
 			// where a cursor operation occurred before a canceled composition
 			// => ignore composition
 			return null;

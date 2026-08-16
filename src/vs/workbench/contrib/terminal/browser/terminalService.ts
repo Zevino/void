@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -205,7 +205,7 @@ export class TerminalService extends Disposable implements ITerminalService {
 			this._onDidCreateInstance.fire(instance);
 		}));
 
-		// Hide the panel if there are no more instances, provided that VS Code is not shutting
+		// Hide the panel if there are no more instances, provided that Voidly is not shutting
 		// down. When shutting down the panel is locked in place so that it is restored upon next
 		// launch.
 		this._register(this._terminalGroupService.onDidChangeActiveInstance(instance => {

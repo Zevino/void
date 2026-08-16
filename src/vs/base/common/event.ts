@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -24,7 +24,7 @@ const _enableDisposeWithListenerWarning = false
 
 // -----------------------------------------------------------------------------------------------------------------------
 // Uncomment the next line to print warnings whenever a snapshotted event is used repeatedly without cleanup.
-// See https://github.com/microsoft/vscode/issues/142851
+// See https://github.com/voidly/voidly/issues/142851
 // -----------------------------------------------------------------------------------------------------------------------
 const _enableSnapshotPotentialLeakWarning = false
 	// || Boolean("TRUE") // causes a linter warning so that it cannot be pushed

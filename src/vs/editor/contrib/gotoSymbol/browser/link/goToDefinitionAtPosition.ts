@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -83,7 +83,7 @@ export class GotoDefinitionAtPositionEditorContribution implements IEditorContri
 	}
 
 	async startFindDefinitionFromCursor(position: Position) {
-		// For issue: https://github.com/microsoft/vscode/issues/46257
+		// For issue: https://github.com/voidly/voidly/issues/46257
 		// equivalent to mouse move with meta/ctrl key
 
 		// First find the definition and add decorations

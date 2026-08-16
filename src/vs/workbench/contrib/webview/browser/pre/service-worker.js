@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 // @ts-check
@@ -190,7 +190,7 @@ sw.addEventListener('fetch', (event) => {
 	}
 
 	// If we're making a request against the remote authority, we want to go
-	// through VS Code itself so that we are authenticated properly.  If the
+	// through Voidly itself so that we are authenticated properly.  If the
 	// service worker is hosted on the same origin we will have cookies and
 	// authentication will not be an issue.
 	if (requestUrl.origin !== sw.origin && requestUrl.host === remoteAuthority) {
@@ -448,7 +448,7 @@ async function processLocalhostRequest(event, requestUrl) {
  * @returns {string | null}
  */
 function getWebviewIdForClient(client) {
-	// Refs https://github.com/microsoft/vscode/issues/244143
+	// Refs https://github.com/voidly/voidly/issues/244143
 	// With PlzDedicatedWorker, worker subresources and blob wokers
 	// will use clients different from the window client.
 	// Since we cannot different a worker main resource from a worker subresource

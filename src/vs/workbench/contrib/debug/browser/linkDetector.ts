@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -236,7 +236,7 @@ export class LinkDetector implements ILinkDetector {
 		this.decorateLink(link, uri, fulltext, hoverBehavior, async () => {
 
 			if (uri.scheme === Schemas.file) {
-				// Just using fsPath here is unsafe: https://github.com/microsoft/vscode/issues/109076
+				// Just using fsPath here is unsafe: https://github.com/voidly/voidly/issues/109076
 				const fsPath = uri.fsPath;
 				const path = await this.pathService.path;
 				const fileUrl = osPath.normalize(((path.sep === osPath.posix.sep) && platform.isWindows) ? fsPath.replace(/\\/g, osPath.posix.sep) : fsPath);

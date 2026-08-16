@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -194,7 +194,7 @@ export class ExtHostConsumerFileSystem {
 					// if multiple calls try to create the same folders
 					// As such, we only throw an error here if it is other than
 					// the fact that the file already exists.
-					// (see also https://github.com/microsoft/vscode/issues/89834)
+					// (see also https://github.com/voidly/voidly/issues/89834)
 					throw error;
 				}
 			}

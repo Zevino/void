@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -78,7 +78,7 @@ class EditorOpener implements IOpener {
 		target = uri;
 
 		if (target.scheme === Schemas.file) {
-			target = normalizePath(target); // workaround for non-normalized paths (https://github.com/microsoft/vscode/issues/12954)
+			target = normalizePath(target); // workaround for non-normalized paths (https://github.com/voidly/voidly/issues/12954)
 		}
 
 		await this._editorService.openCodeEditor(

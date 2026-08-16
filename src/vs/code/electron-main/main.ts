@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -74,11 +74,11 @@ import { FileUserDataProvider } from '../../platform/userData/common/fileUserDat
 import { addUNCHostToAllowlist, getUNCHost } from '../../base/node/unc.js';
 
 /**
- * The main VS Code entry point.
+ * The main Voidly entry point.
  *
- * Note: This class can exist more than once for example when VS Code is already
+ * Note: This class can exist more than once for example when Voidly is already
  * running and a second instance is started from the command line. It will always
- * try to communicate with an existing instance to prevent that 2 VS Code instances
+ * try to communicate with an existing instance to prevent that 2 Voidly instances
  * are running at the same time.
  */
 class CodeMain {
@@ -123,16 +123,16 @@ class CodeMain {
 
 				// Create the main IPC server by trying to be the server
 				// If this throws an error it means we are not the first
-				// instance of VS Code running and so we would quit.
+				// instance of Voidly running and so we would quit.
 				const mainProcessNodeIpcServer = await this.claimInstance(logService, environmentMainService, lifecycleMainService, instantiationService, productService, true);
 
 				// Write a lockfile to indicate an instance is running
-				// (https://github.com/microsoft/vscode/issues/127861#issuecomment-877417451)
+				// (https://github.com/voidly/voidly/issues/127861#issuecomment-877417451)
 				FSPromises.writeFile(environmentMainService.mainLockfile, String(process.pid)).catch(err => {
 					logService.warn(`app#startup(): Error writing main lockfile: ${err.stack}`);
 				});
 
-				// Delay creation of spdlog for perf reasons (https://github.com/microsoft/vscode/issues/72906)
+				// Delay creation of spdlog for perf reasons (https://github.com/voidly/voidly/issues/72906)
 				bufferLogger.logger = loggerService.createLogger('main', { name: localize('mainLog', "Main") });
 
 				// Lifecycle
@@ -169,7 +169,7 @@ class CodeMain {
 
 		// Log: We need to buffer the spdlog logs until we are sure
 		// we are the only instance running, otherwise we'll have concurrent
-		// log file access on Windows (https://github.com/microsoft/vscode/issues/41218)
+		// log file access on Windows (https://github.com/voidly/voidly/issues/41218)
 		const bufferLogger = new BufferLogger(loggerService.getLogLevel());
 		const logService = disposables.add(new LogService(bufferLogger, [new ConsoleMainLogger(loggerService.getLogLevel())]));
 		services.set(ILogService, logService);
@@ -302,7 +302,7 @@ class CodeMain {
 		} catch (error) {
 
 			// Handle unexpected errors (the only expected error is EADDRINUSE that
-			// indicates another instance of VS Code is running)
+			// indicates another instance of Voidly is running)
 			if (error.code !== 'EADDRINUSE') {
 
 				// Show a dialog for errors that can be resolved by the user
@@ -434,7 +434,7 @@ class CodeMain {
 
 		// use sync variant here because we likely exit after this method
 		// due to startup issues and otherwise the dialog seems to disappear
-		// https://github.com/microsoft/vscode/issues/104493
+		// https://github.com/voidly/voidly/issues/104493
 
 		dialog.showMessageBoxSync(massageMessageBoxOptions({
 			type: 'warning',
@@ -496,7 +496,7 @@ class CodeMain {
 		// is closed and then exit the waiting process.
 		//
 		// Note: we are not doing this if the wait marker has been already
-		// added as argument. This can happen if VS Code was started from CLI.
+		// added as argument. This can happen if Voidly was started from CLI.
 
 		if (args.wait && !args.waitMarkerFilePath) {
 			const waitMarkerFilePath = createWaitMarkerFileSync(args.verbose);
@@ -567,7 +567,7 @@ class CodeMain {
 
 		// Trim trailing quotes
 		if (isWindows) {
-			path = rtrim(path, '"'); // https://github.com/microsoft/vscode/issues/1498
+			path = rtrim(path, '"'); // https://github.com/voidly/voidly/issues/1498
 		}
 
 		// Trim whitespaces

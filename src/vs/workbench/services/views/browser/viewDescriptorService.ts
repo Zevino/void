@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -622,7 +622,7 @@ export class ViewDescriptorService extends Disposable implements IViewDescriptor
 			if (viewContainer) {
 				const defaultContainer = this.getDefaultContainerById(viewId);
 				// Skip if the view is at default location
-				// https://github.com/microsoft/vscode/issues/90414
+				// https://github.com/voidly/voidly/issues/90414
 				if (defaultContainer?.id === viewContainer.id) {
 					continue;
 				}

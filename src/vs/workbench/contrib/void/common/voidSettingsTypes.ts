@@ -187,6 +187,12 @@ export const displayInfoOfSettingName = (providerName: ProviderName, settingName
 	else if (settingName === 'headersJSON') {
 		return { title: 'Custom Headers', placeholder: '{ "X-Request-Id": "..." }' }
 	}
+	else if (settingName === 'reasoningField') {
+		return {
+			title: 'Reasoning Field',
+			placeholder: 'e.g. reasoning_content (DeepSeek) or reasoning (QwQ/Groq); empty to disable',
+		}
+	}
 	else if (settingName === 'region') {
 		// vertex only
 		return {
@@ -241,6 +247,7 @@ const defaultCustomSettings: Record<CustomSettingName, undefined> = {
 	project: undefined,
 	azureApiVersion: undefined,
 	headersJSON: undefined,
+	reasoningField: undefined,
 }
 
 

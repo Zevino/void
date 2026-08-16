@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -129,7 +129,7 @@ export class TerminalFontMetrics extends Disposable {
 
 		// Always fallback to AppleBraille on macOS, otherwise braille will render with filled and
 		// empty circles in all 8 positions, instead of just filled circles
-		// See https://github.com/microsoft/vscode/issues/174521
+		// See https://github.com/voidly/voidly/issues/174521
 		if (isMacintosh) {
 			fontFamily += ', AppleBraille';
 		}

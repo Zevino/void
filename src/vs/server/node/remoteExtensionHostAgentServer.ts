@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -689,7 +689,7 @@ export async function createServer(address: string | net.AddressInfo | null, arg
 
 	function initUnexpectedErrorHandler(handler: (err: any) => void) {
 		setUnexpectedErrorHandler(err => {
-			// See https://github.com/microsoft/vscode-remote-release/issues/6481
+			// See https://github.com/voidly/voidly-remote-release/issues/6481
 			// In some circumstances, console.error will throw an asynchronous error. This asynchronous error
 			// will end up here, and then it will be logged again, thus creating an endless asynchronous loop.
 			// Here we try to break the loop by ignoring EPIPE errors that include our own unexpected error handler in the stack.
@@ -707,7 +707,7 @@ export async function createServer(address: string | net.AddressInfo | null, arg
 	});
 	let didLogAboutSIGPIPE = false;
 	process.on('SIGPIPE', () => {
-		// See https://github.com/microsoft/vscode-remote-release/issues/6543
+		// See https://github.com/voidly/voidly-remote-release/issues/6543
 		// We would normally install a SIGPIPE listener in bootstrap-node.js
 		// But in certain situations, the console itself can be in a broken pipe state
 		// so logging SIGPIPE to the console will cause an infinite async loop

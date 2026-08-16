@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -93,7 +93,7 @@ export interface IBaseWorkspace {
 	 * once, e.g. a window reload of a transient workspace will
 	 * open an empty window.
 	 *
-	 * See: https://github.com/microsoft/vscode/issues/119695
+	 * See: https://github.com/voidly/voidly/issues/119695
 	 */
 	readonly transient?: boolean;
 }

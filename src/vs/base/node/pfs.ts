@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -417,7 +417,7 @@ function doWriteFileAndFlush(path: string, data: string | Buffer | Uint8Array, o
 			}
 
 			// Flush contents (not metadata) of the file to disk
-			// https://github.com/microsoft/vscode/issues/9589
+			// https://github.com/voidly/voidly/issues/9589
 			fs.fdatasync(fd, (syncError: Error | null) => {
 
 				// In some exotic setups it is well possible that node fails to sync
@@ -455,7 +455,7 @@ export function writeFileSync(path: string, data: string | Buffer, options?: IWr
 
 		// Flush contents (not metadata) of the file to disk
 		try {
-			fs.fdatasyncSync(fd); // https://github.com/microsoft/vscode/issues/9589
+			fs.fdatasyncSync(fd); // https://github.com/voidly/voidly/issues/9589
 		} catch (syncError) {
 			console.warn('[node.js fs] fdatasyncSync is now disabled for this session because it failed: ', syncError);
 			configureFlushOnWrite(false);
@@ -602,7 +602,7 @@ async function doCopy(source: string, target: string, payload: ICopyPayload): Pr
 		}
 
 		if (symbolicLink.dangling) {
-			return; // skip dangling symbolic links from here on (https://github.com/microsoft/vscode/issues/111621)
+			return; // skip dangling symbolic links from here on (https://github.com/voidly/voidly/issues/111621)
 		}
 	}
 
@@ -667,7 +667,7 @@ async function doCopySymlink(source: string, target: string, payload: ICopyPaylo
  * At least `realpath` is implemented differently in the promise
  * based implementation compared to the callback based one. The
  * promise based implementation actually calls `fs.realpath.native`.
- * (https://github.com/microsoft/vscode/issues/118562)
+ * (https://github.com/voidly/voidly/issues/118562)
  */
 export const Promises = new class {
 

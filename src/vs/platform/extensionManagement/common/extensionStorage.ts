@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -148,7 +148,7 @@ export class ExtensionStorageService extends Disposable implements IExtensionSto
 				return JSON.parse(jsonValue);
 			} catch (error) {
 				// Do not fail this call but log it for diagnostics
-				// https://github.com/microsoft/vscode/issues/132777
+				// https://github.com/voidly/voidly/issues/132777
 				this.logService.error(`[mainThreadStorage] unexpected error parsing storage contents (extensionId: ${extensionId}, global: ${global}): ${error}`);
 			}
 		}

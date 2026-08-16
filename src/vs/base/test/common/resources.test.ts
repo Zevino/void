@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import assert from 'assert';
@@ -66,7 +66,7 @@ suite('Resources', () => {
 		assert.strictEqual(dirname(URI.parse('foo://a/')).toString(), 'foo://a/');
 		assert.strictEqual(dirname(URI.parse('foo://a')).toString(), 'foo://a');
 
-		// does not explode (https://github.com/microsoft/vscode/issues/41987)
+		// does not explode (https://github.com/voidly/voidly/issues/41987)
 		dirname(URI.from({ scheme: 'file', authority: '/users/someone/portal.h' }));
 
 		assert.strictEqual(dirname(URI.parse('foo://a/b/c?q')).toString(), 'foo://a/b?q');

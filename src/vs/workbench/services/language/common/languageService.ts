@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -304,7 +304,7 @@ export class WorkbenchLanguageService extends LanguageService {
 				if (typeof langId !== 'string') {
 					this.logService.warn(`Ignoring configured 'files.associations' for '${pattern}' because its type is not a string but '${typeof langId}'`);
 
-					return; // https://github.com/microsoft/vscode/issues/147284
+					return; // https://github.com/voidly/voidly/issues/147284
 				}
 
 				const mimeType = this.getMimeType(langId) || `text/x-${langId}`;

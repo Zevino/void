@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -50,7 +50,7 @@ async function setupWaitTilShownListener(controller: QuickInputController): Prom
 	}
 }
 
-suite('QuickInput', () => { // https://github.com/microsoft/vscode/issues/147543
+suite('QuickInput', () => { // https://github.com/voidly/voidly/issues/147543
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 	let controller: QuickInputController;
 

@@ -631,7 +631,7 @@ const VoidOnboardingContent = () => {
 
 					<div className="mt-8 text-center flex flex-col items-center gap-4 w-full max-w-md mx-auto">
 						<h4 className="text-void-fg-3 mb-4">Transfer your settings from an existing editor?</h4>
-						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="VS Code" />
+						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="Voidly" />
 						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="Cursor" />
 						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="Windsurf" />
 					</div>

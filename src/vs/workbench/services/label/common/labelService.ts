@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -218,7 +218,7 @@ export class LabelService extends Disposable implements ILabelService {
 		let label = this.doGetUriLabel(resource, formatting, options);
 
 		// Without formatting we still need to support the separator
-		// as provided in options (https://github.com/microsoft/vscode/issues/130019)
+		// as provided in options (https://github.com/voidly/voidly/issues/130019)
 		if (!formatting && options.separator) {
 			label = label.replace(sepRegexp, options.separator);
 		}

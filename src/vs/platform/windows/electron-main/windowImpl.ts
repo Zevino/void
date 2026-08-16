@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -223,13 +223,13 @@ export abstract class BaseWindow extends Disposable implements IBaseWindow {
 
 		// TODO@electron (Electron 4 regression): when running on multiple displays where the target display
 		// to open the window has a larger resolution than the primary display, the window will not size
-		// correctly unless we set the bounds again (https://github.com/microsoft/vscode/issues/74872)
+		// correctly unless we set the bounds again (https://github.com/voidly/voidly/issues/74872)
 		//
-		// Extended to cover Windows as well as Mac (https://github.com/microsoft/vscode/issues/146499)
+		// Extended to cover Windows as well as Mac (https://github.com/voidly/voidly/issues/146499)
 		//
 		// However, when running with native tabs with multiple windows we cannot use this workaround
 		// because there is a potential that the new window will be added as native tab instead of being
-		// a window on its own. In that case calling setBounds() would cause https://github.com/microsoft/vscode/issues/75830
+		// a window on its own. In that case calling setBounds() would cause https://github.com/voidly/voidly/issues/75830
 
 		const windowSettings = this.configurationService.getValue<IWindowSettings | undefined>('window');
 		const useNativeTabs = isMacintosh && windowSettings?.nativeTabs === true;
@@ -688,7 +688,7 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 		// through DOM events. We have our own logic for
 		// unloading a window that should not be confused
 		// with the DOM way.
-		// (https://github.com/microsoft/vscode/issues/122736)
+		// (https://github.com/voidly/voidly/issues/122736)
 		this._register(Event.fromNodeEventEmitter<electron.Event>(this._win.webContents, 'will-prevent-unload')(event => event.preventDefault()));
 
 		// Remember that we loaded
@@ -820,7 +820,7 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 				// Unresponsive
 				if (type === WindowError.UNRESPONSIVE) {
 					if (this.isExtensionDevelopmentHost || this.isExtensionTestHost || (this._win && this._win.webContents && this._win.webContents.isDevToolsOpened())) {
-						// TODO@electron Workaround for https://github.com/microsoft/vscode/issues/56994
+						// TODO@electron Workaround for https://github.com/voidly/voidly/issues/56994
 						// In certain cases the window can report unresponsiveness because a breakpoint was hit
 						// and the process is stopped executing. The most typical cases are:
 						// - devtools are opened and debugging happens
@@ -1077,10 +1077,10 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 		// (as indicated by VSCODE_CLI environment), make sure to
 		// preserve that user environment in subsequent loads,
 		// unless the new configuration context was also a CLI
-		// (for https://github.com/microsoft/vscode/issues/108571)
+		// (for https://github.com/voidly/voidly/issues/108571)
 		// Also, preserve the environment if we're loading from an
 		// extension development host that had its environment set
-		// (for https://github.com/microsoft/vscode/issues/123508)
+		// (for https://github.com/voidly/voidly/issues/123508)
 		const currentUserEnv = (this._config ?? this.pendingLoadConfig)?.userEnv;
 		if (currentUserEnv) {
 			const shouldPreserveLaunchCliEnvironment = isLaunchedFromCli(currentUserEnv) && !isLaunchedFromCli(configuration.userEnv);
@@ -1092,7 +1092,7 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 
 		// If named pipe was instantiated for the crashpad_handler process, reuse the same
 		// pipe for new app instances connecting to the original app instance.
-		// Ref: https://github.com/microsoft/vscode/issues/115874
+		// Ref: https://github.com/voidly/voidly/issues/115874
 		if (process.env['CHROME_CRASHPAD_PIPE_NAME']) {
 			Object.assign(configuration.userEnv, {
 				CHROME_CRASHPAD_PIPE_NAME: process.env['CHROME_CRASHPAD_PIPE_NAME']
@@ -1209,7 +1209,7 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 				display = electron.screen.getDisplayMatching(this.getBounds());
 			} catch (error) {
 				// Electron has weird conditions under which it throws errors
-				// e.g. https://github.com/microsoft/vscode/issues/100334 when
+				// e.g. https://github.com/voidly/voidly/issues/100334 when
 				// large numbers are passed in
 			}
 
@@ -1222,7 +1222,7 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 				// Still carry over window dimensions from previous sessions
 				// if we can compute it in fullscreen state.
 				// does not seem possible in all cases on Linux for example
-				// (https://github.com/microsoft/vscode/issues/58218) so we
+				// (https://github.com/voidly/voidly/issues/58218) so we
 				// fallback to the defaults in that case.
 				width: this.windowState.width || defaultState.width,
 				height: this.windowState.height || defaultState.height,
@@ -1335,7 +1335,7 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 
 		if (visibility === 'hidden') {
 			// for some weird reason that I have no explanation for, the menu bar is not hiding when calling
-			// this without timeout (see https://github.com/microsoft/vscode/issues/19777). there seems to be
+			// this without timeout (see https://github.com/voidly/voidly/issues/19777). there seems to be
 			// a timing issue with us opening the first window and the menu bar getting created. somehow the
 			// fact that we want to hide the menu without being able to bring it back via Alt key makes Electron
 			// still show the menu. Unable to reproduce from a simple Hello World application though...

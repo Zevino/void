@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -17,7 +17,7 @@ export class ToggleTabFocusModeAction extends Action2 {
 	constructor() {
 		super({
 			id: ToggleTabFocusModeAction.ID,
-			title: nls.localize2({ key: 'toggle.tabMovesFocus', comment: ['Turn on/off use of tab key for moving focus around VS Code'] }, 'Toggle Tab Key Moves Focus'),
+			title: nls.localize2({ key: 'toggle.tabMovesFocus', comment: ['Turn on/off use of tab key for moving focus around Voidly'] }, 'Toggle Tab Key Moves Focus'),
 			precondition: undefined,
 			keybinding: {
 				primary: KeyMod.CtrlCmd | KeyCode.KeyM,

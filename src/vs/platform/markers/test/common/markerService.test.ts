@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -184,7 +184,7 @@ suite('Marker Service', () => {
 		assert.strictEqual(service.read({ owner: 'far' }).length, 1);
 	});
 
-	test('MapMap#remove returns bad values, https://github.com/microsoft/vscode/issues/13548', () => {
+	test('MapMap#remove returns bad values, https://github.com/voidly/voidly/issues/13548', () => {
 		service = new markerService.MarkerService();
 
 		service.changeOne('o', URI.parse('some:uri/1'), [randomMarkerData()]);

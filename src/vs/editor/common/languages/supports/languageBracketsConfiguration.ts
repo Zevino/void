@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -53,7 +53,7 @@ export class LanguageBracketsConfiguration {
 			// If not configured: Take all brackets except `<` ... `>`
 			// Many languages set < ... > as bracket pair, even though they also use it as comparison operator.
 			// This leads to problems when colorizing this bracket, so we exclude it if not explicitly configured otherwise.
-			// https://github.com/microsoft/vscode/issues/132476
+			// https://github.com/voidly/voidly/issues/132476
 			: bracketPairs.filter((p) => !(p[0] === '<' && p[1] === '>'));
 		for (const [open, close] of colorizedBracketPairs) {
 			const opening = openingBracketInfos.get(open);

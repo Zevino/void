@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -919,7 +919,7 @@ interface ICursorStyleVscodeToXtermMap {
 	'cursorStyleInactive': NonNullable<ITerminalOptions['cursorInactiveStyle']>;
 }
 function vscodeToXtermCursorStyle<T extends 'cursorStyle' | 'cursorStyleInactive'>(style: ITerminalConfiguration[T]): ICursorStyleVscodeToXtermMap[T] {
-	// 'line' is used instead of bar in VS Code to be consistent with editor.cursorStyle
+	// 'line' is used instead of bar in Voidly to be consistent with editor.cursorStyle
 	if (style === 'line') {
 		return 'bar';
 	}

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -168,7 +168,7 @@ export class OverlayWebview extends Disposable implements IOverlayWebview {
 		}
 
 		if (this._options.retainContextWhenHidden) {
-			// https://github.com/microsoft/vscode/issues/157424
+			// https://github.com/voidly/voidly/issues/157424
 			// We need to record the current state when retaining context so we can try to showFind() when showing webview again
 			this._shouldShowFindWidgetOnRestore = !!this._findWidgetVisible?.get();
 			this.hideFind(false);
@@ -278,7 +278,7 @@ export class OverlayWebview extends Disposable implements IOverlayWebview {
 			this._firstLoadPendingMessages.clear();
 		}
 
-		// https://github.com/microsoft/vscode/issues/157424
+		// https://github.com/voidly/voidly/issues/157424
 		if (this.options.retainContextWhenHidden && this._shouldShowFindWidgetOnRestore) {
 			this.showFind(false);
 			// Reset

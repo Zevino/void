@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1944,7 +1944,7 @@ suite('EditorGroupModel', () => {
 		assert.ok(group1Listener.disposed[1].editor.matches(input3));
 	});
 
-	test('Preview tab does not have a stable position (https://github.com/microsoft/vscode/issues/8245)', function () {
+	test('Preview tab does not have a stable position (https://github.com/voidly/voidly/issues/8245)', function () {
 		const group1 = createEditorGroupModel();
 
 		const input1 = input();

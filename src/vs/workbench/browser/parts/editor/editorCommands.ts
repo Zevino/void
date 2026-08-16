@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -402,7 +402,7 @@ function registerOpenEditorAPICommands(): void {
 	}
 
 	// partial, renderer-side API command to open editor
-	// complements https://github.com/microsoft/vscode/blob/2b164efb0e6a5de3826bff62683eaeafe032284f/src/vs/workbench/api/common/extHostApiCommands.ts#L373
+	// complements https://github.com/voidly/voidly/blob/2b164efb0e6a5de3826bff62683eaeafe032284f/src/vs/workbench/api/common/extHostApiCommands.ts#L373
 	CommandsRegistry.registerCommand({
 		id: 'vscode.open',
 		handler: (accessor, arg) => {
@@ -460,7 +460,7 @@ function registerOpenEditorAPICommands(): void {
 	});
 
 	// partial, renderer-side API command to open diff editor
-	// complements https://github.com/microsoft/vscode/blob/2b164efb0e6a5de3826bff62683eaeafe032284f/src/vs/workbench/api/common/extHostApiCommands.ts#L397
+	// complements https://github.com/voidly/voidly/blob/2b164efb0e6a5de3826bff62683eaeafe032284f/src/vs/workbench/api/common/extHostApiCommands.ts#L397
 	CommandsRegistry.registerCommand({
 		id: 'vscode.diff',
 		handler: (accessor, left, right, label) => {
@@ -513,7 +513,7 @@ function registerOpenEditorAPICommands(): void {
 	});
 
 	// partial, renderer-side API command to open diff editor
-	// complements https://github.com/microsoft/vscode/blob/2b164efb0e6a5de3826bff62683eaeafe032284f/src/vs/workbench/api/common/extHostApiCommands.ts#L397
+	// complements https://github.com/voidly/voidly/blob/2b164efb0e6a5de3826bff62683eaeafe032284f/src/vs/workbench/api/common/extHostApiCommands.ts#L397
 	CommandsRegistry.registerCommand({
 		id: 'vscode.changes',
 		handler: (accessor, title: string, resources: [UriComponents, UriComponents?, UriComponents?][]) => {

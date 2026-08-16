@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -92,7 +92,7 @@ export class WorkingCopyHistoryTracker extends Disposable implements IWorkbenchC
 		// Make sure to track the content version of each entry that
 		// was moved in our map. This ensures that a subsequent save
 		// without a content change does not add a redundant entry
-		// (https://github.com/microsoft/vscode/issues/145881)
+		// (https://github.com/voidly/voidly/issues/145881)
 		for (const resource of resources) {
 			const contentVersion = this.getContentVersion(resource);
 			this.historyEntryContentVersion.set(resource, contentVersion);

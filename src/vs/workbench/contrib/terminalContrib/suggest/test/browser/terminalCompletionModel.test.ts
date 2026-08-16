@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import assert, { notStrictEqual, strictEqual } from 'assert';
@@ -113,7 +113,7 @@ suite('TerminalCompletionModel', function () {
 		});
 
 		test('should handle many files and folders correctly', function () {
-			// This is VS Code's root directory with some python items added that have special
+			// This is Voidly's root directory with some python items added that have special
 			// sorting
 			const items = [
 				...createFolderItems(

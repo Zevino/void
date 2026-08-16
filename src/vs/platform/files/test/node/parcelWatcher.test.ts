@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -169,7 +169,7 @@ suite.skip('File Watcher (parcel)', function () {
 		// Unwind from the event call stack: we have seen crashes in Parcel
 		// when e.g. calling `unsubscribe` directly from the stack of a file
 		// change event
-		// Refs: https://github.com/microsoft/vscode/issues/137430
+		// Refs: https://github.com/voidly/voidly/issues/137430
 		await timeout(1);
 
 		return res;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -170,7 +170,7 @@ export class View extends ViewEventHandler {
 
 		this.domNode = createFastDomNode(document.createElement('div'));
 		this.domNode.setClassName(this._getEditorClassName());
-		// Set role 'code' for better screen reader support https://github.com/microsoft/vscode/issues/93438
+		// Set role 'code' for better screen reader support https://github.com/voidly/voidly/issues/93438
 		this.domNode.setAttribute('role', 'code');
 
 		if (this._context.configuration.options.get(EditorOption.experimentalGpuAcceleration) === 'on') {
@@ -496,7 +496,7 @@ export class View extends ViewEventHandler {
 			throw new BugIndicatingError();
 		}
 		if (this._renderAnimationFrame === null) {
-			// TODO: workaround fix for https://github.com/microsoft/vscode/issues/229825
+			// TODO: workaround fix for https://github.com/voidly/voidly/issues/229825
 			if (this._editContext instanceof NativeEditContext) {
 				this._editContext.setEditContextOnDomNode();
 			}

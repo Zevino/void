@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -122,7 +122,7 @@ export class CodeActionsContribution extends Disposable implements IWorkbenchCon
 	) {
 		super();
 
-		// TODO: @justschen caching of code actions based on extensions loaded: https://github.com/microsoft/vscode/issues/216019
+		// TODO: @justschen caching of code actions based on extensions loaded: https://github.com/voidly/voidly/issues/216019
 		this._register(
 			Event.runAndSubscribe(
 				Event.debounce(languageFeatures.codeActionProvider.onDidChange, () => { }, 1000),

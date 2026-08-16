@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -417,7 +417,7 @@ suite('Files - TextFileEditorModelManager', () => {
 		assert.strictEqual(didResolve, true);
 	});
 
-	test('file change events trigger reload (after a model is resolved: https://github.com/microsoft/vscode/issues/132765)', async () => {
+	test('file change events trigger reload (after a model is resolved: https://github.com/voidly/voidly/issues/132765)', async () => {
 		const manager = accessor.textFileService.files as ITestTextFileEditorModelManager;
 		const resource = URI.file('/path/index.txt');
 

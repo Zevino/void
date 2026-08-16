@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -30,7 +30,7 @@ export interface IEndpointDetails {
 export class PreferencesSearchService extends Disposable implements IPreferencesSearchService {
 	declare readonly _serviceBrand: undefined;
 
-	// @ts-expect-error disable remote search for now, ref https://github.com/microsoft/vscode/issues/172411
+	// @ts-expect-error disable remote search for now, ref https://github.com/voidly/voidly/issues/172411
 	private _installedExtensions: Promise<ILocalExtension[]>;
 	private _remoteSearchProvider: IRemoteSearchProvider | undefined;
 
@@ -119,7 +119,7 @@ export class LocalSearchProvider implements ISearchProvider {
 
 		// Check the top key match type.
 		const topKeyMatchType = Math.max(...filterMatches.map(m => (m.matchType & SettingKeyMatchTypes)));
-		// Always allow description matches as part of https://github.com/microsoft/vscode/issues/239936.
+		// Always allow description matches as part of https://github.com/voidly/voidly/issues/239936.
 		const alwaysAllowedMatchTypes = SettingMatchType.DescriptionOrValueMatch | SettingMatchType.LanguageTagSettingMatch;
 		const filteredMatches = filterMatches.filter(m => (m.matchType & topKeyMatchType) || (m.matchType & alwaysAllowedMatchTypes) || m.matchType === SettingMatchType.ExactMatch);
 		return Promise.resolve({
@@ -594,7 +594,7 @@ class RemoteSearchProvider implements IRemoteSearchProvider {
 			return this.tfIdfSearchProvider!.searchModel(preferencesModel, token);
 		}
 
-		// Use TF-IDF search as a fallback, ref https://github.com/microsoft/vscode/issues/224946
+		// Use TF-IDF search as a fallback, ref https://github.com/voidly/voidly/issues/224946
 		let results = await this.adaSearchProvider.searchModel(preferencesModel, token);
 		if (results?.filterMatches.length) {
 			return results;

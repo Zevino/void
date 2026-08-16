@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -48,7 +48,7 @@ const allowedHtmlTags = [
 	'a',
 	'img',
 
-	// TODO@roblourens when we sanitize attributes in markdown source, we can ban these elements at that step. microsoft/vscode-copilot#5091
+	// TODO@roblourens when we sanitize attributes in markdown source, we can ban these elements at that step. voidly/voidly-copilot#5091
 	// Not in the official list, but used for codicons and other vscode markdown extensions
 	'span',
 	'div',

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -111,7 +111,7 @@ export class WebviewElement extends Disposable implements IWebview, WebviewFindD
 		}
 
 		if (this.window.document.activeElement && this.window.document.activeElement !== this.element) {
-			// looks like https://github.com/microsoft/vscode/issues/132641
+			// looks like https://github.com/voidly/voidly/issues/132641
 			// where the focus is actually not in the `<iframe>`
 			return false;
 		}
@@ -821,7 +821,7 @@ export class WebviewElement extends Disposable implements IWebview, WebviewFindD
 			// noop
 		}
 
-		// Workaround for https://github.com/microsoft/vscode/issues/75209
+		// Workaround for https://github.com/voidly/voidly/issues/75209
 		// Focusing the inner webview is async so for a sequence of actions such as:
 		//
 		// 1. Open webview

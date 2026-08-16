@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -207,7 +207,7 @@ export abstract class AbstractEditorWithViewState<T extends object> extends Edit
 	 * should be used as a way to ensure the view state in the
 	 * editor control is matching the resource expected, for example
 	 * by comparing with the underlying model (this was a fix for
-	 * https://github.com/microsoft/vscode/issues/40114).
+	 * https://github.com/voidly/voidly/issues/40114).
 	 */
 	protected abstract computeEditorViewState(resource: URI): T | undefined;
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -146,12 +146,12 @@ class ReportExtensionSlowAction extends Action {
 		const os = await this._nativeHostService.getOSProperties();
 		const title = encodeURIComponent('Extension causes high cpu load');
 		const osVersion = `${os.type} ${os.arch} ${os.release}`;
-		const message = `:warning: Make sure to **attach** this file from your *home*-directory:\n:warning:\`${path}\`\n\nFind more details here: https://github.com/microsoft/vscode/wiki/Explain-extension-causes-high-cpu-load`;
+		const message = `:warning: Make sure to **attach** this file from your *home*-directory:\n:warning:\`${path}\`\n\nFind more details here: https://github.com/voidly/voidly/wiki/Explain-extension-causes-high-cpu-load`;
 		const body = encodeURIComponent(`- Issue Type: \`Performance\`
 - Extension Name: \`${this.extension.name}\`
 - Extension Version: \`${this.extension.version}\`
 - OS Version: \`${osVersion}\`
-- VS Code version: \`${this._productService.version}\`\n\n${message}`);
+- Voidly version: \`${this._productService.version}\`\n\n${message}`);
 
 		const url = `${this.repoInfo.base}/${this.repoInfo.owner}/${this.repoInfo.repo}/issues/new/?body=${body}&title=${title}`;
 		this._openerService.open(URI.parse(url));

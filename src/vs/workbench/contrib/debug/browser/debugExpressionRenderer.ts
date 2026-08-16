@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -35,7 +35,7 @@ export interface IRenderValueOptions {
 	highlights?: IHighlight[];
 
 	/**
-	 * Indicates areas where VS Code implicitly always supported ANSI escape
+	 * Indicates areas where Voidly implicitly always supported ANSI escape
 	 * sequences. These should be rendered as ANSI when the DA does not specify
 	 * any value of `supportsANSIStyling`.
 	 * @deprecated

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1099,7 +1099,7 @@ export class ChatService extends Disposable implements IChatService {
 					delete this._persistedSessions[sessionId];
 				} else {
 					// Turn all the real objects into actual JSON, otherwise, calling 'revive' may fail when it tries to
-					// assign values to properties that are getters- microsoft/vscode-copilot-release#1233
+					// assign values to properties that are getters- voidly/voidly-copilot-release#1233
 					const sessionData: ISerializableChatData = JSON.parse(JSON.stringify(model));
 					sessionData.isNew = true;
 					this._persistedSessions[sessionId] = sessionData;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -51,7 +51,7 @@ export class BinaryFileEditor extends BaseBinaryResourceEditor {
 			// diff editor.
 			// Since `openInternal` can only ever be selected from the
 			// active editor of the group, this is a safe assumption.
-			// (https://github.com/microsoft/vscode/issues/124222)
+			// (https://github.com/voidly/voidly/issues/124222)
 			const activeEditor = this.group.activeEditor;
 			const untypedActiveEditor = activeEditor?.toUntyped();
 			if (!untypedActiveEditor) {
@@ -79,7 +79,7 @@ export class BinaryFileEditor extends BaseBinaryResourceEditor {
 				for (const editor of resolvedEditor.editor instanceof DiffEditorInput ? [resolvedEditor.editor.original, resolvedEditor.editor.modified] : [resolvedEditor.editor]) {
 					if (editor instanceof FileEditorInput) {
 						editor.setForceOpenAsText();
-						editor.setPreferredLanguageId(BINARY_TEXT_FILE_MODE); // https://github.com/microsoft/vscode/issues/131076
+						editor.setPreferredLanguageId(BINARY_TEXT_FILE_MODE); // https://github.com/voidly/voidly/issues/131076
 					}
 				}
 			}

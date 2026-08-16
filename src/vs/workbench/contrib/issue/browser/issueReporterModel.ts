@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -90,7 +90,7 @@ Type: <b>${this.getIssueTypeTitle()}</b>
 
 ${this._data.issueDescription}
 ${this.getExtensionVersion()}
-VS Code version: ${this._data.versionInfo && this._data.versionInfo.vscodeVersion}
+Voidly version: ${this._data.versionInfo && this._data.versionInfo.vscodeVersion}
 OS version: ${this._data.versionInfo && this._data.versionInfo.os}
 Modes:${modes.length ? ' ' + modes.join(', ') : ''}
 ${this.getRemoteOSes()}

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -89,7 +89,7 @@ suite('Color Registry', function () {
 		// avoid importing the TestEnvironmentService as it brings in a duplicate registration of the file editor input factory.
 		const environmentService = new class extends mock<INativeEnvironmentService>() { override args = { _: [] }; };
 
-		const docUrl = 'https://raw.githubusercontent.com/microsoft/vscode-docs/main/api/references/theme-color.md';
+		const docUrl = 'https://raw.githubusercontent.com/voidly/voidly-docs/main/api/references/theme-color.md';
 
 		const reqContext = await new RequestService('local', new TestConfigurationService(), environmentService, new NullLogService()).request({ url: docUrl }, CancellationToken.None);
 		const content = (await asTextOrError(reqContext))!;
@@ -152,7 +152,7 @@ suite('Color Registry', function () {
 		}
 
 		if (errorText.length > 0) {
-			assert.fail(`\n\nOpen https://github.dev/microsoft/vscode-docs/blob/vnext/api/references/theme-color.md#50${errorText}`);
+			assert.fail(`\n\nOpen https://github.dev/voidly/voidly-docs/blob/vnext/api/references/theme-color.md#50${errorText}`);
 		}
 	});
 });

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -346,7 +346,7 @@ registerSingleton(IExtensionUrlHandler, ExtensionUrlHandler, InstantiationType.E
 
 /**
  * This class handles URLs before `ExtensionUrlHandler` is instantiated.
- * More info: https://github.com/microsoft/vscode/issues/73101
+ * More info: https://github.com/voidly/voidly/issues/73101
  */
 class ExtensionUrlBootstrapHandler implements IWorkbenchContribution, IURLHandler {
 

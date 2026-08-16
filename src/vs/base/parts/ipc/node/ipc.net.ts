@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -22,7 +22,7 @@ import { ChunkStream, Client, ISocket, Protocol, SocketCloseEvent, SocketCloseEv
  * ends. For unix domain sockets, the close event may not fire consistently
  * due to what appears to be a Node.js bug.
  *
- * @see https://github.com/microsoft/vscode/issues/211462#issuecomment-2155471996
+ * @see https://github.com/voidly/voidly/issues/211462#issuecomment-2155471996
  */
 const socketEndTimeoutMs = 30_000;
 
@@ -771,7 +771,7 @@ function unmask(buffer: VSBuffer, mask: number): void {
 }
 
 // Read this before there's any chance it is overwritten
-// Related to https://github.com/microsoft/vscode/issues/30624
+// Related to https://github.com/voidly/voidly/issues/30624
 export const XDG_RUNTIME_DIR = <string | undefined>process.env['XDG_RUNTIME_DIR'];
 
 const safeIpcPathLengths: { [platform: number]: number } = {

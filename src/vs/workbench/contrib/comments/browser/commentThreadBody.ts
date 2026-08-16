@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -233,7 +233,7 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 
 		this._commentThread = commentThread;
 		this._commentElements = newCommentNodeList;
-		// Start editing *after* updating the thread and elements to avoid a sequencing issue https://github.com/microsoft/vscode/issues/239191
+		// Start editing *after* updating the thread and elements to avoid a sequencing issue https://github.com/voidly/voidly/issues/239191
 		await Promise.all(startEditing);
 
 		if (newCommentsInEditMode.length) {

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -97,7 +97,7 @@ export abstract class AbstractGotoSymbolQuickAccessProvider extends AbstractEdit
 		// we do get symbols. This can happen if the picker is opened
 		// very early after the model has loaded but before the
 		// language registry is ready.
-		// https://github.com/microsoft/vscode/issues/70607
+		// https://github.com/voidly/voidly/issues/70607
 		(async () => {
 			const result = await this.waitForLanguageSymbolRegistry(model, disposables);
 			if (!result || token.isCancellationRequested) {

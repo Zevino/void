@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -94,7 +94,7 @@ const enum FinalTermOscPt {
  * VS Code-specific shell integration sequences. Some of these are based on more common alternatives
  * like those pioneered in {@link FinalTermOscPt FinalTerm}. The decision to move to entirely custom
  * sequences was to try to improve reliability and prevent the possibility of applications confusing
- * the terminal. If multiple shell integration scripts run, VS Code will prioritize the VS
+ * the terminal. If multiple shell integration scripts run, Voidly will prioritize the VS
  * Code-specific ones.
  *
  * It's recommended that authors of shell integration scripts use the common sequences (`133`)
@@ -214,7 +214,7 @@ const enum VSCodeOscPt {
 	 * - `HasRichCommandDetection` - Reports whether the shell has rich command line detection,
 	 *   meaning that sequences A, B, C, D and E are exactly where they're meant to be. In
 	 *   particular, {@link CommandLine} must happen immediately before {@link CommandExecuted} so
-	 *   VS Code knows the command line when the execution begins.
+	 *   Voidly knows the command line when the execution begins.
 	 *
 	 * WARNING: Any other properties may be changed and are not guaranteed to work in the future.
 	 */
@@ -396,7 +396,7 @@ export class ShellIntegrationAddon extends Disposable implements IShellIntegrati
 		}
 
 		// Pass the sequence along to the capability
-		// It was considered to disable the common protocol in order to not confuse the VS Code
+		// It was considered to disable the common protocol in order to not confuse the Voidly
 		// shell integration if both happen for some reason. This doesn't work for powerlevel10k
 		// when instant prompt is enabled though. If this does end up being a problem we could pass
 		// a type flag through the capability calls

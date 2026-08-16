@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -116,7 +116,7 @@ export class DebugExtensionsContribution extends Disposable implements IWorkbenc
 					resolveSourceMapLocations: null,
 					// announces sources eagerly for the loaded scripts view:
 					eagerSources: true,
-					// source maps of published VS Code are on the CDN and can take a while to load
+					// source maps of published Voidly are on the CDN and can take a while to load
 					timeouts: {
 						sourceMapMinPause: 30_000,
 						sourceMapCumulativePause: 300_000,

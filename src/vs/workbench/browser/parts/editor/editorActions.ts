@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -615,7 +615,7 @@ abstract class AbstractCloseAllAction extends Action2 {
 
 			// Windows, Linux: editor will be saved on window change
 			// when a native dialog appears, so just track that separate
-			// (see https://github.com/microsoft/vscode/issues/134250)
+			// (see https://github.com/voidly/voidly/issues/134250)
 			else if ((isNative && (isWindows || isLinux)) && !editor.hasCapability(EditorInputCapabilities.Untitled) && filesConfigurationService.getAutoSaveMode(editor).mode === AutoSaveMode.ON_WINDOW_CHANGE) {
 				dirtyAutoSaveOnWindowChangeEditors.add({ editor, groupId });
 			}
@@ -887,7 +887,7 @@ abstract class AbstractMoveCopyGroupAction extends Action2 {
 
 		// Allow the target group to be in alternative locations to support more
 		// scenarios of moving the group to the taret location.
-		// Helps for https://github.com/microsoft/vscode/issues/50741
+		// Helps for https://github.com/voidly/voidly/issues/50741
 		switch (this.direction) {
 			case GroupDirection.LEFT:
 			case GroupDirection.RIGHT:
@@ -2380,7 +2380,7 @@ abstract class AbstractCreateEditorGroupAction extends Action2 {
 		//
 		// If focus is inside the editor area, we want to prevent the situation
 		// of an editor having keyboard focus in an inactive editor group
-		// (see https://github.com/microsoft/vscode/issues/189256)
+		// (see https://github.com/voidly/voidly/issues/189256)
 
 		const activeDocument = getActiveDocument();
 		const focusNewGroup = layoutService.hasFocus(Parts.EDITOR_PART) || activeDocument.activeElement === activeDocument.body;

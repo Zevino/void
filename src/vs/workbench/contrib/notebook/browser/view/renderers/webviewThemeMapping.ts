@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -73,7 +73,7 @@ const constants: Readonly<WebviewStyles> = {
 /**
  * Transforms base vscode theme variables into generic variables for notebook
  * renderers.
- * @see https://github.com/microsoft/vscode/issues/107985 for context
+ * @see https://github.com/voidly/voidly/issues/107985 for context
  * @deprecated
  */
 export const transformWebviewThemeVars = (s: Readonly<WebviewStyles>): WebviewStyles => {

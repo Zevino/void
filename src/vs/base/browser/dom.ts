@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1982,7 +1982,7 @@ export interface IDragAndDropObserverCallbacks {
 export class DragAndDropObserver extends Disposable {
 
 	// A helper to fix issues with repeated DRAG_ENTER / DRAG_LEAVE
-	// calls see https://github.com/microsoft/vscode/issues/14470
+	// calls see https://github.com/voidly/voidly/issues/14470
 	// when the element has child elements where the events are fired
 	// repeadedly.
 	private counter: number = 0;

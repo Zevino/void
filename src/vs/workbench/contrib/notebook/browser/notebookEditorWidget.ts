@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1322,7 +1322,7 @@ export class NotebookEditorWidget extends Disposable implements INotebookEditorD
 		}
 
 		// select cells if options tell to do so
-		// todo@rebornix https://github.com/microsoft/vscode/issues/118108 support selections not just focus
+		// todo@rebornix https://github.com/voidly/voidly/issues/118108 support selections not just focus
 		// todo@rebornix support multipe selections
 		if (options?.cellSelections) {
 			const focusCellIndex = options.cellSelections[0].start;
@@ -2400,7 +2400,7 @@ export class NotebookEditorWidget extends Disposable implements INotebookEditorD
 
 			if (!this.hasEditorFocus()) {
 				// Do not scroll inactive notebook
-				// https://github.com/microsoft/vscode/issues/145340
+				// https://github.com/voidly/voidly/issues/145340
 				const cellIndex = this.viewModel?.getCellIndex(cell);
 				const visibleRanges = this.visibleRanges;
 				if (cellIndex !== undefined

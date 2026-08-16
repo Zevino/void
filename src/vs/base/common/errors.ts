@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -83,7 +83,7 @@ export function setUnexpectedErrorHandler(newUnexpectedErrorHandler: (e: any) =>
  * Returns if the error is a SIGPIPE error. SIGPIPE errors should generally be
  * logged at most once, to avoid a loop.
  *
- * @see https://github.com/microsoft/vscode-remote-release/issues/6481
+ * @see https://github.com/voidly/voidly-remote-release/issues/6481
  */
 export function isSigPipeError(e: unknown): e is Error {
 	if (!e || typeof e !== 'object') {

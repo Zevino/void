@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -149,7 +149,7 @@ function getMultiSelectContext(editorContext: IEditorCommandsContext, isListActi
 		}
 
 		if (selection.length === 0) {
-			// TODO@benibenj workaround for https://github.com/microsoft/vscode/issues/224050
+			// TODO@benibenj workaround for https://github.com/voidly/voidly/issues/224050
 			// Explainer: the `isListAction` flag can be a false positive in certain cases because
 			// it will be `true` if the active element is a `List` even if it is part of the editor
 			// area. The workaround here is to fallback to `isListAction: false` if the list is not

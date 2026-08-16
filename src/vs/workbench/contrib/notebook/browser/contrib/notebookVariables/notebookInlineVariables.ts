@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -122,7 +122,7 @@ export class NotebookInlineVariablesController extends Disposable implements INo
 		const inlineDecorations: IModelDeltaDecoration[] = [];
 
 		if (hasInlineValueProvider) {
-			// use extension based provider, borrowed from https://github.com/microsoft/vscode/blob/main/src/vs/workbench/contrib/debug/browser/debugEditorContribution.ts#L679
+			// use extension based provider, borrowed from https://github.com/voidly/voidly/blob/main/src/vs/workbench/contrib/debug/browser/debugEditorContribution.ts#L679
 			const lastLine = model.getLineCount();
 			const lastColumn = model.getLineMaxColumn(lastLine);
 			const ctx: InlineValueContext = {

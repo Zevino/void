@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -219,7 +219,7 @@ export class StorageMainService extends Disposable implements IStorageMainServic
 
 			// Workaround for native crashes that we see when
 			// SQLite DBs are being created even after shutdown
-			// https://github.com/microsoft/vscode/issues/143186
+			// https://github.com/voidly/voidly/issues/143186
 
 			return new InMemoryStorageMain(this.logService, this.fileService);
 		}
@@ -257,7 +257,7 @@ export class StorageMainService extends Disposable implements IStorageMainServic
 
 			// Workaround for native crashes that we see when
 			// SQLite DBs are being created even after shutdown
-			// https://github.com/microsoft/vscode/issues/143186
+			// https://github.com/voidly/voidly/issues/143186
 
 			return new InMemoryStorageMain(this.logService, this.fileService);
 		}

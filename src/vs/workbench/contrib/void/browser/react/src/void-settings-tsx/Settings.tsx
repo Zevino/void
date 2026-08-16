@@ -880,7 +880,7 @@ export const ToolApprovalTypeSwitch = ({ approvalType, size, desc }: { approvalT
 
 
 
-export const OneClickSwitchButton = ({ fromEditor = 'VS Code', className = '' }: { fromEditor?: TransferEditorType, className?: string }) => {
+export const OneClickSwitchButton = ({ fromEditor = 'Voidly', className = '' }: { fromEditor?: TransferEditorType, className?: string }) => {
 	const accessor = useAccessor()
 	const extensionTransferService = accessor.get('IExtensionTransferService')
 
@@ -1399,7 +1399,7 @@ export const Settings = () => {
 										<h4 className='text-void-fg-3 mb-4'>{`Transfer your editor settings into Void.`}</h4>
 
 										<div className='flex flex-col gap-2'>
-											<OneClickSwitchButton className='w-48' fromEditor="VS Code" />
+											<OneClickSwitchButton className='w-48' fromEditor="Voidly" />
 											<OneClickSwitchButton className='w-48' fromEditor="Cursor" />
 											<OneClickSwitchButton className='w-48' fromEditor="Windsurf" />
 										</div>

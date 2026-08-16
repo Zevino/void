@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -240,7 +240,7 @@ export function fillEditorsDragData(accessor: ServicesAccessor, resourcesOrEdito
 		}
 	}
 
-	// Resource URLs: allows to drop multiple file resources to a target in VS Code
+	// Resource URLs: allows to drop multiple file resources to a target in Voidly
 	const files = fileSystemResources.filter(({ isDirectory }) => !isDirectory);
 	if (files.length) {
 		event.dataTransfer.setData(DataTransfers.RESOURCES, JSON.stringify(files.map(({ resource }) => resource.toString())));
@@ -355,7 +355,7 @@ export function fillEditorsDragData(accessor: ServicesAccessor, resourcesOrEdito
 
 		// Due to https://bugs.chromium.org/p/chromium/issues/detail?id=239745, we can only set
 		// a single uri for the real `text/uri-list` type. Otherwise all uris end up joined together
-		// However we write the full uri-list to an internal type so that other parts of VS Code
+		// However we write the full uri-list to an internal type so that other parts of Voidly
 		// can use the full list.
 		if (!options?.disableStandardTransfer) {
 			event.dataTransfer.setData(Mimes.uriList, UriList.create(uriListEntries.slice(0, 1)));

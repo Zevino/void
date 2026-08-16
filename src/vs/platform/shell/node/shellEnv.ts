@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -208,7 +208,7 @@ async function doResolveUnixShellEnv(logService: ILogService, token: Cancellatio
 
 				delete env['VSCODE_RESOLVING_ENVIRONMENT'];
 
-				// https://github.com/microsoft/vscode/issues/22593#issuecomment-336050758
+				// https://github.com/voidly/voidly/issues/22593#issuecomment-336050758
 				delete env['XDG_RUNTIME_DIR'];
 
 				logService.trace('getUnixShellEnvironment#result', env);

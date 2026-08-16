@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -16,7 +16,7 @@ export function registerContextMenuListener(): void {
 			y: options ? options.y : undefined,
 			positioningItem: options ? options.positioningItem : undefined,
 			callback: () => {
-				// Workaround for https://github.com/microsoft/vscode/issues/72447
+				// Workaround for https://github.com/voidly/voidly/issues/72447
 				// It turns out that the menu gets GC'ed if not referenced anymore
 				// As such we drag it into this scope so that it is not being GC'ed
 				if (menu) {

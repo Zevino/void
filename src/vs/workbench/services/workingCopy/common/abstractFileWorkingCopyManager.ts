@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -117,7 +117,7 @@ export abstract class BaseFileWorkingCopyManager<M extends IFileWorkingCopyModel
 		// known to the manager because this can have unwanted side
 		// effects such as backups getting discarded once the working
 		// copy unregisters. We have an explicit `destroy`
-		// for that purpose (https://github.com/microsoft/vscode/pull/123555)
+		// for that purpose (https://github.com/voidly/voidly/pull/123555)
 		//
 		this.mapResourceToWorkingCopy.clear();
 

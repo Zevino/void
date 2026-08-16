@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -296,7 +296,7 @@ export class NativeEditContext extends AbstractEditContext {
 		this._focusTracker.refreshFocusState();
 	}
 
-	// TODO: added as a workaround fix for https://github.com/microsoft/vscode/issues/229825
+	// TODO: added as a workaround fix for https://github.com/voidly/voidly/issues/229825
 	// When this issue will be fixed the following should be removed.
 	public setEditContextOnDomNode(): void {
 		const targetWindow = getWindow(this.domNode.domNode);
@@ -534,7 +534,7 @@ export class NativeEditContext extends AbstractEditContext {
 	}
 
 	private _setSelectionChangeListener(viewController: ViewController): IDisposable {
-		// See https://github.com/microsoft/vscode/issues/27216 and https://github.com/microsoft/vscode/issues/98256
+		// See https://github.com/voidly/voidly/issues/27216 and https://github.com/voidly/voidly/issues/98256
 		// When using a Braille display or NVDA for example, it is possible for users to reposition the
 		// system caret. This is reflected in Chrome as a `selectionchange` event and needs to be reflected within the editor.
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -503,7 +503,7 @@ export class UserSettings extends Disposable {
 		super();
 		this.parser = new ConfigurationModelParser(this.userSettingsResource.toString(), logService);
 		this._register(this.fileService.watch(extUri.dirname(this.userSettingsResource)));
-		// Also listen to the resource incase the resource is a symlink - https://github.com/microsoft/vscode/issues/118134
+		// Also listen to the resource incase the resource is a symlink - https://github.com/voidly/voidly/issues/118134
 		this._register(this.fileService.watch(this.userSettingsResource));
 		this._register(Event.any(
 			Event.filter(this.fileService.onDidFilesChange, e => e.contains(this.userSettingsResource)),

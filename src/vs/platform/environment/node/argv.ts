@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -192,7 +192,7 @@ export const OPTIONS: OptionDescriptions<Required<NativeParsedArgs>> = {
 	// https://github.com/substack/minimist/blob/aeb3e27dae0412de5c0494e9563a5f10c82cc7a9/index.js#L118-L121
 	// If --no-sandbox is passed via cli wrapper it will be treated as --sandbox which is incorrect, we use
 	// the alias here to make sure --no-sandbox is always respected.
-	// For https://github.com/microsoft/vscode/issues/128279
+	// For https://github.com/voidly/voidly/issues/128279
 	'no-sandbox': { type: 'boolean', alias: 'sandbox' },
 	'proxy-server': { type: 'string' },
 	'proxy-bypass-list': { type: 'string' },
@@ -293,7 +293,7 @@ export function parseArgs<T>(args: string[], options: OptionDescriptions<T>, err
 	const cleanedArgs: any = {};
 	const remainingArgs: any = parsedArgs;
 
-	// https://github.com/microsoft/vscode/issues/58177, https://github.com/microsoft/vscode/issues/106617
+	// https://github.com/voidly/voidly/issues/58177, https://github.com/voidly/voidly/issues/106617
 	cleanedArgs._ = parsedArgs._.map(arg => String(arg)).filter(arg => arg.length > 0);
 
 	delete remainingArgs._;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -491,7 +491,7 @@ export class EditSessionsContribution extends Disposable implements IWorkbenchCo
 		await this.remoteAgentService.getEnvironment();
 
 		// Edit sessions are not currently supported in empty workspaces
-		// https://github.com/microsoft/vscode/issues/159220
+		// https://github.com/voidly/voidly/issues/159220
 		if (this.contextService.getWorkbenchState() === WorkbenchState.EMPTY) {
 			return;
 		}

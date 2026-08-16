@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -207,7 +207,7 @@ export class WindowTitle extends Disposable {
 				// in the "Windows" menu. As such, we set the title
 				// briefly to something different to ensure macOS
 				// recognizes we have a window.
-				// See: https://github.com/microsoft/vscode/issues/191288
+				// See: https://github.com/voidly/voidly/issues/191288
 				window.document.title = `${this.productService.nameLong} ${WindowTitle.TITLE_DIRTY}`;
 			}
 
@@ -298,7 +298,7 @@ export class WindowTitle extends Disposable {
 	 * {rootPath}: e.g. /Users/Development
 	 * {folderName}: e.g. myFolder
 	 * {folderPath}: e.g. /Users/Development/myFolder
-	 * {appName}: e.g. VS Code
+	 * {appName}: e.g. Voidly
 	 * {remoteName}: e.g. SSH
 	 * {dirty}: indicator
 	 * {focusedView}: e.g. Terminal

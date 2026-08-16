@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import { IProductConfiguration } from '../../../../base/common/product.js';
@@ -11,7 +11,7 @@ import { IIssueFormService, IssueReporterData } from '../common/issue.js';
 import { BaseIssueReporterService } from './baseIssueReporterService.js';
 
 // GitHub has let us know that we could up our limit here to 8k. We chose 7500 to play it safe.
-// ref https://github.com/microsoft/vscode/issues/159191
+// ref https://github.com/voidly/voidly/issues/159191
 
 export class IssueWebReporter extends BaseIssueReporterService {
 	constructor(

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -128,7 +128,7 @@ export class LaunchMainService implements ILaunchMainService {
 			 * This is done to ensure that the second window gets treated exactly the same
 			 * as the first window, for example, it gets the same resolved user shell environment.
 			 *
-			 * https://github.com/microsoft/vscode/issues/194736
+			 * https://github.com/voidly/voidly/issues/194736
 			 */
 			userEnv: (args['preserve-env'] || context === OpenContext.CLI) ? userEnv : undefined,
 			waitMarkerFileURI,

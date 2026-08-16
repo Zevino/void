@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -449,7 +449,7 @@ suite('Workbench - TerminalLinkOpeners', () => {
 				});
 			});
 
-			// Test for https://github.com/microsoft/vscode/pull/200919#discussion_r1428124196
+			// Test for https://github.com/voidly/voidly/pull/200919#discussion_r1428124196
 			test('should extract column and/or line numbers from links and remove grepped lines incl singular spaces', async () => {
 				localFileOpener = instantiationService.createInstance(TerminalLocalFileLinkOpener);
 				const localFolderOpener = instantiationService.createInstance(TerminalLocalFolderInWorkspaceLinkOpener);
@@ -807,7 +807,7 @@ suite('Workbench - TerminalLinkOpeners', () => {
 				});
 			});
 
-			// Test for https://github.com/microsoft/vscode/pull/200919#discussion_r1428124196
+			// Test for https://github.com/voidly/voidly/pull/200919#discussion_r1428124196
 			test('should extract column and/or line numbers from links and remove grepped lines incl singular spaces', async () => {
 				localFileOpener = instantiationService.createInstance(TerminalLocalFileLinkOpener);
 				const localFolderOpener = instantiationService.createInstance(TerminalLocalFolderInWorkspaceLinkOpener);

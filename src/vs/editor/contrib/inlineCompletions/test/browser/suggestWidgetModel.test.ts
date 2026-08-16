@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -46,7 +46,7 @@ suite('Suggest Widget Model', () => {
 		});
 	});
 
-	// This test is skipped because the fix for this causes https://github.com/microsoft/vscode/issues/166023
+	// This test is skipped because the fix for this causes https://github.com/voidly/voidly/issues/166023
 	test.skip('Active', async () => {
 		await withAsyncTestCodeEditorAndInlineCompletionsModel('',
 			{ fakeClock: true, provider, },

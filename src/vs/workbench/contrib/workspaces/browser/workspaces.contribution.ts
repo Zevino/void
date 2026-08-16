@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -77,7 +77,7 @@ export class WorkspacesFinderContribution extends Disposable implements IWorkben
 				run: () => this.hostService.openWindow([{ workspaceUri: joinPath(folder, workspaceFile) }])
 			}], {
 				neverShowAgain,
-				priority: !this.storageService.isNew(StorageScope.WORKSPACE) ? NotificationPriority.SILENT : undefined // https://github.com/microsoft/vscode/issues/125315
+				priority: !this.storageService.isNew(StorageScope.WORKSPACE) ? NotificationPriority.SILENT : undefined // https://github.com/voidly/voidly/issues/125315
 			});
 		}
 
@@ -99,7 +99,7 @@ export class WorkspacesFinderContribution extends Disposable implements IWorkben
 				}
 			}], {
 				neverShowAgain,
-				priority: !this.storageService.isNew(StorageScope.WORKSPACE) ? NotificationPriority.SILENT : undefined // https://github.com/microsoft/vscode/issues/125315
+				priority: !this.storageService.isNew(StorageScope.WORKSPACE) ? NotificationPriority.SILENT : undefined // https://github.com/voidly/voidly/issues/125315
 			});
 		}
 	}

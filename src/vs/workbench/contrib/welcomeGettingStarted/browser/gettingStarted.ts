@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -430,7 +430,7 @@ export class GettingStartedPage extends EditorPane {
 				this.hideCategory(argument);
 				break;
 			}
-			// Use selectTask over selectStep to keep telemetry consistant:https://github.com/microsoft/vscode/issues/122256
+			// Use selectTask over selectStep to keep telemetry consistant:https://github.com/voidly/voidly/issues/122256
 			case 'selectTask': {
 				this.selectStep(argument);
 				break;

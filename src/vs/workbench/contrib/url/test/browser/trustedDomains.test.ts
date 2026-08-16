@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -104,12 +104,12 @@ suite('Link protection domain matching', () => {
 	});
 
 	test('case normalization', () => {
-		// https://github.com/microsoft/vscode/issues/99294
-		linkAllowedByRules('https://github.com/microsoft/vscode/issues/new', ['https://github.com/microsoft']);
-		linkAllowedByRules('https://github.com/microsoft/vscode/issues/new', ['https://github.com/microsoft']);
+		// https://github.com/voidly/voidly/issues/99294
+		linkAllowedByRules('https://github.com/voidly/voidly/issues/new', ['https://github.com/microsoft']);
+		linkAllowedByRules('https://github.com/voidly/voidly/issues/new', ['https://github.com/microsoft']);
 	});
 
-	test('ignore query & fragment - https://github.com/microsoft/vscode/issues/156839', () => {
+	test('ignore query & fragment - https://github.com/voidly/voidly/issues/156839', () => {
 		linkAllowedByRules('https://github.com/login/oauth/authorize?foo=4', ['https://github.com/login/oauth/authorize']);
 		linkAllowedByRules('https://github.com/login/oauth/authorize#foo', ['https://github.com/login/oauth/authorize']);
 	});

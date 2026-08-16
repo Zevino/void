@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -125,8 +125,8 @@ class ExtensionStatusBarItemService implements IExtensionStatusBarItemService {
 				// We cannot enforce unique priorities across all extensions, so we
 				// use the extension identifier as a secondary sort key to reduce
 				// the likelyhood of collisions.
-				// See https://github.com/microsoft/vscode/issues/177835
-				// See https://github.com/microsoft/vscode/issues/123827
+				// See https://github.com/voidly/voidly/issues/177835
+				// See https://github.com/voidly/voidly/issues/123827
 				entryPriority = { primary: priority, secondary: hash(extensionId) };
 			} else {
 				entryPriority = priority;

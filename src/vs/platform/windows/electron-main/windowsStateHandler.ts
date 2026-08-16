@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -79,7 +79,7 @@ export class WindowsStateHandler extends Disposable {
 
 		// When a window looses focus, save all windows state. This allows to
 		// prevent loss of window-state data when OS is restarted without properly
-		// shutting down the application (https://github.com/microsoft/vscode/issues/87171)
+		// shutting down the application (https://github.com/voidly/voidly/issues/87171)
 		electron.app.on('browser-window-blur', () => {
 			if (!this.shuttingDown) {
 				this.saveWindowsState();
@@ -389,7 +389,7 @@ export class WindowsStateHandler extends Disposable {
 			} else if ((windowConfig.newWindowDimensions === 'inherit' || windowConfig.newWindowDimensions === 'offset') && lastActive) {
 				const lastActiveState = lastActive.serializeWindowState();
 				if (lastActiveState.mode === WindowMode.Fullscreen) {
-					state.mode = WindowMode.Fullscreen; // only take mode (fixes https://github.com/microsoft/vscode/issues/19331)
+					state.mode = WindowMode.Fullscreen; // only take mode (fixes https://github.com/voidly/voidly/issues/19331)
 				} else {
 					state = {
 						...lastActiveState,

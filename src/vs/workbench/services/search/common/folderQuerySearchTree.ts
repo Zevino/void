@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import { URI } from '../../../../base/common/uri.js';
@@ -9,7 +9,7 @@ import { ResourceMap } from '../../../../base/common/map.js';
 
 /**
  * A ternary search tree that supports URI keys and query/fragment-aware substring matching, specifically for file search.
- * This is because the traditional TST does not support query and fragments https://github.com/microsoft/vscode/issues/227836
+ * This is because the traditional TST does not support query and fragments https://github.com/voidly/voidly/issues/227836
  */
 export class FolderQuerySearchTree<FolderQueryInfo extends { folder: URI }> extends TernarySearchTree<URI, Map<string, FolderQueryInfo>> {
 	constructor(folderQueries: IFolderQuery<URI>[],

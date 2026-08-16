@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -708,7 +708,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 
 		const keycode = IMMUTABLE_CODE_TO_KEY_CODE[code];
 		if (keycode !== -1) {
-			// https://github.com/microsoft/vscode/issues/74934
+			// https://github.com/voidly/voidly/issues/74934
 			return false;
 		}
 		// consult the KeyboardMapperFactory to check the given event for
@@ -784,7 +784,7 @@ class UserKeybindings extends Disposable {
 	private watch(): void {
 		this.watchDisposables.clear();
 		this.watchDisposables.add(this.fileService.watch(dirname(this.userDataProfileService.currentProfile.keybindingsResource)));
-		// Also listen to the resource incase the resource is a symlink - https://github.com/microsoft/vscode/issues/118134
+		// Also listen to the resource incase the resource is a symlink - https://github.com/voidly/voidly/issues/118134
 		this.watchDisposables.add(this.fileService.watch(this.userDataProfileService.currentProfile.keybindingsResource));
 	}
 

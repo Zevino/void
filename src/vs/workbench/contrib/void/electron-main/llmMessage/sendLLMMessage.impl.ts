@@ -20,6 +20,7 @@ import { getSendableReasoningInfo, getModelCapabilities, getProviderCapabilities
 import { extractReasoningWrapper, extractXMLToolsWrapper } from './extractGrammar.js';
 import { availableTools, InternalToolInfo } from '../../common/prompt/prompts.js';
 import { generateUuid } from '../../../../../base/common/uuid.js';
+import { aggregateToolCalls, normalizeV1BaseURL, parseHeadersJSON, rawToolCallObjOfParamsStr } from '../../common/sendLLMMessage.openaiCompatible.utils.js';
 
 const getGoogleApiKey = async () => {
 	// module‑level singleton
@@ -60,115 +61,131 @@ const invalidApiKeyMessage = (providerName: ProviderName) => `Invalid ${displayI
 
 
 
-const parseHeadersJSON = (s: string | undefined): Record<string, string | null | undefined> | undefined => {
-	if (!s) return undefined
-	try {
-		return JSON.parse(s)
-	} catch (e) {
-		throw new Error(`Error parsing OpenAI-Compatible headers: ${s} is not a valid JSON.`)
-	}
+// headers to include on every request so the provider recognizes our traffic
+const openRouterHeaders = {
+	'HTTP-Referer': 'https://voideditor.com', // Optional, for including your app on openrouter.ai rankings.
+	'X-Title': 'Void', // Optional. Shows in rankings on openrouter.ai.
 }
 
-const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName, includeInPayload }: { settingsOfProvider: SettingsOfProvider, providerName: ProviderName, includeInPayload?: { [s: string]: any } }) => {
+// how long (ms) we wait before aborting a request; and how many times we retry on transient failures
+const OPENAI_TIMEOUT_MS = 60_000
+const OPENAI_MAX_RETRIES = 1
+
+type OpenAICompatibleProviderConfig = {
+	baseURL: (settingsOfProvider: SettingsOfProvider, providerName: ProviderName) => string | Promise<string>;
+	// the setting field that holds the API key; undefined means the provider uses a fallback (e.g. noop / empty)
+	apiKeyField?: keyof SettingsOfProvider[ProviderName];
+	apiKey?: (settingsOfProvider: SettingsOfProvider) => string | undefined;
+	defaultHeaders?: Record<string, string>;
+	// pull custom headers from the provider's headersJSON setting (only openAICompatible)
+	defaultHeadersFromSettings?: boolean;
+	// use AzureOpenAI instead of OpenAI
+	isAzure?: boolean;
+	azureConfig?: (settingsOfProvider: SettingsOfProvider) => { endpoint: string; apiKey: string; apiVersion: string };
+}
+// Config table that maps each OpenAI-compatible provider to how it constructs an SDK.
+// Adding a new provider is now a one-line addition here instead of a new if/else branch.
+const openAICompatibleProviderConfigs: Record<Exclude<ProviderName, 'anthropic' | 'gemini'>, OpenAICompatibleProviderConfig> = {
+	openAI: {
+		apiKeyField: 'apiKey',
+		baseURL: () => 'https://api.openai.com/v1',
+	},
+	ollama: {
+		baseURL: ({ ollama }) => normalizeV1BaseURL(ollama.endpoint),
+		// local providers don't need a real key
+		apiKey: () => '',
+	},
+	vLLM: {
+		baseURL: ({ vLLM }) => normalizeV1BaseURL(vLLM.endpoint),
+		apiKey: () => '',
+	},
+	liteLLM: {
+		baseURL: ({ liteLLM }) => normalizeV1BaseURL(liteLLM.endpoint),
+		apiKey: () => '',
+	},
+	lmStudio: {
+		baseURL: ({ lmStudio }) => normalizeV1BaseURL(lmStudio.endpoint),
+		apiKey: () => '',
+	},
+	openRouter: {
+		apiKeyField: 'apiKey',
+		baseURL: () => 'https://openrouter.ai/api/v1',
+		defaultHeaders: openRouterHeaders,
+	},
+	googleVertex: {
+		baseURL: async ({ googleVertex }) => `https://${googleVertex.region}-aiplatform.googleapis.com/v1/projects/${googleVertex.project}/locations/${googleVertex.region}/endpoints/${'openapi'}`,
+		// https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/call-vertex-using-openai-library
+		apiKey: async () => getGoogleApiKey(),
+	},
+	microsoftAzure: {
+		isAzure: true,
+		azureConfig: ({ microsoftAzure }) => {
+			const endpoint = `https://${microsoftAzure.project}.openai.azure.com/`;
+			const apiVersion = microsoftAzure.azureApiVersion ?? '2024-04-01-preview';
+			return { endpoint, apiKey: microsoftAzure.apiKey, apiVersion };
+		},
+		baseURL: () => '',
+	},
+	awsBedrock: {
+		apiKeyField: 'apiKey',
+		// We treat Bedrock as *OpenAI-compatible only through a proxy*:
+		//   • LiteLLM default → http://localhost:4000/v1
+		//   • Bedrock-Access-Gateway → https://<api-id>.execute-api.<region>.amazonaws.com/openai/
+		// The native Bedrock runtime endpoint is **NOT** OpenAI-compatible, so we don't fall back to it.
+		baseURL: ({ awsBedrock }) => normalizeV1BaseURL(awsBedrock.endpoint || 'http://localhost:4000/v1'),
+	},
+	deepseek: {
+		apiKeyField: 'apiKey',
+		baseURL: () => 'https://api.deepseek.com/v1',
+	},
+	openAICompatible: {
+		apiKeyField: 'apiKey',
+		baseURL: ({ openAICompatible }) => normalizeV1BaseURL(openAICompatible.endpoint),
+		defaultHeadersFromSettings: true,
+	},
+	groq: {
+		apiKeyField: 'apiKey',
+		baseURL: () => 'https://api.groq.com/openai/v1',
+	},
+	xAI: {
+		apiKeyField: 'apiKey',
+		baseURL: () => 'https://api.x.ai/v1',
+	},
+	mistral: {
+		apiKeyField: 'apiKey',
+		baseURL: () => 'https://api.mistral.ai/v1',
+	},
+}
+
+const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { settingsOfProvider: SettingsOfProvider, providerName: ProviderName }) => {
 	const commonPayloadOpts: ClientOptions = {
 		dangerouslyAllowBrowser: true,
-		...includeInPayload,
-	}
-	if (providerName === 'openAI') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ apiKey: thisConfig.apiKey, ...commonPayloadOpts })
-	}
-	else if (providerName === 'ollama') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ baseURL: `${thisConfig.endpoint}/v1`, apiKey: 'noop', ...commonPayloadOpts })
-	}
-	else if (providerName === 'vLLM') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ baseURL: `${thisConfig.endpoint}/v1`, apiKey: 'noop', ...commonPayloadOpts })
-	}
-	else if (providerName === 'liteLLM') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ baseURL: `${thisConfig.endpoint}/v1`, apiKey: 'noop', ...commonPayloadOpts })
-	}
-	else if (providerName === 'lmStudio') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ baseURL: `${thisConfig.endpoint}/v1`, apiKey: 'noop', ...commonPayloadOpts })
-	}
-	else if (providerName === 'openRouter') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({
-			baseURL: 'https://openrouter.ai/api/v1',
-			apiKey: thisConfig.apiKey,
-			defaultHeaders: {
-				'HTTP-Referer': 'https://voideditor.com', // Optional, for including your app on openrouter.ai rankings.
-				'X-Title': 'Void', // Optional. Shows in rankings on openrouter.ai.
-			},
-			...commonPayloadOpts,
-		})
-	}
-	else if (providerName === 'googleVertex') {
-		// https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/call-vertex-using-openai-library
-		const thisConfig = settingsOfProvider[providerName]
-		const baseURL = `https://${thisConfig.region}-aiplatform.googleapis.com/v1/projects/${thisConfig.project}/locations/${thisConfig.region}/endpoints/${'openapi'}`
-		const apiKey = await getGoogleApiKey()
-		return new OpenAI({ baseURL: baseURL, apiKey: apiKey, ...commonPayloadOpts })
-	}
-	else if (providerName === 'microsoftAzure') {
-		// https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2024-05-01-preview&tabs=HTTP
-		//  https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
-		const thisConfig = settingsOfProvider[providerName]
-		const endpoint = `https://${thisConfig.project}.openai.azure.com/`;
-		const apiVersion = thisConfig.azureApiVersion ?? '2024-04-01-preview';
-		const options = { endpoint, apiKey: thisConfig.apiKey, apiVersion };
-		return new AzureOpenAI({ ...options, ...commonPayloadOpts });
-	}
-	else if (providerName === 'awsBedrock') {
-		/**
-		  * We treat Bedrock as *OpenAI-compatible only through a proxy*:
-		  *   • LiteLLM default → http://localhost:4000/v1
-		  *   • Bedrock-Access-Gateway → https://<api-id>.execute-api.<region>.amazonaws.com/openai/
-		  *
-		  * The native Bedrock runtime endpoint
-		  *   https://bedrock-runtime.<region>.amazonaws.com
-		  * is **NOT** OpenAI-compatible, so we do *not* fall back to it here.
-		  */
-		const { endpoint, apiKey } = settingsOfProvider.awsBedrock
-
-		// ① use the user-supplied proxy if present
-		// ② otherwise default to local LiteLLM
-		let baseURL = endpoint || 'http://localhost:4000/v1'
-
-		// Normalize: make sure we end with “/v1”
-		if (!baseURL.endsWith('/v1'))
-			baseURL = baseURL.replace(/\/+$/, '') + '/v1'
-
-		return new OpenAI({ baseURL, apiKey, ...commonPayloadOpts })
+		// fail fast + retry a little on transient network errors
+		timeout: OPENAI_TIMEOUT_MS,
+		maxRetries: OPENAI_MAX_RETRIES,
 	}
 
+	const config = openAICompatibleProviderConfigs[providerName]
+	if (!config) throw new Error(`Void providerName was invalid: ${providerName}.`)
 
-	else if (providerName === 'deepseek') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: thisConfig.apiKey, ...commonPayloadOpts })
-	}
-	else if (providerName === 'openAICompatible') {
-		const thisConfig = settingsOfProvider[providerName]
-		const headers = parseHeadersJSON(thisConfig.headersJSON)
-		return new OpenAI({ baseURL: thisConfig.endpoint, apiKey: thisConfig.apiKey, defaultHeaders: headers, ...commonPayloadOpts })
-	}
-	else if (providerName === 'groq') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ baseURL: 'https://api.groq.com/openai/v1', apiKey: thisConfig.apiKey, ...commonPayloadOpts })
-	}
-	else if (providerName === 'xAI') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ baseURL: 'https://api.x.ai/v1', apiKey: thisConfig.apiKey, ...commonPayloadOpts })
-	}
-	else if (providerName === 'mistral') {
-		const thisConfig = settingsOfProvider[providerName]
-		return new OpenAI({ baseURL: 'https://api.mistral.ai/v1', apiKey: thisConfig.apiKey, ...commonPayloadOpts })
+	// microsoftAzure uses a different SDK/client
+	if (config.isAzure) {
+		const { endpoint, apiKey, apiVersion } = config.azureConfig!(settingsOfProvider)
+		return new AzureOpenAI({ endpoint, apiKey, apiVersion, ...commonPayloadOpts })
 	}
 
-	else throw new Error(`Void providerName was invalid: ${providerName}.`)
+	const baseURL = await config.baseURL(settingsOfProvider, providerName)
+	const apiKey = config.apiKeyField
+		? settingsOfProvider[providerName][config.apiKeyField]
+		: config.apiKey?.(settingsOfProvider)
+
+	// custom headers (only the OpenAI-Compatible aggregator lets users provide their own)
+	const defaultHeaders = {
+		...config.defaultHeaders,
+		...(config.defaultHeadersFromSettings ? parseHeadersJSON(settingsOfProvider.openAICompatible.headersJSON) : {}),
+	}
+
+	return new OpenAI({ baseURL, apiKey, defaultHeaders, ...commonPayloadOpts })
 }
 
 
@@ -188,7 +205,7 @@ const _sendOpenAICompatibleFIM = async ({ messages: { prefix, suffix, stopTokens
 		return
 	}
 
-	const openai = await newOpenAICompatibleSDK({ providerName, settingsOfProvider, includeInPayload: additionalOpenAIPayload })
+	const openai = await newOpenAICompatibleSDK({ providerName, settingsOfProvider })
 	openai.completions
 		.create({
 			model: modelName,
@@ -196,6 +213,7 @@ const _sendOpenAICompatibleFIM = async ({ messages: { prefix, suffix, stopTokens
 			suffix: suffix,
 			stop: stopTokens,
 			max_tokens: 300,
+			...additionalOpenAIPayload,
 		})
 		.then(async response => {
 			const fullText = response.choices[0]?.text
@@ -242,20 +260,6 @@ const openAITools = (chatMode: ChatMode | null, mcpTools: InternalToolInfo[] | u
 }
 
 
-// convert LLM tool call to our tool format
-const rawToolCallObjOfParamsStr = (name: string, toolParamsStr: string, id: string): RawToolCallObj | null => {
-	let input: unknown
-	try { input = JSON.parse(toolParamsStr) }
-	catch (e) { return null }
-
-	if (input === null) return null
-	if (typeof input !== 'object') return null
-
-	const rawParams: RawToolParamsObj = input
-	return { id, name, rawParams, doneParams: Object.keys(rawParams), isDone: true }
-}
-
-
 const rawToolCallObjOfAnthropicParams = (toolBlock: Anthropic.Messages.ToolUseBlock): RawToolCallObj | null => {
 	const { id, name, input } = toolBlock
 
@@ -284,10 +288,20 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	const { canIOReasoning, openSourceThinkTags } = reasoningCapabilities || {}
 	const reasoningInfo = getSendableReasoningInfo('Chat', providerName, modelName_, modelSelectionOptions, overridesOfModel) // user's modelName_ here
 
+	// payload sent in the request body (single source of truth — merged in once, below)
 	const includeInPayload = {
 		...providerReasoningIOSettings?.input?.includeInPayload?.(reasoningInfo),
 		...additionalOpenAIPayload
 	}
+
+	// how much output token space the model reserves. o1/o3-style reasoning models
+	// ignore `max_tokens` and require `max_completion_tokens`, so choose the field accordingly.
+	const maxTokens = getReservedOutputTokenSpace(providerName, modelName_, {
+		isReasoningEnabled: !!reasoningInfo?.isReasoningEnabled,
+		overridesOfModel,
+	})
+	const isReasoningModel = !!reasoningCapabilities
+	const outputTokenField: 'max_tokens' | 'max_completion_tokens' = isReasoningModel ? 'max_completion_tokens' : 'max_tokens'
 
 	// tools
 	const potentialTools = openAITools(chatMode, mcpTools)
@@ -296,7 +310,7 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 		: {}
 
 	// instance
-	const openai: OpenAI = await newOpenAICompatibleSDK({ providerName, settingsOfProvider, includeInPayload })
+	const openai: OpenAI = await newOpenAICompatibleSDK({ providerName, settingsOfProvider })
 	if (providerName === 'microsoftAzure') {
 		// Required to select the model
 		(openai as AzureOpenAI).deploymentName = modelName;
@@ -306,12 +320,17 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 		messages: messages as any,
 		stream: true,
 		...nativeToolsObj,
-		...additionalOpenAIPayload
-		// max_completion_tokens: maxTokens,
+		...includeInPayload,
+		// only send the token field if we actually know a space to reserve
+		...(maxTokens != null ? { [outputTokenField]: maxTokens } : {}),
 	}
 
 	// open source models - manually parse think tokens
 	const { needsManualParse: needsManualReasoningParse, nameOfFieldInDelta: nameOfReasoningFieldInDelta } = providerReasoningIOSettings?.output ?? {}
+	// the generic OpenAI-Compatible provider can't assume every backend uses `reasoning_content`.
+	// let the user point us at the right field (e.g. `reasoning` for QwQ/Groq/OpenRouter), or empty to disable.
+	const configuredReasoningField = providerName === 'openAICompatible' ? settingsOfProvider.openAICompatible.reasoningField : ''
+	const effectiveReasoningField = configuredReasoningField !== '' ? configuredReasoningField : nameOfReasoningFieldInDelta
 	const manuallyParseReasoning = needsManualReasoningParse && canIOReasoning && openSourceThinkTags
 	if (manuallyParseReasoning) {
 		const { newOnText, newOnFinalMessage } = extractReasoningWrapper(onText, onFinalMessage, openSourceThinkTags)
@@ -329,9 +348,15 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	let fullReasoningSoFar = ''
 	let fullTextSoFar = ''
 
-	let toolName = ''
-	let toolId = ''
-	let toolParamsStr = ''
+	// OpenAI streams parallel tool calls with different `index` values, interleaved across chunks.
+	// We must aggregate each index separately — concatenating all indexes into one string would
+	// corrupt the arguments of every tool call. Since the rest of the pipeline consumes a single
+	// tool call at a time, we emit the first (lowest-index) completed tool call.
+	//
+	// index -> accumulated tool call
+	const toolCallsByIndex = new Map<number, { name: string; id: string; arguments: string }>()
+	// the lowest index we've seen so far (the "active" tool call to surface during streaming)
+	let activeToolIndex: number | null = null
 
 	openai.chat.completions
 		.create(options)
@@ -343,39 +368,38 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 				const newText = chunk.choices[0]?.delta?.content ?? ''
 				fullTextSoFar += newText
 
-				// tool call
-				for (const tool of chunk.choices[0]?.delta?.tool_calls ?? []) {
-					const index = tool.index
-					if (index !== 0) continue
-
-					toolName += tool.function?.name ?? ''
-					toolParamsStr += tool.function?.arguments ?? '';
-					toolId += tool.id ?? ''
-				}
+				// tool call (aggregate each parallel index separately — see `aggregateToolCalls`)
+				({ toolCallsByIndex, activeToolIndex } = aggregateToolCalls(toolCallsByIndex, chunk.choices[0]?.delta?.tool_calls ?? [], activeToolIndex))
 
 
 				// reasoning
 				let newReasoning = ''
-				if (nameOfReasoningFieldInDelta) {
+				if (effectiveReasoningField) {
 					// @ts-ignore
-					newReasoning = (chunk.choices[0]?.delta?.[nameOfReasoningFieldInDelta] || '') + ''
+					newReasoning = (chunk.choices[0]?.delta?.[effectiveReasoningField] || '') + ''
 					fullReasoningSoFar += newReasoning
 				}
 
 				// call onText
+				const activeTool = activeToolIndex !== null ? toolCallsByIndex.get(activeToolIndex) : undefined
 				onText({
 					fullText: fullTextSoFar,
 					fullReasoning: fullReasoningSoFar,
-					toolCall: !toolName ? undefined : { name: toolName, rawParams: {}, isDone: false, doneParams: [], id: toolId },
+					toolCall: !activeTool || !activeTool.name ? undefined : { name: activeTool.name, rawParams: {}, isDone: false, doneParams: [], id: activeTool.id },
 				})
 
 			}
 			// on final
-			if (!fullTextSoFar && !fullReasoningSoFar && !toolName) {
+			// the first completed tool call (lowest index) is the one we surface
+			const completedTool = activeToolIndex !== null ? toolCallsByIndex.get(activeToolIndex) : undefined
+			const hasToolCall = !!completedTool?.name
+			if (!fullTextSoFar && !fullReasoningSoFar && !hasToolCall) {
 				onError({ message: 'Void: Response from model was empty.', fullError: null })
 			}
 			else {
-				const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId)
+				const toolCall = hasToolCall
+					? rawToolCallObjOfParamsStr(completedTool!.name, completedTool!.arguments, completedTool!.id)
+					: null
 				const toolCallObj = toolCall ? { toolCall } : {}
 				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, ...toolCallObj });
 			}
@@ -854,90 +878,61 @@ type CallFnOfProvider = {
 	}
 }
 
+// ---- which FIM / list implementation each provider uses (chat is shared) ----
+type OAICompatImplementationConfig = {
+	sendFIM: 'openai-compatible' | 'ollama' | 'mistral' | null;
+	list: 'openai-compatible' | 'ollama' | null;
+}
+// providers that use the shared OpenAI-compatible chat path.
+// adding a provider here (plus a row in `openAICompatibleProviderConfigs`) is all that's needed.
+const openAICompatibleImplementationConfigs: Record<Exclude<ProviderName, 'anthropic' | 'gemini'>, OAICompatImplementationConfig> = {
+	openAI: { sendFIM: null, list: null },
+	xAI: { sendFIM: null, list: null },
+	mistral: { sendFIM: 'mistral', list: null },
+	ollama: { sendFIM: 'ollama', list: 'ollama' },
+	openAICompatible: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
+	openRouter: { sendFIM: 'openai-compatible', list: null },
+	vLLM: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
+	deepseek: { sendFIM: null, list: null },
+	groq: { sendFIM: null, list: null },
+	lmStudio: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
+	liteLLM: { sendFIM: 'openai-compatible', list: null },
+	googleVertex: { sendFIM: null, list: null },
+	microsoftAzure: { sendFIM: null, list: null },
+	awsBedrock: { sendFIM: null, list: null },
+}
+
+const openAICompatibleProviderImplementation = (providerName: Exclude<ProviderName, 'anthropic' | 'gemini'>) => {
+	const { sendFIM, list } = openAICompatibleImplementationConfigs[providerName]
+	return {
+		sendChat: (params: SendChatParams_Internal) => _sendOpenAICompatibleChat(params),
+		sendFIM:
+			sendFIM === 'ollama' ? sendOllamaFIM
+				: sendFIM === 'mistral' ? sendMistralFIM
+					: sendFIM === 'openai-compatible' ? (params: SendFIMParams_Internal) => _sendOpenAICompatibleFIM(params)
+						: null,
+		list:
+			list === 'ollama' ? ollamaList
+				: list === 'openai-compatible' ? (params: ListParams_Internal<any>) => _openaiCompatibleList(params)
+					: null,
+	}
+}
+
+// pick out just the openai-compatible providers (everything except anthropic and gemini)
+const openAICompatibleProviderNames = Object.keys(openAICompatibleProviderConfigs) as Exclude<ProviderName, 'anthropic' | 'gemini'>[]
+
 export const sendLLMMessageToProviderImplementation = {
 	anthropic: {
 		sendChat: sendAnthropicChat,
 		sendFIM: null,
 		list: null,
 	},
-	openAI: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: null,
-		list: null,
-	},
-	xAI: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: null,
-		list: null,
-	},
 	gemini: {
-		sendChat: (params) => sendGeminiChat(params),
+		sendChat: sendGeminiChat,
 		sendFIM: null,
 		list: null,
 	},
-	mistral: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: (params) => sendMistralFIM(params),
-		list: null,
-	},
-	ollama: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: sendOllamaFIM,
-		list: ollamaList,
-	},
-	openAICompatible: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params), // using openai's SDK is not ideal (your implementation might not do tools, reasoning, FIM etc correctly), talk to us for a custom integration
-		sendFIM: (params) => _sendOpenAICompatibleFIM(params),
-		list: null,
-	},
-	openRouter: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: (params) => _sendOpenAICompatibleFIM(params),
-		list: null,
-	},
-	vLLM: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: (params) => _sendOpenAICompatibleFIM(params),
-		list: (params) => _openaiCompatibleList(params),
-	},
-	deepseek: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: null,
-		list: null,
-	},
-	groq: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: null,
-		list: null,
-	},
-
-	lmStudio: {
-		// lmStudio has no suffix parameter in /completions, so sendFIM might not work
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: (params) => _sendOpenAICompatibleFIM(params),
-		list: (params) => _openaiCompatibleList(params),
-	},
-	liteLLM: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: (params) => _sendOpenAICompatibleFIM(params),
-		list: null,
-	},
-	googleVertex: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: null,
-		list: null,
-	},
-	microsoftAzure: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: null,
-		list: null,
-	},
-	awsBedrock: {
-		sendChat: (params) => _sendOpenAICompatibleChat(params),
-		sendFIM: null,
-		list: null,
-	},
-
+	...Object.fromEntries(openAICompatibleProviderNames.map(providerName => [providerName, openAICompatibleProviderImplementation(providerName)])),
 } satisfies CallFnOfProvider
 
 

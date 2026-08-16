@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -93,8 +93,8 @@ interface IUnknownLayout {
 }
 
 const DEFAULT_CONTENT: string = [
-	`// ${nls.localize('displayLanguage', 'Defines the keyboard layout used in VS Code in the browser environment.')}`,
-	`// ${nls.localize('doc', 'Open VS Code and run "Developer: Inspect Key Mappings (JSON)" from Command Palette.')}`,
+	`// ${nls.localize('displayLanguage', 'Defines the keyboard layout used in Voidly in the browser environment.')}`,
+	`// ${nls.localize('doc', 'Open Voidly and run "Developer: Inspect Key Mappings (JSON)" from Command Palette.')}`,
 	``,
 	`// Once you have the keyboard layout info, please paste it below.`,
 	'\n'

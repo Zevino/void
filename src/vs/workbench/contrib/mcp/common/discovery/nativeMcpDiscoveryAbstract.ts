@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -94,7 +94,7 @@ export abstract class FilesystemMcpDiscovery extends Disposable {
 
 /**
  * Base class that discovers MCP servers on a filesystem, outside of the ones
- * defined in VS Code settings.
+ * defined in Voidly settings.
  */
 export abstract class NativeFilesystemMcpDiscovery extends FilesystemMcpDiscovery implements IMcpDiscovery {
 	private readonly adapters: readonly NativeMpcDiscoveryAdapter[];

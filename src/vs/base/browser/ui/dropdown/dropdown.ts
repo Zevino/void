@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -62,8 +62,8 @@ class BaseDropdown extends ActionRunner {
 		for (const event of [EventType.MOUSE_DOWN, GestureEventType.Tap]) {
 			this._register(addDisposableListener(this._label, event, e => {
 				if (isMouseEvent(e) && (e.detail > 1 || e.button !== 0)) {
-					// prevent right click trigger to allow separate context menu (https://github.com/microsoft/vscode/issues/151064)
-					// prevent multiple clicks to open multiple context menus (https://github.com/microsoft/vscode/issues/41363)
+					// prevent right click trigger to allow separate context menu (https://github.com/voidly/voidly/issues/151064)
+					// prevent multiple clicks to open multiple context menus (https://github.com/voidly/voidly/issues/41363)
 					return;
 				}
 
@@ -78,7 +78,7 @@ class BaseDropdown extends ActionRunner {
 		this._register(addDisposableListener(this._label, EventType.KEY_DOWN, e => {
 			const event = new StandardKeyboardEvent(e);
 			if (event.equals(KeyCode.Enter) || event.equals(KeyCode.Space)) {
-				EventHelper.stop(e, true); // https://github.com/microsoft/vscode/issues/57997
+				EventHelper.stop(e, true); // https://github.com/voidly/voidly/issues/57997
 
 				if (this.visible) {
 					this.hide();

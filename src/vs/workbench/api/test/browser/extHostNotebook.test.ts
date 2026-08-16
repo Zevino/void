@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -362,7 +362,7 @@ suite('NotebookCell#Document', function () {
 	});
 
 
-	test('Opening a notebook results in VS Code firing the event onDidChangeActiveNotebookEditor twice #118470', function () {
+	test('Opening a notebook results in Voidly firing the event onDidChangeActiveNotebookEditor twice #118470', function () {
 		let count = 0;
 		disposables.add(extHostNotebooks.onDidChangeActiveNotebookEditor(() => count += 1));
 

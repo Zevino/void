@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -342,7 +342,7 @@ async function guessEncodingByBuffer(buffer: VSBuffer, candidateGuessEncodings?:
 	try {
 		guessed = jschardet.detect(binaryString, candidateGuessEncodings ? { detectEncodings: candidateGuessEncodings } : undefined);
 	} catch (error) {
-		return null; // jschardet throws for unknown encodings (https://github.com/microsoft/vscode/issues/239928)
+		return null; // jschardet throws for unknown encodings (https://github.com/voidly/voidly/issues/239928)
 	}
 
 	if (!guessed || !guessed.encoding) {

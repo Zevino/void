@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -416,7 +416,7 @@ interface IChatSessionIndexData {
 }
 
 // TODO if we update the index version:
-// Don't throw away index when moving backwards in VS Code version. Try to recover it. But this scenario is hard.
+// Don't throw away index when moving backwards in Voidly version. Try to recover it. But this scenario is hard.
 function isChatSessionIndex(data: unknown): data is IChatSessionIndexData {
 	if (typeof data !== 'object' || data === null) {
 		return false;

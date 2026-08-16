@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1520,7 +1520,7 @@ suite('Async', () => {
 			assert.strictEqual(worked, false);
 		});
 
-		//  https://github.com/microsoft/vscode/issues/230366
+		//  https://github.com/voidly/voidly/issues/230366
 		// 	test('waitThrottleDelayBetweenWorkUnits option', async () => {
 		// 		const handled: number[] = [];
 		// 		let handledCallback: Function;

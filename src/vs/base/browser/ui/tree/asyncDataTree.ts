@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1602,7 +1602,7 @@ export class CompressibleAsyncDataTree<TInput, T, TFilterData = void> extends As
 					const id = getId(compressedNode.elements[i].element as T);
 					const element = compressedNode.elements[compressedNode.elements.length - 1].element as T;
 
-					// github.com/microsoft/vscode/issues/85938
+					// github.com/voidly/voidly/issues/85938
 					if (oldSelection.has(id) && selection.indexOf(element) === -1) {
 						selection.push(element);
 						didChangeSelection = true;

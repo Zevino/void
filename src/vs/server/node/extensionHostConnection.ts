@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -261,7 +261,7 @@ export class ExtensionHostConnection extends Disposable {
 				silent: true
 			};
 
-			// Refs https://github.com/microsoft/vscode/issues/189805
+			// Refs https://github.com/voidly/voidly/issues/189805
 			opts.execArgv.unshift('--dns-result-order=ipv4first');
 
 			// Run Extension Host as fork of current process

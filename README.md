@@ -26,7 +26,7 @@ Voidly is an independently developed distribution. It is based on the open-sourc
 
 ## Reference
 
-Voidly is a fork of the [vscode](https://github.com/microsoft/vscode) repository (via [Void](https://github.com/voideditor/void)). For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/Zevino/void/blob/main/VOID_CODEBASE_GUIDE.md).
+Voidly is a fork of the [vscode](https://github.com/voidly/voidly) repository (via [Void](https://github.com/voideditor/void)). For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/Zevino/void/blob/main/VOID_CODEBASE_GUIDE.md).
 
 For a guide on how to develop your own version, see [HOW_TO_CONTRIBUTE](https://github.com/Zevino/void/blob/main/HOW_TO_CONTRIBUTE.md).
 

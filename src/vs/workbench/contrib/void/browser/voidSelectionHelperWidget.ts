@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -243,7 +243,7 @@ export class SelectionHelperContribution extends Disposable implements IEditorCo
 
 		// rerender
 		const enabled = this._voidSettingsService.state.globalSettings.showInlineSuggestions
-			&& this._editor.hasTextFocus() // needed since VS Code counts unfocused selections as selections, which causes this to rerender when it shouldnt (bad ux)
+			&& this._editor.hasTextFocus() // needed since Voidly counts unfocused selections as selections, which causes this to rerender when it shouldnt (bad ux)
 
 		if (enabled) {
 			this._rerender({ rerenderKey: this._rerenderKey } satisfies VoidSelectionHelperProps)

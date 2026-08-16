@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -146,7 +146,7 @@ class LanguageSurveysContribution implements IWorkbenchContribution {
 
 		// Make sure to wait for installed extensions
 		// being registered to show notifications
-		// properly (https://github.com/microsoft/vscode/issues/121216)
+		// properly (https://github.com/voidly/voidly/issues/121216)
 		await this.extensionService.whenInstalledExtensionsRegistered();
 
 		// Handle surveys

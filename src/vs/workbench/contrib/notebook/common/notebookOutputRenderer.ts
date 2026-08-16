@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -22,7 +22,7 @@ class DependencyList {
 	/** Gets whether any of the 'available' dependencies match the ones in this list */
 	public matches(available: ReadonlyArray<string>) {
 		// For now this is simple, but this may expand to support globs later
-		// @see https://github.com/microsoft/vscode/issues/119899
+		// @see https://github.com/voidly/voidly/issues/119899
 		return available.some(v => this.value.has(v));
 	}
 }

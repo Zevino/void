@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -236,7 +236,7 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 					spawnOptions.cwd = options.cwd;
 				}
 				if (platform.isWindows && (command.endsWith('.bat') || command.endsWith('.cmd'))) {
-					// https://github.com/microsoft/vscode/issues/224184
+					// https://github.com/voidly/voidly/issues/224184
 					spawnOptions.shell = true;
 					spawnCommand = `"${command}"`;
 					spawnArgs = args.map(a => {

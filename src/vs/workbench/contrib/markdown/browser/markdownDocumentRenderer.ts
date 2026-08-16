@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -194,7 +194,7 @@ interface IRenderMarkdownDocumentOptions {
 /**
  * Renders a string of markdown as a document.
  *
- * Uses VS Code's syntax highlighting code blocks.
+ * Uses Voidly's syntax highlighting code blocks.
  */
 export async function renderMarkdownDocument(
 	text: string,

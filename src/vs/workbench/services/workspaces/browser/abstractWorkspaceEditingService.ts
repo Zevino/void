@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -74,7 +74,7 @@ export abstract class AbstractWorkspaceEditingService extends Disposable impleme
 
 		if (!hasWorkspaceFileExtension(workspacePath)) {
 			// Always ensure we have workspace file extension
-			// (see https://github.com/microsoft/vscode/issues/84818)
+			// (see https://github.com/voidly/voidly/issues/84818)
 			workspacePath = workspacePath.with({ path: `${workspacePath.path}.${WORKSPACE_EXTENSION}` });
 		}
 
@@ -173,7 +173,7 @@ export abstract class AbstractWorkspaceEditingService extends Disposable impleme
 		const state = this.contextService.getWorkbenchState();
 		const remoteAuthority = this.environmentService.remoteAuthority;
 		if (remoteAuthority) {
-			// https://github.com/microsoft/vscode/issues/94191
+			// https://github.com/voidly/voidly/issues/94191
 			foldersToAdd = foldersToAdd.filter(folder => folder.uri.scheme !== Schemas.file && (folder.uri.scheme !== Schemas.vscodeRemote || isEqualAuthority(folder.uri.authority, remoteAuthority)));
 		}
 
@@ -243,7 +243,7 @@ export abstract class AbstractWorkspaceEditingService extends Disposable impleme
 			try {
 				await this.saveWorkspaceAs(untitledWorkspace, path);
 			} finally {
-				await this.workspacesService.deleteUntitledWorkspace(untitledWorkspace); // https://github.com/microsoft/vscode/issues/100276
+				await this.workspacesService.deleteUntitledWorkspace(untitledWorkspace); // https://github.com/voidly/voidly/issues/100276
 			}
 		} else {
 			path = untitledWorkspace.configPath;

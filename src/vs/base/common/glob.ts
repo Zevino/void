@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -370,7 +370,7 @@ function wrapRelativePattern(parsedPattern: ParsedStringPattern, arg2: string | 
 		// For that we try to extract the portion of the `path`
 		// that comes after the `base` portion. We have to account
 		// for the fact that `base` might end in a path separator
-		// (https://github.com/microsoft/vscode/issues/162498)
+		// (https://github.com/voidly/voidly/issues/162498)
 
 		return parsedPattern(ltrim(path.substr(arg2.base.length), sep), basename);
 	};

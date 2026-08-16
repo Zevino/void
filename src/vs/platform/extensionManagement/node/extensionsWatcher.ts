@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -66,7 +66,7 @@ export class ExtensionsWatcher extends Disposable {
 				await Promise.all(added.map(profile => {
 					this.extensionsProfileWatchDisposables.set(profile.id, combinedDisposable(
 						this.fileService.watch(this.uriIdentityService.extUri.dirname(profile.extensionsResource)),
-						// Also listen to the resource incase the resource is a symlink - https://github.com/microsoft/vscode/issues/118134
+						// Also listen to the resource incase the resource is a symlink - https://github.com/voidly/voidly/issues/118134
 						this.fileService.watch(profile.extensionsResource)
 					));
 					return this.populateExtensionsFromProfile(profile.extensionsResource);

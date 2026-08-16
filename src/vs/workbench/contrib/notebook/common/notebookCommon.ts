@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -173,7 +173,7 @@ export const enum NotebookRendererMatch {
 
 /**
  * Renderer messaging requirement. While this allows for 'optional' messaging,
- * VS Code effectively treats it the same as true right now. "Partial
+ * Voidly effectively treats it the same as true right now. "Partial
  * activation" of extensions is a very tricky problem, which could allow
  * solving this. But for now, optional is mostly only honored for aznb.
  */

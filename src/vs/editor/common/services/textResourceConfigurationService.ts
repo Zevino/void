@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -110,7 +110,7 @@ export class TextResourceConfigurationService extends Disposable implements ITex
 					return true;
 				}
 				if (overrideIdentifier) {
-					//TODO@bpasero workaround for https://github.com/microsoft/vscode/issues/240410
+					//TODO@bpasero workaround for https://github.com/voidly/voidly/issues/240410
 					return configurationChangeEvent.affectedKeys.has(`[${overrideIdentifier}]`);
 				}
 				return false;

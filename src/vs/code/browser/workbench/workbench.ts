@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -322,8 +322,8 @@ class LocalStorageURLCallbackProvider extends Disposable implements IURLCallback
 		}
 
 		// TODO@joao remove eventually
-		// https://github.com/microsoft/vscode-dev/issues/62
-		// https://github.com/microsoft/vscode/blob/159479eb5ae451a66b5dac3c12d564f32f454796/extensions/github-authentication/src/githubServer.ts#L50-L50
+		// https://github.com/voidly/voidly-dev/issues/62
+		// https://github.com/voidly/voidly/blob/159479eb5ae451a66b5dac3c12d564f32f454796/extensions/github-authentication/src/githubServer.ts#L50-L50
 		if (!(options.authority === 'vscode.github-authentication' && options.path === '/dummy')) {
 			const key = `vscode-web.url-callbacks[${id}]`;
 			localStorage.removeItem(key);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -97,7 +97,7 @@ suite('NotebookKernelService', () => {
 		assert.ok(info.all[1] === k1);
 	});
 
-	test('new kernel with higher affinity wins, https://github.com/microsoft/vscode/issues/122028', function () {
+	test('new kernel with higher affinity wins, https://github.com/voidly/voidly/issues/122028', function () {
 		const notebook = URI.parse('foo:///one');
 
 		const kernel = new TestNotebookKernel();

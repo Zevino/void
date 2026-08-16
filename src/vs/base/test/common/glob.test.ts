@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1129,7 +1129,7 @@ suite('Glob', () => {
 		assertGlobMatch(p, URI.file('super/duper/long/some/file.md').with({ scheme: 'scheme' }).toString());
 	});
 
-	test('expression fails when siblings use promises (https://github.com/microsoft/vscode/issues/146294)', async function () {
+	test('expression fails when siblings use promises (https://github.com/voidly/voidly/issues/146294)', async function () {
 		const siblings = ['test.html', 'test.txt', 'test.ts'];
 		const hasSibling = (name: string) => Promise.resolve(siblings.indexOf(name) !== -1);
 

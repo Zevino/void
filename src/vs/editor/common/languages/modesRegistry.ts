@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -67,7 +67,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration)
 				'editor.unicodeHighlight.ambiguousCharacters': false,
 				'editor.unicodeHighlight.invisibleCharacters': false
 			},
-			// TODO: Below is a workaround for: https://github.com/microsoft/vscode/issues/240567
+			// TODO: Below is a workaround for: https://github.com/voidly/voidly/issues/240567
 			'[go]': {
 				'editor.insertSpaces': false
 			},

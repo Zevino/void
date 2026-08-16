@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -84,7 +84,7 @@ export class TextureAtlasPage extends Disposable implements IReadableTextureAtla
 		// Ensure the glyph was allocated
 		if (glyph === undefined) {
 			// TODO: undefined here can mean the glyph was too large for a slab on the page, this
-			// can lead to big problems if we don't handle it properly https://github.com/microsoft/vscode/issues/232984
+			// can lead to big problems if we don't handle it properly https://github.com/voidly/voidly/issues/232984
 			return undefined;
 		}
 

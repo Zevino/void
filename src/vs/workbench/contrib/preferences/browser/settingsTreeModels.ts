@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -970,7 +970,7 @@ export class SearchResultModel extends SettingsTreeModel {
 		}
 
 		// Sort the settings according to their relevancy.
-		// https://github.com/microsoft/vscode/issues/197773
+		// https://github.com/voidly/voidly/issues/197773
 		filterMatches.sort((a, b) => {
 			if (a.matchType !== b.matchType) {
 				// Sort by match type if the match types are not the same.

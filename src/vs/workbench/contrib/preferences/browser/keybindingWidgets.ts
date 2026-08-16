@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -205,7 +205,7 @@ export class DefineKeybindingWidget extends Widget {
 				dom.clearNode(this._showExistingKeybindingsNode);
 
 				// Input is not getting focus without timeout in safari
-				// https://github.com/microsoft/vscode/issues/108817
+				// https://github.com/voidly/voidly/issues/108817
 				await timeout(0);
 
 				this._keybindingInputWidget.focus();

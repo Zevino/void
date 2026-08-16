@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -175,7 +175,7 @@ export class AdapterManager extends Disposable implements IAdapterManager {
 					},
 					'debugServer': {
 						type: 'number',
-						description: nls.localize('debugServer', "For debug extension development only: if a port is specified VS Code tries to connect to a debug adapter running in server mode"),
+						description: nls.localize('debugServer', "For debug extension development only: if a port is specified Voidly tries to connect to a debug adapter running in server mode"),
 						default: 4711
 					},
 					'preLaunchTask': {

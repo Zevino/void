@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -457,7 +457,7 @@ export class EditorPanes extends Disposable {
 			// Clear the current input before setting new input
 			// This ensures that a slow loading input will not
 			// be visible for the duration of the new input to
-			// load (https://github.com/microsoft/vscode/issues/34697)
+			// load (https://github.com/voidly/voidly/issues/34697)
 			editorPane.clearInput();
 
 			// Set the input to the editor pane and keep track of it

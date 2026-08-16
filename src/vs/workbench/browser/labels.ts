@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -426,7 +426,7 @@ class ResourceLabelWidget extends IconLabel {
 			if (descriptionCandidate && descriptionCandidate !== '.') {
 				// omit description if its not significant: a relative path
 				// of '.' just indicates that there is no parent to the path
-				// https://github.com/microsoft/vscode/issues/208692
+				// https://github.com/voidly/voidly/issues/208692
 				description = descriptionCandidate;
 			}
 		}

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -175,7 +175,7 @@ export class SnapUpdateService extends AbstractUpdateService {
 	protected override doQuitAndInstall(): void {
 		this.logService.trace('update#quitAndInstall(): running raw#quitAndInstall()');
 
-		// Allow 3 seconds for VS Code to close
+		// Allow 3 seconds for Voidly to close
 		spawn('sleep 3 && ' + path.basename(process.argv[0]), {
 			shell: true,
 			detached: true,

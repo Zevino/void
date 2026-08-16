@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -338,7 +338,7 @@ export class ContentHoverWidget extends ResizableContentWidget {
 		const widgetPosition = renderedHover.showAtPosition;
 		this._positionPreference = this._findPositionPreference(widgetHeight, widgetPosition) ?? ContentWidgetPositionPreference.ABOVE;
 
-		// See https://github.com/microsoft/vscode/issues/140339
+		// See https://github.com/voidly/voidly/issues/140339
 		// TODO: Doing a second layout of the hover after force rendering the editor
 		this.onContentsChanged();
 		if (renderedHover.shouldFocus) {

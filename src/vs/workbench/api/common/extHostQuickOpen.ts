@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -514,7 +514,7 @@ export function createExtHostQuickOpen(mainContext: IMainContext, workspace: IEx
 		}
 		const dark = getDarkIconUri(iconPath as URI | { light: URI; dark: URI });
 		const light = getLightIconUri(iconPath as URI | { light: URI; dark: URI });
-		// Tolerate strings: https://github.com/microsoft/vscode/issues/110432#issuecomment-726144556
+		// Tolerate strings: https://github.com/voidly/voidly/issues/110432#issuecomment-726144556
 		return {
 			dark: typeof dark === 'string' ? URI.file(dark) : dark,
 			light: typeof light === 'string' ? URI.file(light) : light

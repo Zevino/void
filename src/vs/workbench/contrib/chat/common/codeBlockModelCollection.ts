@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -135,7 +135,7 @@ export class CodeBlockModelCollection extends Disposable {
 		if (!entry) {
 			return;
 		}
-		// TODO: fill this in once we've implemented https://github.com/microsoft/vscode/issues/232538
+		// TODO: fill this in once we've implemented https://github.com/voidly/voidly/issues/232538
 	}
 
 	async update(sessionId: string, chat: IChatRequestViewModel | IChatResponseViewModel, codeBlockIndex: number, content: CodeBlockContent): Promise<CodeBlockEntry> {

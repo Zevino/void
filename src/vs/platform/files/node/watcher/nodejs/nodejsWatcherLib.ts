@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -37,7 +37,7 @@ export class NodeJSFileWatcherLibrary extends Disposable {
 	// These numbers are a bit more aggressive compared to the
 	// recursive watcher because we can have many individual
 	// node.js watchers per request.
-	// (https://github.com/microsoft/vscode/issues/124723)
+	// (https://github.com/voidly/voidly/issues/124723)
 	private readonly throttledFileChangesEmitter = this._register(new ThrottledWorker<IFileChange>(
 		{
 			maxWorkChunkSize: 100,	// only process up to 100 changes at once before...
@@ -192,7 +192,7 @@ export class NodeJSFileWatcherLibrary extends Disposable {
 
 		// macOS: watching samba shares can crash VSCode so we do
 		// a simple check for the file path pointing to /Volumes
-		// (https://github.com/microsoft/vscode/issues/106879)
+		// (https://github.com/voidly/voidly/issues/106879)
 		// TODO@electron this needs a revisit when the crash is
 		// fixed or mitigated upstream.
 		if (isMacintosh && isEqualOrParent(realPath, '/Volumes/', true)) {
@@ -265,7 +265,7 @@ export class NodeJSFileWatcherLibrary extends Disposable {
 
 				// Normalize file name
 				let changedFileName = '';
-				if (raw) { // https://github.com/microsoft/vscode/issues/38191
+				if (raw) { // https://github.com/voidly/voidly/issues/38191
 					changedFileName = raw.toString();
 					if (isMacintosh) {
 						// Mac: uses NFD unicode form on disk, but we want NFC

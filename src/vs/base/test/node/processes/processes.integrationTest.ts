@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -25,7 +25,7 @@ function fork(id: string): cp.ChildProcess {
 suite('Processes', () => {
 	test('buffered sending - simple data', function (done: () => void) {
 		if (process.env['VSCODE_PID']) {
-			return done(); // this test fails when run from within VS Code
+			return done(); // this test fails when run from within Voidly
 		}
 
 		const child = fork('vs/base/test/node/processes/fixtures/fork');

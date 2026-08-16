@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -101,13 +101,13 @@ class RemoteInvalidWorkspaceDetector extends Disposable implements IWorkbenchCon
 		// validate that the workspace exists before actually opening
 		// it. As such, we need to check on that after startup and guide
 		// the user to a valid workspace.
-		// (see https://github.com/microsoft/vscode/issues/133872)
+		// (see https://github.com/voidly/voidly/issues/133872)
 		if (this.environmentService.remoteAuthority) {
 			remoteAgentService.getEnvironment().then(remoteEnv => {
 				if (remoteEnv) {
 					// we use the presence of `remoteEnv` to figure out
 					// if we got a healthy remote connection
-					// (see https://github.com/microsoft/vscode/issues/135331)
+					// (see https://github.com/voidly/voidly/issues/135331)
 					this.validateRemoteWorkspace();
 				}
 			});

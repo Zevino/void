@@ -32,6 +32,7 @@ export const defaultProviderSettings = {
 		endpoint: '',
 		apiKey: '',
 		headersJSON: '{}', // default to {}
+		reasoningField: 'reasoning_content', // which delta field carries reasoning output; e.g. 'reasoning' for QwQ/Groq/OpenRouter
 	},
 	gemini: {
 		apiKey: '',

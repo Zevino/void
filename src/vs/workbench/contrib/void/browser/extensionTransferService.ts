@@ -185,14 +185,14 @@ registerSingleton(IExtensionTransferService, ExtensionTransferService, Instantia
 
 
 
-const transferTheseFilesOfOS = (os: 'mac' | 'windows' | 'linux' | null, fromEditor: TransferEditorType = 'VS Code'): TransferFilesInfo => {
+const transferTheseFilesOfOS = (os: 'mac' | 'windows' | 'linux' | null, fromEditor: TransferEditorType = 'Voidly'): TransferFilesInfo => {
 	if (os === null)
 		throw new Error(`One-click switch is not possible in this environment.`)
 	if (os === 'mac') {
 		const homeDir = env['HOME']
 		if (!homeDir) throw new Error(`$HOME not found`)
 
-		if (fromEditor === 'VS Code') {
+		if (fromEditor === 'Voidly') {
 			return [{
 				from: URI.joinPath(URI.from({ scheme: 'file' }), homeDir, 'Library', 'Application Support', 'Code', 'User', 'settings.json'),
 				to: URI.joinPath(URI.from({ scheme: 'file' }), homeDir, 'Library', 'Application Support', 'Void', 'User', 'settings.json'),
@@ -235,7 +235,7 @@ const transferTheseFilesOfOS = (os: 'mac' | 'windows' | 'linux' | null, fromEdit
 		const homeDir = env['HOME']
 		if (!homeDir) throw new Error(`variable for $HOME location not found`)
 
-		if (fromEditor === 'VS Code') {
+		if (fromEditor === 'Voidly') {
 			return [{
 				from: URI.joinPath(URI.from({ scheme: 'file' }), homeDir, '.config', 'Code', 'User', 'settings.json'),
 				to: URI.joinPath(URI.from({ scheme: 'file' }), homeDir, '.config', 'Void', 'User', 'settings.json'),
@@ -280,7 +280,7 @@ const transferTheseFilesOfOS = (os: 'mac' | 'windows' | 'linux' | null, fromEdit
 		const userprofile = env['USERPROFILE']
 		if (!userprofile) throw new Error(`variable for %USERPROFILE% location not found`)
 
-		if (fromEditor === 'VS Code') {
+		if (fromEditor === 'Voidly') {
 			return [{
 				from: URI.joinPath(URI.from({ scheme: 'file' }), appdata, 'Code', 'User', 'settings.json'),
 				to: URI.joinPath(URI.from({ scheme: 'file' }), appdata, 'Void', 'User', 'settings.json'),
@@ -324,6 +324,6 @@ const transferTheseFilesOfOS = (os: 'mac' | 'windows' | 'linux' | null, fromEdit
 
 
 const getExtensionsFolder = (os: 'mac' | 'windows' | 'linux' | null) => {
-	const t = transferTheseFilesOfOS(os, 'VS Code') // from editor doesnt matter
+	const t = transferTheseFilesOfOS(os, 'Voidly') // from editor doesnt matter
 	return t.find(f => f.isExtensions)?.to
 }

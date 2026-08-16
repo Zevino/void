@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -21,7 +21,7 @@ if (!process.env['VSCODE_HANDLES_SIGPIPE']) {
 	// (https://github.com/electron/electron/issues/13254)
 	let didLogAboutSIGPIPE = false;
 	process.on('SIGPIPE', () => {
-		// See https://github.com/microsoft/vscode-remote-release/issues/6543
+		// See https://github.com/voidly/voidly-remote-release/issues/6543
 		// In certain situations, the console itself can be in a broken pipe state
 		// so logging SIGPIPE to the console will cause an infinite async loop
 		if (!didLogAboutSIGPIPE) {

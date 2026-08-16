@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -148,7 +148,7 @@ export class CompressedObjectTreeModel<T extends NonNullable<any>, TFilterData e
 		options: IObjectTreeModelSetChildrenOptions<T, TFilterData>,
 	): void {
 		// Diffs must be deep, since the compression can affect nested elements.
-		// @see https://github.com/microsoft/vscode/pull/114237#issuecomment-759425034
+		// @see https://github.com/voidly/voidly/pull/114237#issuecomment-759425034
 
 		const diffIdentityProvider = options.diffIdentityProvider && wrapIdentityProvider(options.diffIdentityProvider);
 		if (element === null) {

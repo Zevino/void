@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -68,7 +68,7 @@ class StackOperation implements IWorkspaceUndoRedoElement {
 	}
 
 	pushEndState(alternativeVersionId: string, selectionState: ISelectionState | undefined) {
-		// https://github.com/microsoft/vscode/issues/207523
+		// https://github.com/voidly/voidly/issues/207523
 		this._resultAlternativeVersionId = alternativeVersionId;
 		this._resultSelectionState = selectionState || this._resultSelectionState;
 	}
@@ -415,7 +415,7 @@ export class NotebookTextModel extends Disposable implements INotebookTextModel 
 	}
 
 	pushStackElement() {
-		// https://github.com/microsoft/vscode/issues/207523
+		// https://github.com/voidly/voidly/issues/207523
 	}
 
 	private _getCellIndexByHandle(handle: number) {

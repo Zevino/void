@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1111,7 +1111,7 @@ export class QuickInputTree extends Disposable {
 		this._setElementsToTree(this._elementTree);
 
 		// Accessibility hack, unfortunately on next tick
-		// https://github.com/microsoft/vscode/issues/211976
+		// https://github.com/voidly/voidly/issues/211976
 		if (this.accessibilityService.isScreenReaderOptimized()) {
 			setTimeout(() => {
 				const focusedElement = this._tree.getHTMLElement().querySelector(`.monaco-list-row.focused`);

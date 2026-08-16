@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -703,7 +703,7 @@ export class WindowsMainService extends Disposable implements IWindowsMainServic
 
 		let windowToUse: ICodeWindow | undefined;
 		if (!forceNewWindow && typeof openConfig.contextWindowId === 'number') {
-			windowToUse = this.getWindowById(openConfig.contextWindowId); // fix for https://github.com/microsoft/vscode/issues/97172
+			windowToUse = this.getWindowById(openConfig.contextWindowId); // fix for https://github.com/voidly/voidly/issues/97172
 		}
 
 		return this.openInBrowserWindow({
@@ -725,7 +725,7 @@ export class WindowsMainService extends Disposable implements IWindowsMainServic
 		this.logService.trace('windowsManager#doOpenFolderOrWorkspace', { folderOrWorkspace, filesToOpen });
 
 		if (!forceNewWindow && !windowToUse && typeof openConfig.contextWindowId === 'number') {
-			windowToUse = this.getWindowById(openConfig.contextWindowId); // fix for https://github.com/microsoft/vscode/issues/49587
+			windowToUse = this.getWindowById(openConfig.contextWindowId); // fix for https://github.com/voidly/voidly/issues/49587
 		}
 
 		return this.openInBrowserWindow({
@@ -860,7 +860,7 @@ export class WindowsMainService extends Disposable implements IWindowsMainServic
 			forceOpenWorkspaceAsFile:
 				// special case diff / merge mode to force open
 				// workspace as file
-				// https://github.com/microsoft/vscode/issues/149731
+				// https://github.com/voidly/voidly/issues/149731
 				cli.diff && cli._.length === 2 ||
 				cli.merge && cli._.length === 4
 		};
@@ -955,7 +955,7 @@ export class WindowsMainService extends Disposable implements IWindowsMainServic
 
 					// Workspaces
 					if (lastSessionWindow.workspace) {
-						const pathToOpen = await this.resolveOpenable({ workspaceUri: lastSessionWindow.workspace.configPath }, { remoteAuthority: lastSessionWindow.remoteAuthority, rejectTransientWorkspaces: true /* https://github.com/microsoft/vscode/issues/119695 */ });
+						const pathToOpen = await this.resolveOpenable({ workspaceUri: lastSessionWindow.workspace.configPath }, { remoteAuthority: lastSessionWindow.remoteAuthority, rejectTransientWorkspaces: true /* https://github.com/voidly/voidly/issues/119695 */ });
 						if (isWorkspacePathToOpen(pathToOpen)) {
 							return pathToOpen;
 						}
@@ -1200,7 +1200,7 @@ export class WindowsMainService extends Disposable implements IWindowsMainServic
 			addUNCHostToAllowlist(uri.authority);
 
 			if (checkboxChecked) {
-				// Due to https://github.com/microsoft/vscode/issues/195436, we can only
+				// Due to https://github.com/voidly/voidly/issues/195436, we can only
 				// update settings from within a window. But we do not know if a window
 				// is about to open or can already handle the request, so we have to send
 				// to any current window and any newly opening window.
@@ -1215,7 +1215,7 @@ export class WindowsMainService extends Disposable implements IWindowsMainServic
 		if (response === 2) {
 			shell.openExternal('https://aka.ms/vscode-windows-unc');
 
-			return this.onUNCHostNotAllowed(path, options); // keep showing the dialog until decision (https://github.com/microsoft/vscode/issues/181956)
+			return this.onUNCHostNotAllowed(path, options); // keep showing the dialog until decision (https://github.com/voidly/voidly/issues/181956)
 		}
 
 		return undefined;

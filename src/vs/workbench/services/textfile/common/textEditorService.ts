@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -253,4 +253,4 @@ export class TextEditorService extends Disposable implements ITextEditorService 
 	}
 }
 
-registerSingleton(ITextEditorService, TextEditorService, InstantiationType.Eager /* do not change: https://github.com/microsoft/vscode/issues/137675 */);
+registerSingleton(ITextEditorService, TextEditorService, InstantiationType.Eager /* do not change: https://github.com/voidly/voidly/issues/137675 */);

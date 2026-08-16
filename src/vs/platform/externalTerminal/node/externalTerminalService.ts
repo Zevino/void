@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -15,7 +15,7 @@ import * as nls from '../../../nls.js';
 import { DEFAULT_TERMINAL_OSX, IExternalTerminalService, IExternalTerminalSettings, ITerminalForPlatform } from '../common/externalTerminal.js';
 import { ITerminalEnvironment } from '../../terminal/common/terminal.js';
 
-const TERMINAL_TITLE = nls.localize('console.title', "VS Code Console");
+const TERMINAL_TITLE = nls.localize('console.title', "Voidly Console");
 
 abstract class ExternalTerminalService {
 	public _serviceBrand: undefined;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -114,7 +114,7 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 				// to normalize this path first before passing it on
 				// because we will compare it against `Uri.fsPath`
 				// which uses platform specific separators.
-				// Refs: https://github.com/microsoft/vscode/issues/99938
+				// Refs: https://github.com/voidly/voidly/issues/99938
 				normalizedPattern = { ...pattern, base: normalize(pattern.base) };
 			}
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -293,7 +293,7 @@ export class WebExtensionsScannerService extends Disposable implements IWebExten
 					continue;
 				}
 			}
-			/* Update preRelease flag in the cache - https://github.com/microsoft/vscode/issues/142831 */
+			/* Update preRelease flag in the cache - https://github.com/voidly/voidly/issues/142831 */
 			if (webExtension.metadata?.isPreReleaseVersion && !webExtension.metadata?.preRelease) {
 				webExtension.metadata.preRelease = true;
 			}

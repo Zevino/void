@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1010,7 +1010,7 @@ class ChatSetupController extends Disposable {
 		if (!options?.setupFromDialog) {
 			await Promise.race([
 				timeout(5000), 												// helps prevent flicker with sign-in welcome view
-				Event.toPromise(this.chatAgentService.onDidChangeAgents)	// https://github.com/microsoft/vscode-copilot/issues/9274
+				Event.toPromise(this.chatAgentService.onDidChangeAgents)	// https://github.com/voidly/voidly-copilot/issues/9274
 			]);
 		}
 

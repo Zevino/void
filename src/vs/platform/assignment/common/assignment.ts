@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -71,7 +71,7 @@ export enum Filters {
 	ExtensionVersion = 'X-VSCode-ExtensionVersion',
 
 	/**
-	 * The language in use by VS Code
+	 * The language in use by Voidly
 	 */
 	Language = 'X-VSCode-Language',
 

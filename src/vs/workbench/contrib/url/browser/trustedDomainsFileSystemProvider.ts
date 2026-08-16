@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -53,12 +53,12 @@ function computeTrustedDomainContent(defaultTrustedDomains: string[], trustedDom
 	let content = CONFIG_HELP_TEXT_PRE;
 
 	if (defaultTrustedDomains.length > 0) {
-		content += `// By default, VS Code trusts "localhost" as well as the following domains:\n`;
+		content += `// By default, Voidly trusts "localhost" as well as the following domains:\n`;
 		defaultTrustedDomains.forEach(d => {
 			content += `// - "${d}"\n`;
 		});
 	} else {
-		content += `// By default, VS Code trusts "localhost".\n`;
+		content += `// By default, Voidly trusts "localhost".\n`;
 	}
 
 	content += CONFIG_HELP_TEXT_AFTER;

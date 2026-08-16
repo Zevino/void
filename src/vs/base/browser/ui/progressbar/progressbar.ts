@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -37,8 +37,8 @@ export class ProgressBar extends Disposable {
 	 * to long-running mode and throttle animations to reduce
 	 * the pressure on the GPU process.
 	 *
-	 * https://github.com/microsoft/vscode/issues/97900
-	 * https://github.com/microsoft/vscode/issues/138396
+	 * https://github.com/voidly/voidly/issues/97900
+	 * https://github.com/voidly/voidly/issues/138396
 	 */
 	private static readonly LONG_RUNNING_INFINITE_THRESHOLD = 10000;
 

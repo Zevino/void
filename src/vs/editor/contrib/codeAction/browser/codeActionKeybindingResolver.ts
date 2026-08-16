@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -36,7 +36,7 @@ export class CodeActionKeybindingResolver {
 			.filter(item => CodeActionKeybindingResolver.codeActionCommands.indexOf(item.command!) >= 0)
 			.filter(item => item.resolvedKeybinding)
 			.map((item): ResolveCodeActionKeybinding => {
-				// Special case these commands since they come built-in with VS Code and don't use 'commandArgs'
+				// Special case these commands since they come built-in with Voidly and don't use 'commandArgs'
 				let commandArgs = item.commandArgs;
 				if (item.command === organizeImportsCommandId) {
 					commandArgs = { kind: CodeActionKind.SourceOrganizeImports.value };

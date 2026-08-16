@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -232,7 +232,7 @@ function getExtraEditorClassName(): string {
 		extra += 'no-user-select ';
 	}
 	if (browser.isSafari) {
-		// See https://github.com/microsoft/vscode/issues/108822
+		// See https://github.com/voidly/voidly/issues/108822
 		extra += 'no-minimap-shadow ';
 		extra += 'enable-user-select ';
 	}

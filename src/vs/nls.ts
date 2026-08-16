@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -207,7 +207,7 @@ export interface INLSConfiguration {
 	/**
 	 * Below properties are deprecated and only there to continue support
 	 * for `vscode-nls` module that depends on them.
-	 * Refs https://github.com/microsoft/vscode-nls/blob/main/src/node/main.ts#L36-L46
+	 * Refs https://github.com/voidly/voidly-nls/blob/main/src/node/main.ts#L36-L46
 	 */
 	/** @deprecated */
 	readonly locale: string;

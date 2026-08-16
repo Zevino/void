@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -337,7 +337,7 @@ export class DebugService implements IDebugService {
 	private lazySetup() {
 		if (!this.haveDoneLazySetup) {
 			// Registering fs providers is slow
-			// https://github.com/microsoft/vscode/issues/159886
+			// https://github.com/voidly/voidly/issues/159886
 			this.disposables.add(this.fileService.registerProvider(DEBUG_MEMORY_SCHEME, this.disposables.add(new DebugMemoryFileSystemProvider(this))));
 			this.haveDoneLazySetup = true;
 		}

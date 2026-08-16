@@ -936,7 +936,7 @@ export const VoidSimpleInputBox = ({ value, onChangeValue, placeholder, classNam
 				color: asCssVariable(inputForeground)
 			}}
 			{...inputProps}
-			type={undefined} // VS Code is doing some annoyingness that breaks paste if this is defined
+			type={undefined} // Voidly is doing some annoyingness that breaks paste if this is defined
 		/>
 	);
 };

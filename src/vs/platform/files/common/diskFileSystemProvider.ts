@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -242,7 +242,7 @@ export abstract class AbstractDiskFileSystemProvider extends Disposable implemen
 		// Ensure to have any trailing path separators removed, otherwise
 		// we may believe the path is not "real" and will convert every
 		// event back to this form, which is not warranted.
-		// See also https://github.com/microsoft/vscode/issues/210517
+		// See also https://github.com/voidly/voidly/issues/210517
 		return removeTrailingPathSeparator(filePath);
 	}
 }

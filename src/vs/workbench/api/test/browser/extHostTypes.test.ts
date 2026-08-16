@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -793,7 +793,7 @@ suite('ExtHostTypes', function () {
 	});
 
 	test('runtime stable, type-def changed', function () {
-		// see https://github.com/microsoft/vscode/issues/231938
+		// see https://github.com/voidly/voidly/issues/231938
 		const m = new types.LanguageModelChatMessage(types.LanguageModelChatMessageRole.User, []);
 		assert.deepStrictEqual(m.content, []);
 		m.content = 'Hello';

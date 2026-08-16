@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -316,7 +316,7 @@ export class RenameWidget implements IRenameWidget, IContentWidget, IDisposable 
 	}
 
 	afterRender(position: ContentWidgetPositionPreference | null): void {
-		// FIXME@ulugbekna: commenting trace log out until we start unmounting the widget from editor properly - https://github.com/microsoft/vscode/issues/226975
+		// FIXME@ulugbekna: commenting trace log out until we start unmounting the widget from editor properly - https://github.com/voidly/voidly/issues/226975
 		// this._trace('invoking afterRender, position: ', position ? 'not null' : 'null');
 		if (position === null) {
 			// cancel rename when input widget isn't rendered anymore

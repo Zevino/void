@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -83,7 +83,7 @@ export class ProxyAuthService extends Disposable implements IProxyAuthService {
 		// Compute a hash over the authentication info to be used
 		// with the credentials store to return the right credentials
 		// given the properties of the auth request
-		// (see https://github.com/microsoft/vscode/issues/109497)
+		// (see https://github.com/voidly/voidly/issues/109497)
 		const authInfoHash = String(hash({ scheme: authInfo.scheme, host: authInfo.host, port: authInfo.port }));
 
 		let credentials: Credentials | undefined = undefined;

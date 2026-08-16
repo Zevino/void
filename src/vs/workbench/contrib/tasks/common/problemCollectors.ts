@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -293,7 +293,7 @@ export abstract class AbstractProblemCollector extends Disposable implements IDi
 		if (!markersPerResource.has(key)) {
 			markersPerResource.set(key, marker);
 		} else if (((existingMarker = markersPerResource.get(key)) !== undefined) && (existingMarker.message.length < marker.message.length) && isWindows) {
-			// Most likely https://github.com/microsoft/vscode/issues/77475
+			// Most likely https://github.com/voidly/voidly/issues/77475
 			// Heuristic dictates that when the key is the same and message is smaller, we have hit this limitation.
 			markersPerResource.set(key, marker);
 		}
@@ -413,7 +413,7 @@ export class WatchingProblemCollector extends AbstractProblemCollector implement
 
 	private backgroundPatterns: IBackgroundPatterns[];
 
-	// workaround for https://github.com/microsoft/vscode/issues/44018
+	// workaround for https://github.com/voidly/voidly/issues/44018
 	private _activeBackgroundMatchers: Set<string>;
 
 	// Current State

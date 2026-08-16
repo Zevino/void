@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -41,7 +41,7 @@ export class BrowserLifecycleService extends AbstractLifecycleService {
 		// We explicitly do not listen to `unload` event
 		// which would disable certain browser caching.
 		// We currently do not handle the `persisted` property
-		// (https://github.com/microsoft/vscode/issues/136216)
+		// (https://github.com/voidly/voidly/issues/136216)
 		this.unloadListener = addDisposableListener(mainWindow, EventType.PAGE_HIDE, () => this.onUnload());
 	}
 
@@ -201,7 +201,7 @@ export class BrowserLifecycleService extends AbstractLifecycleService {
 		// so in order to get back to a functional workbench, we
 		// currently can only reload the window
 		// Docs: https://web.dev/bfcache/#optimize-your-pages-for-bfcache
-		// Refs: https://github.com/microsoft/vscode/issues/136035
+		// Refs: https://github.com/voidly/voidly/issues/136035
 		this.withExpectedShutdown({ disableShutdownHandling: true }, () => mainWindow.location.reload());
 	}
 

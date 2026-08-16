@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -116,7 +116,7 @@ class ScopedMemento {
 			// Seeing reports from users unable to open editors
 			// from memento parsing exceptions. Log the contents
 			// to diagnose further
-			// https://github.com/microsoft/vscode/issues/102251
+			// https://github.com/voidly/voidly/issues/102251
 			onUnexpectedError(`[memento]: failed to parse contents: ${error} (id: ${this.id}, scope: ${this.scope}, contents: ${this.storageService.get(this.id, this.scope)})`);
 		}
 

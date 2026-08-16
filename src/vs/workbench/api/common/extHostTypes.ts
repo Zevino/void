@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -2895,7 +2895,7 @@ export class DataTransferItem implements vscode.DataTransferItem {
 }
 
 /**
- * A data transfer item that has been created by VS Code instead of by a extension.
+ * A data transfer item that has been created by Voidly instead of by a extension.
  *
  * Intentionally not exported to extensions.
  */

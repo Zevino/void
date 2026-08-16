@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -372,7 +372,7 @@ export abstract class MenubarControl extends Disposable {
 	}
 }
 
-// This is a bit complex due to the issue https://github.com/microsoft/vscode/issues/205836
+// This is a bit complex due to the issue https://github.com/voidly/voidly/issues/205836
 let focusMenuBarEmitter: Emitter<void> | undefined = undefined;
 function enableFocusMenuBarAction(): Emitter<void> {
 	if (!focusMenuBarEmitter) {

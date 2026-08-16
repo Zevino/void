@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -24,7 +24,7 @@ import { IWindowsMainService } from '../../windows/electron-main/windows.js';
  * - macOS:   we rely on `app.on('open-url')` to be called by the OS
  * - Linux:   we have a special shortcut installed (`resources/linux/code-url-handler.desktop`)
  *            that calls VSCode with the `open-url` command line argument
- *            (https://github.com/microsoft/vscode/pull/56727)
+ *            (https://github.com/voidly/voidly/pull/56727)
  */
 export class ElectronURLListener extends Disposable {
 

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -41,7 +41,7 @@ export class ReplFilter implements ITreeFilter<IReplElement, FuzzyScore> {
 
 	filter(element: IReplElement, parentVisibility: TreeVisibility): TreeFilterResult<FuzzyScore> {
 		if (element instanceof ReplEvaluationInput || element instanceof ReplEvaluationResult || element instanceof Variable) {
-			// Only filter the output events, everything else is visible https://github.com/microsoft/vscode/issues/105863
+			// Only filter the output events, everything else is visible https://github.com/voidly/voidly/issues/105863
 			return TreeVisibility.Visible;
 		}
 

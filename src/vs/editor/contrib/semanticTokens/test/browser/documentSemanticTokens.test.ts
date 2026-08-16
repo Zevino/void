@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -130,7 +130,7 @@ suite('ModelSemanticColoring', () => {
 		});
 	});
 
-	test('issue #149412: VS Code hangs when bad semantic token data is received', async () => {
+	test('issue #149412: Voidly hangs when bad semantic token data is received', async () => {
 		await runWithFakedTimers({}, async () => {
 
 			disposables.add(languageService.registerLanguage({ id: 'testMode' }));

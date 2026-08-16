@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -40,7 +40,7 @@ export interface ITestResultStorage {
 export const ITestResultStorage = createDecorator('ITestResultStorage');
 
 /**
- * Data revision this version of VS Code deals with. Should be bumped whenever
+ * Data revision this version of Voidly deals with. Should be bumped whenever
  * a breaking change is made to the stored results, which will cause previous
  * revisions to be discarded.
  */

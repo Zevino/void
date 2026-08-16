@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -24,7 +24,7 @@ export function getUserDataPath(cliArgs: NativeParsedArgs, productName: string):
 	// current working directory. We cannot use the
 	// node.js `path.resolve()` logic because it will
 	// not pick up our `VSCODE_CWD` environment variable
-	// (https://github.com/microsoft/vscode/issues/120269)
+	// (https://github.com/voidly/voidly/issues/120269)
 	if (!path.isAbsolute(userDataPath)) {
 		pathsToResolve.unshift(cwd);
 	}

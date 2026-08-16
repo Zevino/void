@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -81,7 +81,7 @@ export class ConsoleLogInAutomationLogger extends AdapterLogger implements ILogg
 			try {
 				automatedWindow.codeAutomationLog(type, args);
 			} catch (err) {
-				// see https://github.com/microsoft/vscode-test-web/issues/69
+				// see https://github.com/voidly/voidly-test-web/issues/69
 				console.error('Problems writing to codeAutomationLog', err);
 			}
 		}

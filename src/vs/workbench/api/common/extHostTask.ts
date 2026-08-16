@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -509,7 +509,7 @@ export abstract class ExtHostTaskBase implements ExtHostTaskShape, IExtHostTask 
 	public async $OnDidEndTask(execution: tasks.ITaskExecutionDTO): Promise<void> {
 		if (!this._taskExecutionPromises.has(execution.id)) {
 			// Event already fired by the main thread
-			// See https://github.com/microsoft/vscode/commit/aaf73920aeae171096d205efb2c58804a32b6846
+			// See https://github.com/voidly/voidly/commit/aaf73920aeae171096d205efb2c58804a32b6846
 			return;
 		}
 		const _execution = await this.getTaskExecution(execution);

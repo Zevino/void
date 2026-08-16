@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -50,7 +50,7 @@ export class BrowserClipboardService extends BaseBrowserClipboardService {
 		} catch (error) {
 			return new Promise<string>(resolve => {
 
-				// Inform user about permissions problem (https://github.com/microsoft/vscode/issues/112089)
+				// Inform user about permissions problem (https://github.com/voidly/voidly/issues/112089)
 				const listener = new DisposableStore();
 				const handle = this.notificationService.prompt(
 					Severity.Error,

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -234,7 +234,7 @@ suite('EditorService', () => {
 		visibleEditorChangeListener.dispose();
 	});
 
-	test('openEditor() - same input does not cancel previous one - https://github.com/microsoft/vscode/issues/136684', async () => {
+	test('openEditor() - same input does not cancel previous one - https://github.com/voidly/voidly/issues/136684', async () => {
 		const [, service] = await createEditorService();
 
 		let input = createTestFileEditorInput(URI.parse('my://resource-basics'), TEST_EDITOR_INPUT_ID);
@@ -2685,7 +2685,7 @@ suite('EditorService', () => {
 		assert.strictEqual(foundEditors.length, 1);
 	});
 
-	test('side by side editor is not matching all other editors (https://github.com/microsoft/vscode/issues/132859)', async () => {
+	test('side by side editor is not matching all other editors (https://github.com/voidly/voidly/issues/132859)', async () => {
 		const [part, service] = await createEditorService();
 
 		const rootGroup = part.activeGroup;

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -67,7 +67,7 @@ export class GlobalPointerMoveMonitor implements IDisposable {
 				try {
 					initialElement.releasePointerCapture(pointerId);
 				} catch (err) {
-					// See https://github.com/microsoft/vscode/issues/161731
+					// See https://github.com/voidly/voidly/issues/161731
 					//
 					// `releasePointerCapture` sometimes fails when being invoked with the exception:
 					//     DOMException: Failed to execute 'releasePointerCapture' on 'Element':
@@ -77,8 +77,8 @@ export class GlobalPointerMoveMonitor implements IDisposable {
 				}
 			}));
 		} catch (err) {
-			// See https://github.com/microsoft/vscode/issues/144584
-			// See https://github.com/microsoft/vscode/issues/146947
+			// See https://github.com/voidly/voidly/issues/144584
+			// See https://github.com/voidly/voidly/issues/146947
 			// `setPointerCapture` sometimes fails when being invoked
 			// from a `mousedown` listener on macOS and Windows
 			// and it always fails on Linux with the exception:

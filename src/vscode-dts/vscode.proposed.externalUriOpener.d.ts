@@ -1,11 +1,11 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
 
-	// https://github.com/microsoft/vscode/issues/109277
+	// https://github.com/voidly/voidly/issues/109277
 
 	/**
 	 * Details if an `ExternalUriOpener` can open a uri.

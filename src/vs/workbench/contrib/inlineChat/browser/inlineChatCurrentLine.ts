@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -243,7 +243,7 @@ export class InlineChatHintsController extends Disposable implements IEditorCont
 
 
 			// DEBT - I cannot use `model.onDidChangeContent` directly here
-			// https://github.com/microsoft/vscode/issues/242059
+			// https://github.com/voidly/voidly/issues/242059
 			const emitter = store.add(new Emitter<void>());
 			store.add(model.onDidChangeContent(() => emitter.fire()));
 			observableFromEvent(emitter.event, () => model.getVersionId()).read(r);

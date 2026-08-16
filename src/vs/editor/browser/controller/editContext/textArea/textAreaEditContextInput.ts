@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -402,7 +402,7 @@ export class TextAreaInput extends Disposable {
 		}));
 		this._register(this._textArea.onBlur(() => {
 			if (this._currentComposition) {
-				// See https://github.com/microsoft/vscode/issues/112621
+				// See https://github.com/voidly/voidly/issues/112621
 				// where compositionend is not triggered when the editor
 				// is taken off-dom during a composition
 
@@ -440,7 +440,7 @@ export class TextAreaInput extends Disposable {
 	}
 
 	private _installSelectionChangeListener(): IDisposable {
-		// See https://github.com/microsoft/vscode/issues/27216 and https://github.com/microsoft/vscode/issues/98256
+		// See https://github.com/voidly/voidly/issues/27216 and https://github.com/voidly/voidly/issues/98256
 		// When using a Braille display, it is possible for users to reposition the
 		// system caret. This is reflected in Chrome as a `selectionchange` event.
 		//

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -121,7 +121,7 @@ export class DesktopMain extends Disposable {
 		// workspace, so we need the resolved configuration service.
 		// Finally, it is possible for the window to have a custom
 		// zoom level that is not derived from settings.
-		// (fixes https://github.com/microsoft/vscode/issues/187982)
+		// (fixes https://github.com/voidly/voidly/issues/187982)
 		this.applyWindowZoomLevel(services.configurationService);
 
 		// Create Workbench

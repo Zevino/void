@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1649,7 +1649,7 @@ suite('keyboardMapper', () => {
 			);
 		}
 
-		// https://github.com/microsoft/vscode/issues/24107#issuecomment-292318497
+		// https://github.com/voidly/voidly/issues/24107#issuecomment-292318497
 		assertKeyboardEvent(KeyCode.UpArrow, 'Lang3', 'UpArrow', 'Up', 'up', '[ArrowUp]');
 		assertKeyboardEvent(KeyCode.DownArrow, 'NumpadEnter', 'DownArrow', 'Down', 'down', '[ArrowDown]');
 		assertKeyboardEvent(KeyCode.LeftArrow, 'Convert', 'LeftArrow', 'Left', 'left', '[ArrowLeft]');
@@ -1661,7 +1661,7 @@ suite('keyboardMapper', () => {
 		assertKeyboardEvent(KeyCode.PageDown, 'ControlRight', 'PageDown', 'PageDown', 'pagedown', '[PageDown]');
 		assertKeyboardEvent(KeyCode.PageUp, 'Lang4', 'PageUp', 'PageUp', 'pageup', '[PageUp]');
 
-		// https://github.com/microsoft/vscode/issues/24107#issuecomment-292323924
+		// https://github.com/voidly/voidly/issues/24107#issuecomment-292323924
 		assertKeyboardEvent(KeyCode.PageDown, 'ControlRight', 'PageDown', 'PageDown', 'pagedown', '[PageDown]');
 		assertKeyboardEvent(KeyCode.PageUp, 'Lang4', 'PageUp', 'PageUp', 'pageup', '[PageUp]');
 		assertKeyboardEvent(KeyCode.End, '', 'End', 'End', 'end', '[End]');

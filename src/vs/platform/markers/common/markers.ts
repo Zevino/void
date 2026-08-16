@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -169,7 +169,7 @@ export namespace IMarkerData {
 		}
 
 		// Modifed to not include the message as part of the marker key to work around
-		// https://github.com/microsoft/vscode/issues/77475
+		// https://github.com/voidly/voidly/issues/77475
 		if (markerData.message && useMessage) {
 			result.push(markerData.message.replace('¦', '\\¦'));
 		} else {

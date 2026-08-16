@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -76,7 +76,7 @@ export class KeybindingResolver {
 				continue;
 			}
 
-			// substitute with constants that are registered after startup - https://github.com/microsoft/vscode/issues/174218#issuecomment-1437972127
+			// substitute with constants that are registered after startup - https://github.com/voidly/voidly/issues/174218#issuecomment-1437972127
 			const when = k.when?.substituteConstants();
 
 			if (when && when.type === ContextKeyExprType.False) {

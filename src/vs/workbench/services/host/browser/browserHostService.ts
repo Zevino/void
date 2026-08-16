@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -400,7 +400,7 @@ export class BrowserHostService extends Disposable implements IHostService {
 	private withServices(fn: (accessor: ServicesAccessor) => unknown): void {
 		// Host service is used in a lot of contexts and some services
 		// need to be resolved dynamically to avoid cyclic dependencies
-		// (https://github.com/microsoft/vscode/issues/108522)
+		// (https://github.com/voidly/voidly/issues/108522)
 		this.instantiationService.invokeFunction(accessor => fn(accessor));
 	}
 

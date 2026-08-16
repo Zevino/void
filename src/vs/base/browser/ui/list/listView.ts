@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -1593,9 +1593,9 @@ export class ListView<T> implements IListView<T> {
 				if (typeof anchorElementIndex === 'number') {
 					// To compute a destination scroll top, we need to take into account the current smooth scrolling
 					// animation, and then reuse it with a new target (to avoid prolonging the scroll)
-					// See https://github.com/microsoft/vscode/issues/104144
-					// See https://github.com/microsoft/vscode/pull/104284
-					// See https://github.com/microsoft/vscode/issues/107704
+					// See https://github.com/voidly/voidly/issues/104144
+					// See https://github.com/voidly/voidly/pull/104284
+					// See https://github.com/voidly/voidly/issues/107704
 					const deltaScrollTop = this.scrollable.getFutureScrollPosition().scrollTop - renderTop;
 					const newScrollTop = this.elementTop(anchorElementIndex) - anchorElementTopDelta! + deltaScrollTop;
 					this.setScrollTop(newScrollTop, inSmoothScrolling);

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -337,7 +337,7 @@ CommandsRegistry.registerCommand({
 			}
 		} else {
 			// Do not reveal the open editors view if it's hidden explicitly
-			// See https://github.com/microsoft/vscode/issues/227378
+			// See https://github.com/voidly/voidly/issues/227378
 			const openEditorsView = viewService.getViewWithId(OpenEditorsView.ID);
 			if (openEditorsView) {
 				openEditorsView.setExpanded(true);
@@ -382,9 +382,9 @@ async function saveSelectedEditors(accessor: ServicesAccessor, options?: ISaveEd
 			// In addition, we require the secondary side to be modified to not
 			// trigger a touch operation unexpectedly.
 			//
-			// See also https://github.com/microsoft/vscode/issues/4180
-			// See also https://github.com/microsoft/vscode/issues/106330
-			// See also https://github.com/microsoft/vscode/issues/190210
+			// See also https://github.com/voidly/voidly/issues/4180
+			// See also https://github.com/voidly/voidly/issues/106330
+			// See also https://github.com/voidly/voidly/issues/190210
 			if (
 				activeGroup.activeEditor instanceof SideBySideEditorInput &&
 				!options?.saveAs && !(activeGroup.activeEditor.primary.hasCapability(EditorInputCapabilities.Untitled) || activeGroup.activeEditor.secondary.hasCapability(EditorInputCapabilities.Untitled)) &&

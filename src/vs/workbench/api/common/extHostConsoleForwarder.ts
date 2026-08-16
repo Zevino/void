@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -38,7 +38,7 @@ export abstract class AbstractExtHostConsoleForwarder {
 	 * are the only methods that allow later introspection of logged variables.
 	 *
 	 * The wrapped property is not defined with `writable: false` to avoid
-	 * throwing errors, but rather a no-op setting. See https://github.com/microsoft/vscode-extension-telemetry/issues/88
+	 * throwing errors, but rather a no-op setting. See https://github.com/voidly/voidly-extension-telemetry/issues/88
 	 */
 	private _wrapConsoleMethod(method: 'log' | 'info' | 'warn' | 'error' | 'debug', severity: 'log' | 'warn' | 'error' | 'debug') {
 		const that = this;

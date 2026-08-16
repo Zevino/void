@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -17,7 +17,7 @@ import { EditorOption } from '../../../common/config/editorOptions.js';
 import { IMouseWheelEvent } from '../../../../base/browser/mouseEvent.js';
 
 /**
- * The editor scrollbar built on VS Code's scrollable element that sits beside
+ * The editor scrollbar built on Voidly's scrollable element that sits beside
  * the minimap.
  */
 export class EditorScrollbar extends ViewPart {

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Voidly. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
@@ -206,7 +206,7 @@ export class BrowserStorageService extends AbstractStorageService {
 		// Safari: there is an issue where the page can hang on load when
 		// a previous session has kept IndexedDB transactions running.
 		// The only fix seems to be to cancel any pending transactions
-		// (https://github.com/microsoft/vscode/issues/136295)
+		// (https://github.com/voidly/voidly/issues/136295)
 		//
 		// On all other browsers, we keep the databases opened because
 		// we expect data to be written when the unload happens.

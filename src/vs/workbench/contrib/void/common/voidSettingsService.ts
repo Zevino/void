@@ -148,10 +148,15 @@ const _validatedModelState = (state: Omit<VoidSettingsState, '_modelOptions'>): 
 	let newSettingsOfProvider = state.settingsOfProvider
 
 	// recompute _didFillInProviderSettings
+	// `reasoningField` is optional (only applies to openAICompatible), so we exclude it from the
+	// "filled in" check — otherwise clearing it to disable reasoning would lock out the provider.
+	const optionalCustomSettingNames: readonly string[] = ['reasoningField']
 	for (const providerName of providerNames) {
 		const settingsAtProvider = newSettingsOfProvider[providerName]
 
-		const didFillInProviderSettings = Object.keys(defaultProviderSettings[providerName]).every(key => !!settingsAtProvider[key as keyof typeof settingsAtProvider])
+		const didFillInProviderSettings = Object.keys(defaultProviderSettings[providerName]).every(key =>
+			optionalCustomSettingNames.includes(key) || !!settingsAtProvider[key as keyof typeof settingsAtProvider]
+		)
 
 		if (didFillInProviderSettings === settingsAtProvider._didFillInProviderSettings) continue
 
