@@ -157,7 +157,7 @@ const openAICompatibleProviderConfigs: Record<Exclude<ProviderName, 'anthropic' 
 	},
 }
 
-const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { settingsOfProvider: SettingsOfProvider, providerName: Exclude<ProviderName, 'anthropic' | 'gemini'> }) => {
+const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { settingsOfProvider: SettingsOfProvider, providerName: ProviderName }) => {
 	const commonPayloadOpts: ClientOptions = {
 		dangerouslyAllowBrowser: true,
 		// fail fast + retry a little on transient network errors
@@ -165,7 +165,8 @@ const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { se
 		maxRetries: OPENAI_MAX_RETRIES,
 	}
 
-	const config = openAICompatibleProviderConfigs[providerName]
+	const oaiProviderName = providerName as Exclude<ProviderName, 'anthropic' | 'gemini'>
+	const config = openAICompatibleProviderConfigs[oaiProviderName]
 	if (!config) throw new Error(`Void providerName was invalid: ${providerName}.`)
 
 	// microsoftAzure uses a different SDK/client
@@ -174,10 +175,10 @@ const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { se
 		return new AzureOpenAI({ endpoint, apiKey, apiVersion, ...commonPayloadOpts })
 	}
 
-	const baseURL = await config.baseURL(settingsOfProvider, providerName)
-	const apiKey = config.apiKeyField
+	const baseURL = await config.baseURL(settingsOfProvider, oaiProviderName)
+	const apiKey = (config.apiKeyField
 		? settingsOfProvider[providerName][config.apiKeyField]
-		: await config.apiKey?.(settingsOfProvider)
+		: await config.apiKey?.(settingsOfProvider)) as string | undefined
 
 	// custom headers (only the OpenAI-Compatible aggregator lets users provide their own)
 	const defaultHeaders = {
@@ -396,7 +397,8 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 			for (const idx of [...toolCallsByIndex.keys()].sort((a, b) => a - b)) {
 				const tc = toolCallsByIndex.get(idx)
 				if (tc?.name) {
-					completedToolCalls.push(rawToolCallObjOfParamsStr(tc.name, tc.arguments, tc.id))
+					const toolCall = rawToolCallObjOfParamsStr(tc.name, tc.arguments, tc.id)
+					if (toolCall) completedToolCalls.push(toolCall)
 				}
 			}
 			const hasToolCall = completedToolCalls.length > 0
@@ -937,8 +939,10 @@ export const sendLLMMessageToProviderImplementation: CallFnOfProvider = {
 		sendFIM: null,
 		list: null,
 	},
-	...Object.fromEntries(openAICompatibleProviderNames.map(providerName => [providerName, openAICompatibleProviderImplementation(providerName)])),
-} satisfies CallFnOfProvider
+	...Object.fromEntries(
+		openAICompatibleProviderNames.map(providerName => [providerName, openAICompatibleProviderImplementation(providerName)] as const)
+	) as { [K in Exclude<ProviderName, 'anthropic' | 'gemini'>]: CallFnOfProvider[K] },
+}
 
 
 

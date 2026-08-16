@@ -135,7 +135,9 @@ export class LLMMessageChannel implements IServerChannel {
 			onSuccess: (p) => { emitters.success.fire({ requestId, ...p }); },
 			onError: (p) => { emitters.error.fire({ requestId, ...p }); },
 		}
-		sendLLMMessageToProviderImplementation.ollama.list(mainThreadParams)
+		const listFn = sendLLMMessageToProviderImplementation.ollama.list
+		if (!listFn) { params.onError({ error: 'Ollama list is not supported.' }); return }
+		listFn(mainThreadParams)
 	}
 
 	_callOpenAICompatibleList = (params: MainModelListParams<OpenaiCompatibleModelResponse>) => {
@@ -146,7 +148,9 @@ export class LLMMessageChannel implements IServerChannel {
 			onSuccess: (p) => { emitters.success.fire({ requestId, ...p }); },
 			onError: (p) => { emitters.error.fire({ requestId, ...p }); },
 		}
-		sendLLMMessageToProviderImplementation[providerName].list(mainThreadParams)
+		const listFn = sendLLMMessageToProviderImplementation[providerName].list
+		if (!listFn) { params.onError({ error: `Provider "${providerName}" does not support model listing.` }); return }
+		listFn(mainThreadParams)
 	}
 
 
