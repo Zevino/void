@@ -1,15 +1,14 @@
 name: Release Voidly (Windows x64)
 
 on:
-  # Auto-build & publish a Windows x64 release on every push to main.
+  # Auto-build & publish a Windows x64 release on every push to main,
+  # and also on any tag push. Manual runs are always available.
   push:
     branches:
       - main
-  # Also allow manual runs and tag-based runs (tag name is ignored for triggering).
-  workflow_dispatch:
-  push:
     tags:
       - '*'
+  workflow_dispatch:
 
 permissions:
   contents: write
