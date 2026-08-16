@@ -1,10 +1,15 @@
 name: Release Voidly (Windows x64)
 
 on:
+  # Auto-build & publish a Windows x64 release on every push to main.
+  push:
+    branches:
+      - main
+  # Also allow manual runs and tag-based runs (tag name is ignored for triggering).
+  workflow_dispatch:
   push:
     tags:
-      - 'v*'
-  workflow_dispatch:
+      - '*'
 
 permissions:
   contents: write
@@ -125,14 +130,17 @@ jobs:
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
+          # When triggered by a tag use the tag name; when triggered by a push
+          # to main (no tag) fall back to the short commit SHA so every push
+          # still produces a downloadable release.
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('ci-{0}', github.sha) }}
           files: |
             dist/Voidly-win32-x64.zip
             dist/VoidlySetup-x64-*.exe
-          name: Voidly ${{ github.ref_name }}
+          name: Voidly ${{ github.ref_type == 'tag' && github.ref_name || format('ci-{0}', github.sha) }}
           body: |
-            Voidly ${{ github.ref_name }} - Windows x64 build.
+            Voidly ${{ github.ref_type == 'tag' && github.ref_name || format('ci-{0}', github.sha) }} - Windows x64 build.
 
             - **VoidlySetup-x64-*.exe** — System installer
             - **Voidly-win32-x64.zip** — Portable build
