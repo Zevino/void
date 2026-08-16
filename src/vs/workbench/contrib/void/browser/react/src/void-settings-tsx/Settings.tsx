@@ -5,6 +5,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'; // Added useRef import just in case it was missed, though likely already present
 import { ProviderName, SettingName, displayInfoOfSettingName, providerNames, VoidStatefulModelInfo, customSettingNamesOfProvider, RefreshableProviderName, refreshableProviderNames, displayInfoOfProviderName, nonlocalProviderNames, localProviderNames, GlobalSettingName, featureNames, displayInfoOfFeatureName, isProviderNameDisabled, FeatureName, hasDownloadButtonsOnModelsProviderNames, subTextMdOfProviderName } from '../../../../common/voidSettingsTypes.js'
+import { parseHeadersJSON } from '../../../../common/sendLLMMessage.openaiCompatible.utils.js'
 import ErrorBoundary from '../sidebar-tsx/ErrorBoundary.js'
 import { VoidButtonBgDarken, VoidCustomDropdownBox, VoidInputBox2, VoidSimpleInputBox, VoidSwitch } from '../util/inputs.js'
 import { useAccessor, useIsDark, useIsOptedOut, useRefreshModelListener, useRefreshModelState, useSettingsState } from '../util/services.js'
@@ -624,10 +625,18 @@ const ProviderSetting = ({ providerName, settingName, subTextMd }: { providerNam
 		return
 	}
 
-	// Create a stable callback reference using useCallback with proper dependencies
+	// live validation feedback for settings that are validated on save (currently only headersJSON)
+	const isJSONValidated = providerName === 'openAICompatible' && settingName === 'headersJSON'
+	const [validationError, setValidationError] = useState<string | null>(null)
+
+	// Create a stable callback reference using useCallback with proper dependencies.
+	// The save is rejected (and no state is written) for invalid JSON, so we surface the error here
+	// and clear it as soon as a subsequent save succeeds.
 	const handleChangeValue = useCallback((newVal: string) => {
 		voidSettingsService.setSettingOfProvider(providerName, settingName, newVal)
-	}, [voidSettingsService, providerName, settingName]);
+			.then(() => { if (isJSONValidated) setValidationError(null) })
+			.catch((e: unknown) => { if (isJSONValidated) setValidationError((e && (e as Error).message) || '' + e) })
+	}, [voidSettingsService, providerName, settingName, isJSONValidated]);
 
 	return <ErrorBoundary>
 		<div className='my-1'>
@@ -638,9 +647,11 @@ const ProviderSetting = ({ providerName, settingName, subTextMd }: { providerNam
 				passwordBlur={isPasswordField}
 				compact={true}
 			/>
-			{!subTextMd ? null : <div className='py-1 px-3 opacity-50 text-sm'>
-				{subTextMd}
-			</div>}
+			{validationError
+				? <div className='py-1 px-3 text-sm text-void-fg-1' style={{ color: 'var(--vscode-errorForeground)' }}>{validationError}</div>
+				: !subTextMd ? null : <div className='py-1 px-3 opacity-50 text-sm'>
+					{subTextMd}
+				</div>}
 		</div>
 	</ErrorBoundary>
 }

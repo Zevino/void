@@ -12,6 +12,7 @@ import { createDecorator } from '../../../../platform/instantiation/common/insta
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IMetricsService } from './metricsService.js';
 import { defaultProviderSettings, getModelCapabilities, ModelOverrides } from './modelCapabilities.js';
+import { parseHeadersJSON } from './sendLLMMessage.openaiCompatible.utils.js';
 import { VOID_SETTINGS_STORAGE_KEY } from './storageKeys.js';
 import { defaultSettingsOfProvider, FeatureName, ProviderName, ModelSelectionOfFeature, SettingsOfProvider, SettingName, providerNames, ModelSelection, modelSelectionsEqual, featureNames, VoidStatefulModelInfo, GlobalSettings, GlobalSettingName, defaultGlobalSettings, ModelSelectionOptions, OptionsOfModelSelection, ChatMode, OverridesOfModel, defaultOverridesOfModel, MCPUserStateOfName as MCPUserStateOfName, MCPUserState } from './voidSettingsTypes.js';
 
@@ -371,6 +372,12 @@ class VoidSettingsService extends Disposable implements IVoidSettingsService {
 	}
 
 	setSettingOfProvider: SetSettingOfProviderFn = async (providerName, settingName, newVal) => {
+
+		// validate `headersJSON` (only openAICompatible lets users provide custom headers) at
+		// save-time rather than at request-time, so a typo surfaces immediately in the UI.
+		if (providerName === 'openAICompatible' && settingName === 'headersJSON') {
+			parseHeadersJSON(newVal as string) // throws a readable error on invalid JSON
+		}
 
 		const newModelSelectionOfFeature = this.state.modelSelectionOfFeature
 
