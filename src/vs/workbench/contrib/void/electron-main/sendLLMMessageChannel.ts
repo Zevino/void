@@ -136,7 +136,7 @@ export class LLMMessageChannel implements IServerChannel {
 			onError: (p) => { emitters.error.fire({ requestId, ...p }); },
 		}
 		const listFn = sendLLMMessageToProviderImplementation.ollama.list
-		if (!listFn) { params.onError({ error: 'Ollama list is not supported.' }); return }
+		if (!listFn) { emitters.error.fire({ requestId, error: 'Ollama list is not supported.' }); return }
 		listFn(mainThreadParams)
 	}
 
@@ -149,7 +149,7 @@ export class LLMMessageChannel implements IServerChannel {
 			onError: (p) => { emitters.error.fire({ requestId, ...p }); },
 		}
 		const listFn = sendLLMMessageToProviderImplementation[providerName].list
-		if (!listFn) { params.onError({ error: `Provider "${providerName}" does not support model listing.` }); return }
+		if (!listFn) { emitters.error.fire({ requestId, error: `Provider "${providerName}" does not support model listing.` }); return }
 		listFn(mainThreadParams)
 	}
 
