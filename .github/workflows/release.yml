@@ -49,7 +49,7 @@ jobs:
         run: |
           node ./node_modules/gulp/bin/gulp.js vscode-win32-x64 > packaging.log 2>&1
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "Packaging task failed — see packaging.log"
+            Write-Host "Packaging task failed - see packaging.log"
             Exit $LASTEXITCODE
           }
 
@@ -76,7 +76,7 @@ jobs:
           files: dist/Voidly-win32-x64.zip
           name: Voidly ${{ github.ref_name }}
           body: |
-            Voidly ${{ github.ref_name }} — Windows x64 build.
+            Voidly ${{ github.ref_name }} - Windows x64 build.
 
             Independently developed and distributed by Zevino.
             Repository: https://github.com/Zevino/void
