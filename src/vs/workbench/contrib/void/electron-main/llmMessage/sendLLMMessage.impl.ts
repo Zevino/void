@@ -75,7 +75,7 @@ type OpenAICompatibleProviderConfig = {
 	baseURL: (settingsOfProvider: SettingsOfProvider, providerName: ProviderName) => string | Promise<string>;
 	// the setting field that holds the API key; undefined means the provider uses a fallback (e.g. noop / empty)
 	apiKeyField?: keyof SettingsOfProvider[ProviderName];
-	apiKey?: (settingsOfProvider: SettingsOfProvider) => string | undefined;
+	apiKey?: (settingsOfProvider: SettingsOfProvider) => string | undefined | Promise<string | undefined>;
 	defaultHeaders?: Record<string, string>;
 	// pull custom headers from the provider's headersJSON setting (only openAICompatible)
 	defaultHeadersFromSettings?: boolean;
@@ -157,7 +157,7 @@ const openAICompatibleProviderConfigs: Record<Exclude<ProviderName, 'anthropic' 
 	},
 }
 
-const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { settingsOfProvider: SettingsOfProvider, providerName: ProviderName }) => {
+const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { settingsOfProvider: SettingsOfProvider, providerName: Exclude<ProviderName, 'anthropic' | 'gemini'> }) => {
 	const commonPayloadOpts: ClientOptions = {
 		dangerouslyAllowBrowser: true,
 		// fail fast + retry a little on transient network errors
@@ -177,7 +177,7 @@ const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { se
 	const baseURL = await config.baseURL(settingsOfProvider, providerName)
 	const apiKey = config.apiKeyField
 		? settingsOfProvider[providerName][config.apiKeyField]
-		: config.apiKey?.(settingsOfProvider)
+		: await config.apiKey?.(settingsOfProvider)
 
 	// custom headers (only the OpenAI-Compatible aggregator lets users provide their own)
 	const defaultHeaders = {
@@ -354,7 +354,7 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	// tool call at a time, we emit the first (lowest-index) completed tool call.
 	//
 	// index -> accumulated tool call
-	const toolCallsByIndex = new Map<number, { name: string; id: string; arguments: string }>()
+	let toolCallsByIndex = new Map<number, { name: string; id: string; arguments: string }>()
 	// the lowest index we've seen so far (the "active" tool call to surface during streaming)
 	let activeToolIndex: number | null = null
 
@@ -390,17 +390,21 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 
 			}
 			// on final
-			// the first completed tool call (lowest index) is the one we surface
-			const completedTool = activeToolIndex !== null ? toolCallsByIndex.get(activeToolIndex) : undefined
-			const hasToolCall = !!completedTool?.name
+			// surface ALL completed tool calls (sorted by index) as an array, so the
+			// agent loop can execute multiple tools in one round. #2
+			const completedToolCalls: RawToolCallObj[] = []
+			for (const idx of [...toolCallsByIndex.keys()].sort((a, b) => a - b)) {
+				const tc = toolCallsByIndex.get(idx)
+				if (tc?.name) {
+					completedToolCalls.push(rawToolCallObjOfParamsStr(tc.name, tc.arguments, tc.id))
+				}
+			}
+			const hasToolCall = completedToolCalls.length > 0
 			if (!fullTextSoFar && !fullReasoningSoFar && !hasToolCall) {
 				onError({ message: 'Void: Response from model was empty.', fullError: null })
 			}
 			else {
-				const toolCall = hasToolCall
-					? rawToolCallObjOfParamsStr(completedTool!.name, completedTool!.arguments, completedTool!.id)
-					: null
-				const toolCallObj = toolCall ? { toolCall } : {}
+				const toolCallObj = hasToolCall ? { toolCall: completedToolCalls } : {}
 				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, ...toolCallObj });
 			}
 		})
@@ -589,8 +593,9 @@ const sendAnthropicChat = async ({ messages, providerName, onText, onFinalMessag
 		const tools = response.content.filter(c => c.type === 'tool_use')
 		// console.log('TOOLS!!!!!!', JSON.stringify(tools, null, 2))
 		// console.log('TOOLS!!!!!!', JSON.stringify(response, null, 2))
-		const toolCall = tools[0] && rawToolCallObjOfAnthropicParams(tools[0])
-		const toolCallObj = toolCall ? { toolCall } : {}
+		// Anthropic supports multiple tool_use blocks per message - surface all. #2
+		const toolCalls: RawToolCallObj[] = tools.map(t => rawToolCallObjOfAnthropicParams(t)).filter(Boolean) as RawToolCallObj[]
+		const toolCallObj = toolCalls.length > 0 ? { toolCall: toolCalls } : {}
 
 		onFinalMessage({ fullText, fullReasoning, anthropicReasoning, ...toolCallObj })
 	})
@@ -845,7 +850,7 @@ const sendGeminiChat = async ({
 			} else {
 				if (!toolId) toolId = generateUuid() // ids are empty, but other providers might expect an id
 				const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId)
-				const toolCallObj = toolCall ? { toolCall } : {}
+				const toolCallObj = toolCall ? { toolCall: [toolCall] } : {}
 				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, ...toolCallObj });
 			}
 		})
@@ -921,7 +926,7 @@ const openAICompatibleProviderImplementation = (providerName: Exclude<ProviderNa
 // pick out just the openai-compatible providers (everything except anthropic and gemini)
 const openAICompatibleProviderNames = Object.keys(openAICompatibleProviderConfigs) as Exclude<ProviderName, 'anthropic' | 'gemini'>[]
 
-export const sendLLMMessageToProviderImplementation = {
+export const sendLLMMessageToProviderImplementation: CallFnOfProvider = {
 	anthropic: {
 		sendChat: sendAnthropicChat,
 		sendFIM: null,
