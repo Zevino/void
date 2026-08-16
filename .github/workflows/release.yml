@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,52 +25,28 @@ jobs:
           node-version: '20.18.2'
           cache: 'npm'
 
-      # VS2022 with Desktop C++ workload + Spectre-mitigated libs (matches local build env)
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Install Windows SDK / Spectre libs
-        shell: powershell
-        run: |
-          # Install the Spectre-mitigated ATL/MFC libs for v143 (required by node-gyp native builds)
-          # This uses the VS installer to add the Spectre components without a full re-install.
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $vsPath = & "$vswhere" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          $installer = "$vsPath\Common7\IDE\VSInstaller.exe"
-          if (Test-Path $installer) {
-            Start-Process -Wait -FilePath $installer -ArgumentList "modify --installPath `"$vsPath`" --add Microsoft.VisualStudio.Component.VC.ATLMFC.Spectre --add Microsoft.VisualStudio.Component.VC.Tools.Spectre.x86.x64 --quiet --norestart"
-          } else {
-            Write-Host "VSInstaller.exe not found at $installer; assuming Spectre libs already present."
-          }
-
       - name: Configure npm cache & install
         shell: powershell
         run: |
           # Ensure node-gyp picks up the Visual Studio version
           $env:GYP_MSVS_VERSION = '2022'
-          # Also set npm_config_msvs_version so legacy consumers see the setting
           $env:npm_config_msvs_version = '2022'
           npm ci --no-audit --no-fund
         env:
-          # Keep build clean (avoid any external safe-delete shims interfering)
           CODEBUDDY_SAFE_DELETE_ENABLED: '0'
           NODE_OPTIONS: ''
 
+      # Build Void's React subproject (required; gulp does NOT cover this)
       - name: Build React products
         shell: powershell
         run: npm run buildreact
 
-      - name: Compile
-        shell: powershell
-        run: npm run compile
-
-      - name: Package Windows x64 (app directory)
+      # Package Windows x64. The gulp task compiles src->out-build internally,
+      # so the separate `npm run compile` step was redundant and is removed.
+      # Output goes to <workspace-parent>/VSCode-win32-x64 (gulpfile quirk).
+      - name: Package Windows x64
         shell: powershell
         run: |
-          $env:NPM_CONFIG_LOGLEVEL = "verbose"
-          # Captures output to packaging.log for diagnostics.
-          # NOTE: this task writes the built app to <workspace-parent>/VSCode-win32-x64
-          # (because gulpfile uses path.dirname(repoRoot) as the destination), NOT inside the repo.
           node ./node_modules/gulp/bin/gulp.js vscode-win32-x64 > packaging.log 2>&1
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Packaging task failed — see packaging.log"
@@ -80,12 +56,10 @@ jobs:
       - name: Zip the packaged app
         shell: powershell
         run: |
-          # The packaged directory lives one level ABOVE the workspace (parent of repo root).
           $wsParent = [System.IO.Path]::GetDirectoryName($env:GITHUB_WORKSPACE)
           $appDir = Join-Path $wsParent "VSCode-win32-x64"
           if (-not (Test-Path $appDir)) {
             Write-Host "ERROR: packaged app directory not found at $appDir"
-            Write-Host "Workspace parent listing:"
             Get-ChildItem $wsParent | ForEach-Object { Write-Host $_.FullName }
             Exit 1
           }
@@ -95,67 +69,11 @@ jobs:
           Compress-Archive -Path "$appDir\*" -DestinationPath $zipOut -Force
           Write-Host "Created $zipOut ($([math]::Round((Get-Item $zipOut).Length/1MB,1)) MB)"
 
-      - name: Install Inno Setup
-        shell: powershell
-        run: |
-          # Inno Setup is required to build the .exe installer
-          if (-not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) {
-            Write-Host "Installing Inno Setup via Chocolatey..."
-            choco install innosetup -y --no-progress
-          } else {
-            Write-Host "Inno Setup already present."
-          }
-
-      - name: Build installer (user setup)
-        continue-on-error: true
-        shell: powershell
-        run: |
-          # Produces .exe installer under <workspace-parent>/.build/win32-x64/*-setup/
-          node ./node_modules/gulp/bin/gulp.js vscode-win32-x64-user-setup
-
-      - name: Locate build artifacts
-        id: artifacts
-        shell: powershell
-        run: |
-          Write-Host "Searching for build artifacts..."
-
-          # zip is produced by the Zip step into ./dist
-          $zip = Get-ChildItem -Path "dist" -Filter "Voidly-win32-x64.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
-
-          # installer .exe is produced by the inno setup task under <workspace-parent>/.build/win32-x64/*-setup/
-          $wsParent = [System.IO.Path]::GetDirectoryName($env:GITHUB_WORKSPACE)
-          $exe = Get-ChildItem -Path (Join-Path $wsParent ".build") -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-
-          if (-not $zip) {
-            Write-Host "ERROR: Could not find dist/Voidly-win32-x64.zip. Workspace tree (top 200):"
-            Get-ChildItem -Path . -Recurse -File | Select-Object -First 200 | ForEach-Object { Write-Host $_.FullName }
-            Exit 1
-          }
-          if (-not $exe) {
-            Write-Host "WARNING: Could not find installer .exe; release will include zip only."
-          }
-
-          Write-Host "Found zip: $($zip.FullName)"
-          if ($exe) { Write-Host "Found exe: $($exe.FullName)" }
-
-          "zipPath=$($zip.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          if ($exe) { "exePath=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append }
-
-      - name: Upload build artifacts for debugging
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: build-debug
-          path: |
-            ${{ steps.artifacts.outputs.zipPath }}
-            ${{ steps.artifacts.outputs.exePath }}
-            packaging.log
-
-      - name: Create GitHub Release (zip)
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ${{ steps.artifacts.outputs.zipPath }}
+          files: dist/Voidly-win32-x64.zip
           name: Voidly ${{ github.ref_name }}
           body: |
             Voidly ${{ github.ref_name }} — Windows x64 build.
@@ -165,9 +83,9 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Attach installer to release (if present)
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') && steps.artifacts.outputs.exePath != ''
+      - name: Upload packaging log on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          files: ${{ steps.artifacts.outputs.exePath }}
-          name: Voidly ${{ github.ref_name }}
+          name: packaging-log
+          path: packaging.log
