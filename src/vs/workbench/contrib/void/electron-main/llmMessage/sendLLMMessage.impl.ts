@@ -142,7 +142,7 @@ const openAICompatibleProviderConfigs: Record<Exclude<ProviderName, 'anthropic' 
 	},
 	deepseek: {
 		apiKeyField: 'apiKey',
-		baseURL: () => 'https://api.deepseek.com/v1',
+		baseURL: () => 'https://api.deepseek.com',
 	},
 	// All OpenAI-Compatible instances share identical behavior; they only differ by which
 	// provider settings entry they read (endpoint / apiKey / headersJSON) — hence `providerName`.
@@ -444,8 +444,9 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 		})
 		// when error/fail - this catches errors of both .create() and .then(for await)
 		.catch(error => {
+			const stack = (error && (error as any).stack) ? ` | STACK: ${(error as any).stack}` : ''
 			if (error instanceof OpenAI.APIError && error.status === 401) { onError({ message: invalidApiKeyMessage(providerName), fullError: error }); }
-			else { onError({ message: error + '', fullError: error }); }
+			else { onError({ message: (error + '') + stack, fullError: error }); }
 		})
 }
 

@@ -28,11 +28,43 @@ export const defaultProviderSettings = {
 	openRouter: {
 		apiKey: '',
 	},
+	// OpenAI-Compatible supports multiple independent instances so you can connect
+	// several different providers/gateways at once. They are identical in behavior;
+	// each one has its own endpoint/apiKey/headers/models and an optional display `name`.
 	openAICompatible: {
 		endpoint: '',
 		apiKey: '',
 		headersJSON: '{}', // default to {}
 		reasoningField: 'reasoning_content', // which delta field carries reasoning output; e.g. 'reasoning' for QwQ/Groq/OpenRouter
+		name: '', // optional user-facing label, e.g. "Company Gateway"
+	},
+	openAICompatible2: {
+		endpoint: '',
+		apiKey: '',
+		headersJSON: '{}',
+		reasoningField: 'reasoning_content',
+		name: '',
+	},
+	openAICompatible3: {
+		endpoint: '',
+		apiKey: '',
+		headersJSON: '{}',
+		reasoningField: 'reasoning_content',
+		name: '',
+	},
+	openAICompatible4: {
+		endpoint: '',
+		apiKey: '',
+		headersJSON: '{}',
+		reasoningField: 'reasoning_content',
+		name: '',
+	},
+	openAICompatible5: {
+		endpoint: '',
+		apiKey: '',
+		headersJSON: '{}',
+		reasoningField: 'reasoning_content',
+		name: '',
 	},
 	gemini: {
 		apiKey: '',
@@ -106,9 +138,9 @@ export const defaultModelsOfProvider = {
 		'gemini-2.0-flash-lite',
 		'gemini-2.5-pro-preview-05-06',
 	],
-	deepseek: [ // https://api-docs.deepseek.com/quick_start/pricing
-		'deepseek-chat',
-		'deepseek-reasoner',
+	deepseek: [ // https://api-docs.deepseek.com/zh-cn/quick_start/pricing
+		'deepseek-v4-flash',
+		'deepseek-v4-pro',
 	],
 	ollama: [ // autodetected
 	],
@@ -150,6 +182,10 @@ export const defaultModelsOfProvider = {
 		'ministral-8b-latest',
 	],
 	openAICompatible: [], // fallback
+	openAICompatible2: [],
+	openAICompatible3: [],
+	openAICompatible4: [],
+	openAICompatible5: [],
 	googleVertex: [],
 	microsoftAzure: [],
 	awsBedrock: [],
@@ -926,19 +962,22 @@ const geminiSettings: VoidStaticProviderInfo = {
 
 
 // ---------------- DEEPSEEK API ----------------
+// https://api-docs.deepseek.com/zh-cn/quick_start/pricing
+// 新模型：deepseek-v4-flash (DeepSeek-V4-Flash-0731) / deepseek-v4-pro (DeepSeek-V4-Pro-0813)
+// 上下文 1M，最大输出 384K，默认思考模式，支持 tool calls / JSON output / Responses API / Anthropic API
 const deepseekModelOptions = {
-	'deepseek-chat': {
-		...openSourceModelOptions_assumingOAICompat.deepseekR1,
-		contextWindow: 64_000, // https://api-docs.deepseek.com/quick_start/pricing
-		reservedOutputTokenSpace: 8_000, // 8_000,
-		cost: { cache_read: .07, input: .27, output: 1.10, },
+	'deepseek-v4-flash': {
+		...openSourceModelOptions_assumingOAICompat.deepseekR1, // 支持思考模式
+		contextWindow: 1_000_000,
+		reservedOutputTokenSpace: 384_000,
+		cost: { cache_read: .014, input: .42, output: 1.26 }, // 高峰时段人民币换算：输入0.3元/百万≈$0.42，输出9元/百万≈$1.26，缓存命中0.1元≈$0.014
 		downloadable: false,
 	},
-	'deepseek-reasoner': {
-		...openSourceModelOptions_assumingOAICompat.deepseekCoderV2,
-		contextWindow: 64_000,
-		reservedOutputTokenSpace: 8_000, // 8_000,
-		cost: { cache_read: .14, input: .55, output: 2.19, },
+	'deepseek-v4-pro': {
+		...openSourceModelOptions_assumingOAICompat.deepseekR1, // 支持思考模式
+		contextWindow: 1_000_000,
+		reservedOutputTokenSpace: 384_000,
+		cost: { cache_read: .042, input: 1.26, output: 3.78 }, // 高峰时段：输入0.9元≈$1.26，输出27元≈$3.78，缓存命中0.3元≈$0.042
 		downloadable: false,
 	},
 } as const satisfies { [s: string]: VoidStaticModelInfo }
@@ -1467,6 +1506,10 @@ const modelSettingsOfProvider: { [providerName in ProviderName]: VoidStaticProvi
 	vLLM: vLLMSettings,
 	ollama: ollamaSettings,
 	openAICompatible: openaiCompatible,
+	openAICompatible2: openaiCompatible,
+	openAICompatible3: openaiCompatible,
+	openAICompatible4: openaiCompatible,
+	openAICompatible5: openaiCompatible,
 	mistral: mistralSettings,
 
 	liteLLM: liteLLMSettings,

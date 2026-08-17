@@ -100,7 +100,7 @@ const tabNames = ['Free', 'Paid', 'Local'] as const;
 type TabName = typeof tabNames[number] | 'Cloud/Other';
 
 // Data for cloud providers tab
-const cloudProviders: ProviderName[] = ['googleVertex', 'liteLLM', 'microsoftAzure', 'awsBedrock', 'openAICompatible'];
+const cloudProviders: ProviderName[] = ['googleVertex', 'liteLLM', 'microsoftAzure', 'awsBedrock', 'openAICompatible', 'openAICompatible2', 'openAICompatible3', 'openAICompatible4', 'openAICompatible5'];
 
 // Data structures for provider tabs
 const providerNamesOfTab: Record<TabName, ProviderName[]> = {
@@ -511,7 +511,7 @@ const VoidOnboardingContent = () => {
 
 	const providerNamesOfWantToUseOption: { [wantToUseOption in WantToUseOption]: ProviderName[] } = {
 		smart: ['anthropic', 'openAI', 'gemini', 'openRouter'],
-		private: ['ollama', 'vLLM', 'openAICompatible', 'lmStudio'],
+		private: ['ollama', 'vLLM', 'openAICompatible', 'openAICompatible2', 'openAICompatible3', 'openAICompatible4', 'openAICompatible5', 'lmStudio'],
 		cheap: ['gemini', 'deepseek', 'openRouter', 'ollama', 'vLLM'],
 		all: providerNames,
 	}

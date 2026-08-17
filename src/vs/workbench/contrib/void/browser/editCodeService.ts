@@ -1489,10 +1489,20 @@ class EditCodeService extends Disposable implements IEditCodeService {
 		const latestStreamLocationMutable: StreamLocationMutable = { line: diffZone.startLine, addedSplitYet: false, col: 1, originalCodeStartLine: 1 }
 
 		// allowed to throw errors - this is called inside a promise that handles everything
+		const WRITEOVER_MAX_RETRIES = 4 // cap to prevent an uncontrolled writeover loop. mirrors Fast Apply's N_RETRIES. #1
 		const runWriteover = async () => {
 			let shouldSendAnotherMessage = true
+			let nWriteoverMessagesSent = 0
 			while (shouldSendAnotherMessage) {
 				shouldSendAnotherMessage = false
+				nWriteoverMessagesSent += 1
+				if (nWriteoverMessagesSent >= WRITEOVER_MAX_RETRIES) {
+					onError({
+						message: `Tried to Writeover ${WRITEOVER_MAX_RETRIES} times but failed. This may be related to model intelligence, or it may be an edit that's too complex. Please retry or disable Writeover.`,
+						fullError: null,
+					})
+					break
+				}
 
 				let resMessageDonePromise: () => void = () => { }
 				const messageDonePromise = new Promise<void>((res_) => { resMessageDonePromise = res_ })

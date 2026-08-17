@@ -14,7 +14,7 @@ import { IMetricsService } from './metricsService.js';
 import { defaultProviderSettings, getModelCapabilities, ModelOverrides } from './modelCapabilities.js';
 import { parseHeadersJSON } from './sendLLMMessage.openaiCompatible.utils.js';
 import { VOID_SETTINGS_STORAGE_KEY } from './storageKeys.js';
-import { defaultSettingsOfProvider, FeatureName, ProviderName, ModelSelectionOfFeature, SettingsOfProvider, SettingName, providerNames, ModelSelection, modelSelectionsEqual, featureNames, VoidStatefulModelInfo, GlobalSettings, GlobalSettingName, defaultGlobalSettings, ModelSelectionOptions, OptionsOfModelSelection, ChatMode, OverridesOfModel, defaultOverridesOfModel, MCPUserStateOfName as MCPUserStateOfName, MCPUserState } from './voidSettingsTypes.js';
+import { defaultSettingsOfProvider, FeatureName, ProviderName, ModelSelectionOfFeature, SettingsOfProvider, SettingName, providerNames, ModelSelection, modelSelectionsEqual, featureNames, VoidStatefulModelInfo, GlobalSettings, GlobalSettingName, defaultGlobalSettings, ModelSelectionOptions, OptionsOfModelSelection, ChatMode, OverridesOfModel, defaultOverridesOfModel, MCPUserStateOfName as MCPUserStateOfName, MCPUserState, isOpenAICompatibleProviderName, titleOfProviderName } from './voidSettingsTypes.js';
 
 
 // name is the name in the dropdown
@@ -149,9 +149,10 @@ const _validatedModelState = (state: Omit<VoidSettingsState, '_modelOptions'>): 
 	let newSettingsOfProvider = state.settingsOfProvider
 
 	// recompute _didFillInProviderSettings
-	// `reasoningField` is optional (only applies to openAICompatible), so we exclude it from the
-	// "filled in" check — otherwise clearing it to disable reasoning would lock out the provider.
-	const optionalCustomSettingNames: readonly string[] = ['reasoningField']
+	// `reasoningField` and `name` are optional (they only apply to openAICompatible instances), so we
+	// exclude them from the "filled in" check — otherwise clearing `reasoningField` to disable
+	// reasoning, or leaving the display `name` blank, would wrongly lock out the provider.
+	const optionalCustomSettingNames: readonly string[] = ['reasoningField', 'name']
 	for (const providerName of providerNames) {
 		const settingsAtProvider = newSettingsOfProvider[providerName]
 
@@ -173,7 +174,10 @@ const _validatedModelState = (state: Omit<VoidSettingsState, '_modelOptions'>): 
 	// update model options
 	let newModelOptions: ModelOption[] = []
 	for (const providerName of providerNames) {
-		const providerTitle = providerName // displayInfoOfProviderName(providerName).title.toLowerCase() // looks better lowercase, best practice to not use raw providerName
+		// for OpenAI-Compatible instances, prefer the user's own label so multiple instances are distinguishable
+		const providerTitle = isOpenAICompatibleProviderName(providerName)
+			? titleOfProviderName(providerName, newSettingsOfProvider)
+			: providerName // displayInfoOfProviderName(providerName).title.toLowerCase() // looks better lowercase, best practice to not use raw providerName
 		if (!newSettingsOfProvider[providerName]._didFillInProviderSettings) continue // if disabled, don't display model options
 		for (const { modelName, isHidden } of newSettingsOfProvider[providerName].models) {
 			if (isHidden) continue
@@ -332,7 +336,8 @@ class VoidSettingsService extends Disposable implements IVoidSettingsService {
 				}
 
 				// remove when enough people have had it run (default is now {})
-				if (providerName === 'openAICompatible' && !readS.settingsOfProvider[providerName].headersJSON) {
+				// applies to every OpenAI-Compatible instance
+				if (isOpenAICompatibleProviderName(providerName) && !readS.settingsOfProvider[providerName].headersJSON) {
 					readS.settingsOfProvider[providerName].headersJSON = '{}'
 				}
 			}
@@ -373,9 +378,9 @@ class VoidSettingsService extends Disposable implements IVoidSettingsService {
 
 	setSettingOfProvider: SetSettingOfProviderFn = async (providerName, settingName, newVal) => {
 
-		// validate `headersJSON` (only openAICompatible lets users provide custom headers) at
+		// validate `headersJSON` (only the openAICompatible instances let users provide custom headers) at
 		// save-time rather than at request-time, so a typo surfaces immediately in the UI.
-		if (providerName === 'openAICompatible' && settingName === 'headersJSON') {
+		if (isOpenAICompatibleProviderName(providerName) && settingName === 'headersJSON') {
 			parseHeadersJSON(newVal as string) // throws a readable error on invalid JSON
 		}
 
