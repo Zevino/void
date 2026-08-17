@@ -1,6 +1,6 @@
 {
   "name": "code-oss-dev",
-  "version": "1.99.3",
+  "version": "1.99.9",
   "distro": "21c8d8ea1e46d97c5639a7cabda6c0e063cc8dd5",
   "author": {
     "name": "Microsoft Corporation"
@@ -69,7 +69,8 @@
     "extensions-ci": "node ./node_modules/gulp/bin/gulp.js extensions-ci",
     "extensions-ci-pr": "node ./node_modules/gulp/bin/gulp.js extensions-ci-pr",
     "perf": "node scripts/code-perf.js",
-    "update-build-ts-version": "npm install typescript@next && tsc -p ./build/tsconfig.build.json"
+    "update-build-ts-version": "npm install typescript@next && tsc -p ./build/tsconfig.build.json",
+    "dist-win": "@powershell -NoProfile -ExecutionPolicy Bypass -File ./build/win32/dist-win.ps1"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",

@@ -11,7 +11,13 @@ if "%VSCODE_SKIP_PRELAUNCH%"=="" node build/lib/preLaunch.js
 for /f "tokens=2 delims=:," %%a in ('findstr /R /C:"\"nameShort\":.*" product.json') do set NAMESHORT=%%~a
 set NAMESHORT=%NAMESHORT: "=%
 set NAMESHORT=%NAMESHORT:"=%.exe
-set CODE=".build\electron\%NAMESHORT%"
+
+:: Electron binary name is "Void.exe" regardless of product nameShort
+if exist ".build\electron\Void.exe" (
+	set CODE=".build\electron\Void.exe"
+) else (
+	set CODE=".build\electron\%NAMESHORT%"
+)
 
 :: Manage built-in extensions
 if "%~1"=="--builtin" goto builtin

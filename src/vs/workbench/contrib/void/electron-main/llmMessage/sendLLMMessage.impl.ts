@@ -397,9 +397,8 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 			for await (const chunk of response) {
 				// message
 				const deltaContent = chunk.choices[0]?.delta?.content
-			const newText: string = (deltaContent ?? '') as string
-				// @ts-ignore openai SDK delta.content typed as callable under this tsconfig
-				fullTextSoFar += newText
+				const newText = String(deltaContent ?? '')
+				fullTextSoFar += newText;
 
 				// tool call (aggregate each parallel index separately — see `aggregateToolCalls`)
 				({ toolCallsByIndex, activeToolIndex } = aggregateToolCalls(toolCallsByIndex, chunk.choices[0]?.delta?.tool_calls ?? [], activeToolIndex))
@@ -444,9 +443,8 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 		})
 		// when error/fail - this catches errors of both .create() and .then(for await)
 		.catch(error => {
-			const stack = (error && (error as any).stack) ? ` | STACK: ${(error as any).stack}` : ''
 			if (error instanceof OpenAI.APIError && error.status === 401) { onError({ message: invalidApiKeyMessage(providerName), fullError: error }); }
-			else { onError({ message: (error + '') + stack, fullError: error }); }
+			else { onError({ message: error + '', fullError: error }); }
 		})
 }
 
