@@ -281,6 +281,9 @@ export const extractXMLToolsWrapper = (
 	let fullText = '';
 	let trueFullText = ''
 	let latestToolCall: RawToolCallObj | undefined = undefined
+	// accumulate every completed tool call in the message, so multiple tools per
+	// round are supported. #2
+	const allToolCalls: RawToolCallObj[] = []
 
 	let foundOpenTag: { idx: number, toolName: ToolName } | null = null
 	let openToolTagBuffer = '' // the characters we've seen so far that come after a < with no space afterwards, not yet added to fullText
@@ -326,18 +329,26 @@ export const extractXMLToolsWrapper = (
 
 		// toolTagIdx is not null, so parse the XML
 		if (foundOpenTag !== null) {
-			latestToolCall = parseXMLPrefixToToolCall(
+			const parsed = parseXMLPrefixToToolCall(
 				foundOpenTag.toolName,
 				toolId,
 				trueFullText.substring(foundOpenTag.idx, Infinity),
 				toolOfToolName,
 			)
+			latestToolCall = parsed
+			// once a tool call is complete, record it and reset the scanner so any
+			// subsequent tool call in the same message is also parsed. #2
+			if (parsed.isDone) {
+				allToolCalls.push(parsed)
+				foundOpenTag = null
+				latestToolCall = undefined
+			}
 		}
 
 		onText({
 			...params,
 			fullText,
-			toolCall: latestToolCall,
+			toolCall: latestToolCall ? [latestToolCall] : undefined,
 		});
 	};
 
@@ -347,7 +358,8 @@ export const extractXMLToolsWrapper = (
 		newOnText({ ...params })
 
 		fullText = fullText.trimEnd()
-		const toolCall = latestToolCall
+		// surface all completed tool calls (array) so the agent loop can run them. #2
+		const toolCall = allToolCalls.length > 0 ? allToolCalls : latestToolCall ? [latestToolCall] : undefined
 
 		// console.log('final message!!!', trueFullText)
 		// console.log('----- returning ----\n', fullText)

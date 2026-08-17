@@ -45,6 +45,15 @@ import { RawMCPToolCall } from '../common/mcpServiceTypes.js';
 const CHAT_RETRIES = 3
 const RETRY_DELAY = 2500
 
+// hard cap on the number of LLM round-trips in an agent loop, to prevent
+// uncontrolled/infinite loops (e.g. a model repeatedly calling the same tool,
+// or a tool that perpetually errors). #1
+const AGENT_MAX_STEPS = 25
+
+// max number of consecutive tool-call failures (tool_error / invalid_params)
+// before the agent loop stops, to avoid an infinite tool-retry loop. #3
+const AGENT_MAX_CONSECUTIVE_TOOL_FAILURES = 5
+
 
 const findStagingSelectionIndex = (currentSelections: StagingSelectionItem[] | undefined, newSelection: StagingSelectionItem): number | null => {
 	if (!currentSelections) return null
@@ -173,7 +182,7 @@ export type ThreadStreamState = {
 		llmInfo: {
 			displayContentSoFar: string;
 			reasoningSoFar: string;
-			toolCallSoFar: RawToolCallObj | null;
+			toolCallSoFar: RawToolCallObj[] | null;
 		};
 		toolInfo?: undefined;
 		interrupt: Promise<() => void>; // calling this should have no effect on state - would be too confusing. it just cancels the tool
@@ -562,7 +571,7 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		if (this.streamState[threadId]?.isRunning === 'LLM') {
 			const { displayContentSoFar, reasoningSoFar, toolCallSoFar } = this.streamState[threadId].llmInfo
 			this._addMessageToThread(threadId, { role: 'assistant', displayContent: displayContentSoFar, reasoning: reasoningSoFar, anthropicReasoning: null })
-			if (toolCallSoFar) this._addMessageToThread(threadId, { role: 'interrupted_streaming_tool', name: toolCallSoFar.name, mcpServerName: this._computeMCPServerOfToolName(toolCallSoFar.name) })
+			if (toolCallSoFar?.length) this._addMessageToThread(threadId, { role: 'interrupted_streaming_tool', name: toolCallSoFar[0].name, mcpServerName: this._computeMCPServerOfToolName(toolCallSoFar[0].name) })
 		}
 		// add tool that's running
 		else if (this.streamState[threadId]?.isRunning === 'tool') {
@@ -635,9 +644,6 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 				this._addMessageToThread(threadId, { role: 'tool', type: 'invalid_params', rawParams: opts.unvalidatedToolParams, result: null, name: toolName, content: errorMessage, id: toolId, mcpServerName })
 				return {}
 			}
-			// once validated, add checkpoint for edit
-			if (toolName === 'edit_file') { this._addToolEditCheckpoint({ threadId, uri: (toolParams as BuiltinToolCallParams['edit_file']).uri }) }
-			if (toolName === 'rewrite_file') { this._addToolEditCheckpoint({ threadId, uri: (toolParams as BuiltinToolCallParams['rewrite_file']).uri }) }
 
 			// 2. if tool requires approval, break from the loop, awaiting approval
 
@@ -650,10 +656,15 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 					return { awaitingUserApproval: true }
 				}
 			}
-		}
-		else {
+			}
+			else {
 			toolParams = opts.validatedParams
-		}
+			}
+
+			// once params are determined (both preapproved and non-preapproved paths),
+			// add a checkpoint for file-editing tools so the change can be reverted. #5
+			if (toolName === 'edit_file') { this._addToolEditCheckpoint({ threadId, uri: (toolParams as BuiltinToolCallParams['edit_file']).uri }) }
+			if (toolName === 'rewrite_file') { this._addToolEditCheckpoint({ threadId, uri: (toolParams as BuiltinToolCallParams['rewrite_file']).uri }) }
 
 
 
@@ -752,6 +763,7 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		const { overridesOfModel } = this._settingsService.state
 
 		let nMessagesSent = 0
+		let consecutiveToolFailures = 0
 		let shouldSendAnotherMessage = true
 		let isRunningWhenEnd: IsRunningType = undefined
 
@@ -774,6 +786,15 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 			isRunningWhenEnd = undefined
 			nMessagesSent += 1
 
+			// hard cap on agent steps to prevent uncontrolled loops. #1
+			if (nMessagesSent > AGENT_MAX_STEPS) {
+				this._addMessageToThread(threadId, { role: 'assistant', displayContent: `Reached the maximum number of agent steps (${AGENT_MAX_STEPS}). Stopping to avoid an uncontrolled loop.`, reasoning: '', anthropicReasoning: null })
+				this._setStreamState(threadId, undefined)
+				this._addUserCheckpoint({ threadId })
+				this._metricsService.capture('Agent Loop Done (Max Steps)', { nMessagesSent, chatMode })
+				return
+			}
+
 			this._setStreamState(threadId, { isRunning: 'idle', interrupt: idleInterruptor })
 
 			const chatMessages = this.state.allThreads[threadId]?.messages ?? []
@@ -795,7 +816,7 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 				nAttempts += 1
 
 				type ResTypes =
-					| { type: 'llmDone', toolCall?: RawToolCallObj, info: { fullText: string, fullReasoning: string, anthropicReasoning: AnthropicReasoning[] | null } }
+					| { type: 'llmDone', toolCall?: RawToolCallObj[], info: { fullText: string, fullReasoning: string; anthropicReasoning: AnthropicReasoning[] | null } }
 					| { type: 'llmError', error?: { message: string; fullError: Error | null; } }
 					| { type: 'llmAborted' }
 
@@ -866,7 +887,7 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 						const { error } = llmRes
 						const { displayContentSoFar, reasoningSoFar, toolCallSoFar } = this.streamState[threadId].llmInfo
 						this._addMessageToThread(threadId, { role: 'assistant', displayContent: displayContentSoFar, reasoning: reasoningSoFar, anthropicReasoning: null })
-						if (toolCallSoFar) this._addMessageToThread(threadId, { role: 'interrupted_streaming_tool', name: toolCallSoFar.name, mcpServerName: this._computeMCPServerOfToolName(toolCallSoFar.name) })
+						if (toolCallSoFar?.length) this._addMessageToThread(threadId, { role: 'interrupted_streaming_tool', name: toolCallSoFar[0].name, mcpServerName: this._computeMCPServerOfToolName(toolCallSoFar[0].name) })
 
 						this._setStreamState(threadId, { isRunning: undefined, error })
 						this._addUserCheckpoint({ threadId })
@@ -881,20 +902,42 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 				this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative for clarity
 
-				// call tool if there is one
-				if (toolCall) {
+				// call tool(s) if there are any. Multiple tool calls in one round are
+				// executed sequentially. #2
+				if (toolCall && toolCall.length > 0) {
 					const mcpTools = this._mcpService.getMCPTools()
-					const mcpTool = mcpTools?.find(t => t.name === toolCall.name)
 
-					const { awaitingUserApproval, interrupted } = await this._runToolCall(threadId, toolCall.name, toolCall.id, mcpTool?.mcpServerName, { preapproved: false, unvalidatedToolParams: toolCall.rawParams })
-					if (interrupted) {
-						this._setStreamState(threadId, undefined)
-						return
+					for (const singleToolCall of toolCall) {
+						const mcpTool = mcpTools?.find(t => t.name === singleToolCall.name)
+
+						const { awaitingUserApproval, interrupted } = await this._runToolCall(threadId, singleToolCall.name, singleToolCall.id, mcpTool?.mcpServerName, { preapproved: false, unvalidatedToolParams: singleToolCall.rawParams })
+						if (interrupted) {
+							this._setStreamState(threadId, undefined)
+							return
+						}
+
+						// track consecutive tool failures to break an infinite retry loop. #3
+						const lastToolMsg = this.state.allThreads[threadId]?.messages.at(-1)
+						const failed = lastToolMsg?.role === 'tool' && (lastToolMsg.type === 'tool_error' || lastToolMsg.type === 'invalid_params')
+						if (failed) {
+							consecutiveToolFailures += 1
+							if (consecutiveToolFailures >= AGENT_MAX_CONSECUTIVE_TOOL_FAILURES) {
+								this._addMessageToThread(threadId, { role: 'assistant', displayContent: `Stopping after ${consecutiveToolFailures} consecutive tool failures.`, reasoning: '', anthropicReasoning: null })
+								this._setStreamState(threadId, undefined)
+								this._addUserCheckpoint({ threadId })
+								this._metricsService.capture('Agent Loop Done (Tool Failures)', { nMessagesSent, consecutiveToolFailures, chatMode })
+								return
+							}
+						}
+						else {
+							consecutiveToolFailures = 0
+						}
+
+						if (awaitingUserApproval) { isRunningWhenEnd = 'awaiting_user' }
+						else { shouldSendAnotherMessage = true }
+
+						this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative, for clarity
 					}
-					if (awaitingUserApproval) { isRunningWhenEnd = 'awaiting_user' }
-					else { shouldSendAnotherMessage = true }
-
-					this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative, for clarity
 				}
 
 			} // end while (attempts)

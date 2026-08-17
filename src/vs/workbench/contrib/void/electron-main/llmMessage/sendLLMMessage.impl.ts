@@ -15,7 +15,7 @@ import { GoogleAuth } from 'google-auth-library'
 /* eslint-enable */
 
 import { AnthropicLLMChatMessage, GeminiLLMChatMessage, LLMChatMessage, LLMFIMMessage, ModelListParams, OllamaModelResponse, OnError, OnFinalMessage, OnText, RawToolCallObj, RawToolParamsObj } from '../../common/sendLLMMessageTypes.js';
-import { ChatMode, displayInfoOfProviderName, ModelSelectionOptions, OverridesOfModel, ProviderName, SettingsOfProvider } from '../../common/voidSettingsTypes.js';
+import { ChatMode, displayInfoOfProviderName, isOpenAICompatibleProviderName, ModelSelectionOptions, OpenAICompatibleProviderName, OverridesOfModel, ProviderName, SettingsOfProvider } from '../../common/voidSettingsTypes.js';
 import { getSendableReasoningInfo, getModelCapabilities, getProviderCapabilities, defaultProviderSettings, getReservedOutputTokenSpace } from '../../common/modelCapabilities.js';
 import { extractReasoningWrapper, extractXMLToolsWrapper } from './extractGrammar.js';
 import { availableTools, InternalToolInfo } from '../../common/prompt/prompts.js';
@@ -83,6 +83,12 @@ type OpenAICompatibleProviderConfig = {
 	isAzure?: boolean;
 	azureConfig?: (settingsOfProvider: SettingsOfProvider) => { endpoint: string; apiKey: string; apiVersion: string };
 }
+// Reads the settings of whichever OpenAI-Compatible instance is in use.
+// Indexing `SettingsOfProvider` with the broad `ProviderName` union would widen every field to
+// `T | undefined`, so we narrow to the OpenAI-Compatible instances (which all share one shape).
+const oaiCompatSettings = (settingsOfProvider: SettingsOfProvider, providerName: ProviderName) =>
+	settingsOfProvider[providerName as OpenAICompatibleProviderName]
+
 // Config table that maps each OpenAI-compatible provider to how it constructs an SDK.
 // Adding a new provider is now a one-line addition here instead of a new if/else branch.
 const openAICompatibleProviderConfigs: Record<Exclude<ProviderName, 'anthropic' | 'gemini'>, OpenAICompatibleProviderConfig> = {
@@ -138,9 +144,31 @@ const openAICompatibleProviderConfigs: Record<Exclude<ProviderName, 'anthropic' 
 		apiKeyField: 'apiKey',
 		baseURL: () => 'https://api.deepseek.com/v1',
 	},
+	// All OpenAI-Compatible instances share identical behavior; they only differ by which
+	// provider settings entry they read (endpoint / apiKey / headersJSON) — hence `providerName`.
 	openAICompatible: {
 		apiKeyField: 'apiKey',
-		baseURL: ({ openAICompatible }) => normalizeV1BaseURL(openAICompatible.endpoint),
+		baseURL: (settingsOfProvider, providerName) => normalizeV1BaseURL(oaiCompatSettings(settingsOfProvider, providerName).endpoint),
+		defaultHeadersFromSettings: true,
+	},
+	openAICompatible2: {
+		apiKeyField: 'apiKey',
+		baseURL: (settingsOfProvider, providerName) => normalizeV1BaseURL(oaiCompatSettings(settingsOfProvider, providerName).endpoint),
+		defaultHeadersFromSettings: true,
+	},
+	openAICompatible3: {
+		apiKeyField: 'apiKey',
+		baseURL: (settingsOfProvider, providerName) => normalizeV1BaseURL(oaiCompatSettings(settingsOfProvider, providerName).endpoint),
+		defaultHeadersFromSettings: true,
+	},
+	openAICompatible4: {
+		apiKeyField: 'apiKey',
+		baseURL: (settingsOfProvider, providerName) => normalizeV1BaseURL(oaiCompatSettings(settingsOfProvider, providerName).endpoint),
+		defaultHeadersFromSettings: true,
+	},
+	openAICompatible5: {
+		apiKeyField: 'apiKey',
+		baseURL: (settingsOfProvider, providerName) => normalizeV1BaseURL(oaiCompatSettings(settingsOfProvider, providerName).endpoint),
 		defaultHeadersFromSettings: true,
 	},
 	groq: {
@@ -180,10 +208,11 @@ const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { se
 		? settingsOfProvider[providerName][config.apiKeyField]
 		: await config.apiKey?.(settingsOfProvider)) as string | undefined
 
-	// custom headers (only the OpenAI-Compatible aggregator lets users provide their own)
+	// custom headers (only the OpenAI-Compatible instances let users provide their own).
+	// Read from the *current* provider so each instance uses its own headers.
 	const defaultHeaders = {
 		...config.defaultHeaders,
-		...(config.defaultHeadersFromSettings ? parseHeadersJSON(settingsOfProvider.openAICompatible.headersJSON) : {}),
+		...(config.defaultHeadersFromSettings ? parseHeadersJSON(oaiCompatSettings(settingsOfProvider, providerName).headersJSON) : {}),
 	}
 
 	return new OpenAI({ baseURL, apiKey, defaultHeaders, ...commonPayloadOpts })
@@ -330,7 +359,8 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	const { needsManualParse: needsManualReasoningParse, nameOfFieldInDelta: nameOfReasoningFieldInDelta } = providerReasoningIOSettings?.output ?? {}
 	// the generic OpenAI-Compatible provider can't assume every backend uses `reasoning_content`.
 	// let the user point us at the right field (e.g. `reasoning` for QwQ/Groq/OpenRouter), or empty to disable.
-	const configuredReasoningField = providerName === 'openAICompatible' ? settingsOfProvider.openAICompatible.reasoningField : ''
+	// each OpenAI-Compatible instance can configure its own reasoning field
+	const configuredReasoningField = isOpenAICompatibleProviderName(providerName) ? oaiCompatSettings(settingsOfProvider, providerName).reasoningField : ''
 	const effectiveReasoningField = configuredReasoningField !== '' ? configuredReasoningField : nameOfReasoningFieldInDelta
 	const manuallyParseReasoning = needsManualReasoningParse && canIOReasoning && openSourceThinkTags
 	if (manuallyParseReasoning) {
@@ -346,9 +376,6 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 		onFinalMessage = newOnFinalMessage
 	}
 
-	let fullReasoningSoFar = ''
-	let fullTextSoFar = ''
-
 	// OpenAI streams parallel tool calls with different `index` values, interleaved across chunks.
 	// We must aggregate each index separately — concatenating all indexes into one string would
 	// corrupt the arguments of every tool call. Since the rest of the pipeline consumes a single
@@ -359,6 +386,9 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	// the lowest index we've seen so far (the "active" tool call to surface during streaming)
 	let activeToolIndex: number | null = null
 
+	let fullReasoningSoFar: string = ''
+	let fullTextSoFar: string = ''
+
 	openai.chat.completions
 		.create(options)
 		.then(async response => {
@@ -366,7 +396,9 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 			// when receive text
 			for await (const chunk of response) {
 				// message
-				const newText = chunk.choices[0]?.delta?.content ?? ''
+				const deltaContent = chunk.choices[0]?.delta?.content
+			const newText: string = (deltaContent ?? '') as string
+				// @ts-ignore openai SDK delta.content typed as callable under this tsconfig
 				fullTextSoFar += newText
 
 				// tool call (aggregate each parallel index separately — see `aggregateToolCalls`)
@@ -386,7 +418,7 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 				onText({
 					fullText: fullTextSoFar,
 					fullReasoning: fullReasoningSoFar,
-					toolCall: !activeTool || !activeTool.name ? undefined : { name: activeTool.name, rawParams: {}, isDone: false, doneParams: [], id: activeTool.id },
+					toolCall: !activeTool || !activeTool.name ? undefined : [{ name: activeTool.name, rawParams: {}, isDone: false, doneParams: [], id: activeTool.id }],
 				})
 
 			}
@@ -543,7 +575,7 @@ const sendAnthropicChat = async ({ messages, providerName, onText, onFinalMessag
 		onText({
 			fullText,
 			fullReasoning,
-			toolCall: !fullToolName ? undefined : { name: fullToolName, rawParams: {}, isDone: false, doneParams: [], id: 'dummy' },
+			toolCall: !fullToolName ? undefined : [{ name: fullToolName, rawParams: {}, isDone: false, doneParams: [], id: 'dummy' }],
 		})
 	}
 	// there are no events for tool_use, it comes in at the end
@@ -842,7 +874,7 @@ const sendGeminiChat = async ({
 				onText({
 					fullText: fullTextSoFar,
 					fullReasoning: fullReasoningSoFar,
-					toolCall: !toolName ? undefined : { name: toolName, rawParams: {}, isDone: false, doneParams: [], id: toolId },
+					toolCall: !toolName ? undefined : [{ name: toolName, rawParams: {}, isDone: false, doneParams: [], id: toolId }],
 				})
 			}
 
@@ -898,6 +930,10 @@ const openAICompatibleImplementationConfigs: Record<Exclude<ProviderName, 'anthr
 	mistral: { sendFIM: 'mistral', list: null },
 	ollama: { sendFIM: 'ollama', list: 'ollama' },
 	openAICompatible: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
+	openAICompatible2: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
+	openAICompatible3: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
+	openAICompatible4: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
+	openAICompatible5: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
 	openRouter: { sendFIM: 'openai-compatible', list: null },
 	vLLM: { sendFIM: 'openai-compatible', list: 'openai-compatible' },
 	deepseek: { sendFIM: null, list: null },
