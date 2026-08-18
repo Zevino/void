@@ -287,43 +287,47 @@ export const extractXMLToolsWrapper = (
 
 	let foundOpenTag: { idx: number, toolName: ToolName } | null = null
 	let openToolTagBuffer = '' // the characters we've seen so far that come after a < with no space afterwards, not yet added to fullText
+	// absolute cursor into trueFullText where we should continue scanning for the
+	// next tool open tag. Advances past each completed tool so multiple tools in
+	// the same message are all surfaced. #2
+	let scanIdx = 0
 
-	let prevFullTextLen = 0
 	const newOnText: OnText = (params) => {
-		const newText = params.fullText.substring(prevFullTextLen)
-		prevFullTextLen = params.fullText.length
 		trueFullText = params.fullText
 
 		// console.log('NEWTEXT', JSON.stringify(newText))
 
 
 		if (foundOpenTag === null) {
-			const newFullText = openToolTagBuffer + newText
+			const newText = trueFullText.substring(scanIdx)
+			const combined = openToolTagBuffer + newText
 			// ensure the code below doesn't run if only half a tag has been written
-			const isPartial = findPartiallyWrittenToolTagAtEnd(newFullText, toolOpenTags)
+			const isPartial = findPartiallyWrittenToolTagAtEnd(combined, toolOpenTags)
 			if (isPartial) {
 				// console.log('--- partial!!!')
-				openToolTagBuffer += newText
+				openToolTagBuffer = combined
 			}
 			// if no tooltag is partially written at the end, attempt to get the index
 			else {
 				// we will instantly retroactively remove this if it's a tag match
-				fullText += openToolTagBuffer
 				openToolTagBuffer = ''
-				fullText += newText
-
-				const i = findIndexOfAny(fullText, toolOpenTags)
+				const i = findIndexOfAny(combined, toolOpenTags)
 				if (i !== null) {
 					const [idx, toolTag] = i
 					const toolName = toolTag.substring(1, toolTag.length - 1) as ToolName
 					// console.log('found ', toolName)
-					foundOpenTag = { idx, toolName }
+					foundOpenTag = { idx: scanIdx + idx, toolName }
 
-					// do not count anything at or after i in fullText
-					fullText = fullText.substring(0, idx)
+					// text before the tag becomes visible fullText
+					fullText += combined.substring(0, idx)
+					// keep scanning from right before this open tag
+					scanIdx = scanIdx + idx
 				}
-
-
+				else {
+					// no tool tag in this chunk, commit everything as visible text
+					fullText += combined
+					scanIdx = trueFullText.length
+				}
 			}
 		}
 
@@ -340,6 +344,12 @@ export const extractXMLToolsWrapper = (
 			// subsequent tool call in the same message is also parsed. #2
 			if (parsed.isDone) {
 				allToolCalls.push(parsed)
+				// advance the scan cursor past this tool's close tag so the next
+				// tool in the same message gets discovered on the next tick.
+				const closeTag = `</${parsed.name}>`
+				const closeIdx = trueFullText.indexOf(closeTag, foundOpenTag.idx)
+				if (closeIdx !== -1) { scanIdx = closeIdx + closeTag.length }
+				openToolTagBuffer = ''
 				foundOpenTag = null
 				latestToolCall = undefined
 			}
@@ -355,7 +365,8 @@ export const extractXMLToolsWrapper = (
 
 	const newOnFinalMessage: OnFinalMessage = (params) => {
 		// treat like just got text before calling onFinalMessage (or else we sometimes miss the final chunk that's new to finalMessage)
-		newOnText({ ...params })
+		// scan against the last known full text, which stays intact even if the final message's fullText is empty. #2
+		newOnText({ ...params, fullText: trueFullText })
 
 		fullText = fullText.trimEnd()
 		// surface all completed tool calls (array) so the agent loop can run them. #2

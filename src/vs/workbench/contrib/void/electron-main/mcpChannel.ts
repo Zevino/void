@@ -17,6 +17,7 @@ import { MCPConfigFileJSON, MCPConfigFileEntryJSON, MCPServer, RawMCPToolCall, M
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { MCPUserStateOfName } from '../common/voidSettingsTypes.js';
+import { CancellationToken } from '../../../../base/common/cancellation.js';
 
 const getClientConfig = (serverName: string) => {
 	return {
@@ -84,7 +85,7 @@ export class MCPChannel implements IServerChannel {
 	}
 
 	// browser uses this to call (see this.channel.call() in mcpConfigService.ts for all usages)
-	async call(_: unknown, command: string, params: any): Promise<any> {
+	async call(_: unknown, command: string, params: any, cancellationToken?: CancellationToken): Promise<any> {
 		try {
 			if (command === 'refreshMCPServers') {
 				await this._refreshMCPServers(params)
@@ -97,7 +98,7 @@ export class MCPChannel implements IServerChannel {
 			}
 			else if (command === 'callTool') {
 				const p: MCPToolCallParams = params
-				const response = await this._safeCallTool(p.serverName, p.toolName, p.params)
+				const response = await this._safeCallTool(p.serverName, p.toolName, p.params, cancellationToken)
 				return response
 			}
 			else {
@@ -302,17 +303,28 @@ export class MCPChannel implements IServerChannel {
 
 	// tool call functions
 
-	private async _callTool(serverName: string, toolName: string, params: any): Promise<RawMCPToolCall> {
+	// converts a VS Code CancellationToken to an AbortSignal so the MCP SDK can
+	// send a CancelledNotification when the agent is interrupted. #4
+	private _toAbortSignal(cancellationToken: CancellationToken | undefined): AbortSignal | undefined {
+		if (!cancellationToken) return undefined
+		if (cancellationToken.isCancellationRequested) return AbortSignal.abort()
+		const controller = new AbortController()
+		cancellationToken.onCancellationRequested(() => controller.abort())
+		return controller.signal
+	}
+
+	private async _callTool(serverName: string, toolName: string, params: any, cancellationToken?: CancellationToken): Promise<RawMCPToolCall> {
 		const server = this.infoOfClientId[serverName]
 		if (!server) throw new Error(`Server ${serverName} not found`)
 		const { _client: client } = server
 		if (!client) throw new Error(`Client for server ${serverName} not found`)
 
-		// Call the tool with the provided parameters
+		// Call the tool with the provided parameters, forwarding the abort signal so
+		// the MCP server actually gets a cancellation notification. #4
 		const response = await client.callTool({
 			name: removeMCPToolNamePrefix(toolName),
 			arguments: params
-		})
+		}, undefined, { signal: this._toAbortSignal(cancellationToken) })
 		const { content } = response as CallToolResult
 		const returnValue = content[0]
 
@@ -348,9 +360,9 @@ export class MCPChannel implements IServerChannel {
 	}
 
 	// tool call error wrapper
-	private async _safeCallTool(serverName: string, toolName: string, params: any): Promise<RawMCPToolCall> {
+	private async _safeCallTool(serverName: string, toolName: string, params: any, cancellationToken?: CancellationToken): Promise<RawMCPToolCall> {
 		try {
-			const response = await this._callTool(serverName, toolName, params)
+			const response = await this._callTool(serverName, toolName, params, cancellationToken)
 			return response
 		} catch (err) {
 

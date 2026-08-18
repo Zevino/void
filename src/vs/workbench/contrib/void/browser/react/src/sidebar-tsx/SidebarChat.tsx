@@ -776,6 +776,36 @@ type ToolHeaderParams = {
 	desc2OnClick?: () => void;
 	isOpen?: boolean;
 	className?: string;
+	duration?: string; // human-readable elapsed time for the tool call, shown as a badge
+}
+
+// module-level tracking of when each tool call started (keyed by tool message id),
+// used to display the elapsed duration of a tool call. #ui
+const toolStartTimes = new Map<string, number>()
+
+// record the start time of a tool call when it begins running.
+const recordToolStart = (toolMessage: { id: string; type: string }) => {
+	if (toolMessage.type === 'running_now' && !toolStartTimes.has(toolMessage.id)) {
+		toolStartTimes.set(toolMessage.id, Date.now())
+	}
+}
+
+// format an elapsed duration in ms as a compact human-readable string (e.g. "1.2s").
+const formatDuration = (ms: number): string => {
+	if (ms < 1000) return `${Math.max(1, Math.round(ms))}ms`
+	const seconds = ms / 1000
+	if (seconds < 60) return `${seconds.toFixed(1)}s`
+	const minutes = Math.floor(seconds / 60)
+	const remSeconds = Math.round(seconds % 60)
+	return `${minutes}m ${remSeconds}s`
+}
+
+// compute the elapsed duration for a finished tool message, or undefined if it
+// never started (e.g. restored from a previous session).
+const durationOfToolMessage = (toolMessage: { id: string; type: string }): string | undefined => {
+	const start = toolStartTimes.get(toolMessage.id)
+	if (start === undefined) return undefined
+	return formatDuration(Date.now() - start)
 }
 
 const ToolHeaderWrapper = ({
@@ -795,6 +825,7 @@ const ToolHeaderWrapper = ({
 	desc2OnClick,
 	isOpen,
 	isRejected,
+	duration,
 	className, // applies to the main content
 }: ToolHeaderParams) => {
 
@@ -876,6 +907,14 @@ const ToolHeaderWrapper = ({
 							data-tooltip-content={'Canceled'}
 							data-tooltip-place='top'
 						/>}
+						{duration && <span
+							className='text-void-fg-4 text-[10px] opacity-70 flex-shrink-0 tabular-nums'
+							data-tooltip-id='void-tooltip'
+							data-tooltip-content='Elapsed time'
+							data-tooltip-place='top'
+						>
+							{duration}
+						</span>}
 						{desc2 && <span className="text-void-fg-4 text-xs" onClick={desc2OnClick}>
 							{desc2}
 						</span>}
@@ -1420,6 +1459,8 @@ const titleOfBuiltinToolName = {
 
 	'read_lint_errors': { done: `Read lint errors`, proposed: 'Read lint errors', running: loadingTitleWrapper('Reading lint errors') },
 	'search_in_file': { done: 'Searched in file', proposed: 'Search in file', running: loadingTitleWrapper('Searching in file') },
+	'get_git_status': { done: 'Read git status', proposed: 'Read git status', running: loadingTitleWrapper('Reading git status') },
+	'get_git_diff': { done: 'Read git diff', proposed: 'Read git diff', running: loadingTitleWrapper('Reading git diff') },
 } as const satisfies Record<BuiltinToolName, { done: any, proposed: any, running: any }>
 
 
@@ -1559,6 +1600,12 @@ const toolNameToDesc = (toolName: BuiltinToolName, _toolParams: BuiltinToolCallP
 				desc1: getBasename(toolParams.uri.fsPath),
 				desc1Info: getRelative(toolParams.uri, accessor),
 			}
+		},
+		'get_git_status': () => {
+			return { desc1: 'working tree status' }
+		},
+		'get_git_diff': () => {
+			return { desc1: 'working tree diff' }
 		}
 	}
 
@@ -1875,7 +1922,7 @@ const MCPToolWrapper = ({ toolMessage }: WrapperProps<string>) => {
 	const isError = false
 	const isRejected = toolMessage.type === 'rejected'
 	const { rawParams, params } = toolMessage
-	const componentParams: ToolHeaderParams = { title, desc1, isError, icon, isRejected, }
+	const componentParams: ToolHeaderParams = { title, desc1, isError, icon, isRejected, duration: durationOfToolMessage(toolMessage) }
 
 	const paramsStr = JSON.stringify(params, null, 2)
 	componentParams.desc2 = <CopyButton codeStr={paramsStr} toolTipName={`Copy inputs: ${paramsStr}`} />
@@ -2445,6 +2492,88 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			return <ToolHeaderWrapper {...componentParams} />
 		},
 	},
+	'get_git_status': {
+		resultWrapper: ({ toolMessage }) => {
+			const accessor = useAccessor()
+
+			const { desc1, desc1Info } = toolNameToDesc(toolMessage.name, toolMessage.params, accessor)
+			const title = getTitle(toolMessage)
+			const icon = null
+
+			if (toolMessage.type === 'tool_request') return null
+			if (toolMessage.type === 'running_now') return null
+
+			const isError = false
+			const isRejected = toolMessage.type === 'rejected'
+			const { params } = toolMessage
+			const componentParams: ToolHeaderParams = { title, desc1, desc1Info, isError, icon, isRejected, duration: durationOfToolMessage(toolMessage) }
+
+			if (toolMessage.type === 'success') {
+				const { result } = toolMessage
+				componentParams.children = <ToolChildrenWrapper>
+					<SmallProseWrapper>
+						<ChatMarkdownRender
+							string={`\`\`\`\n${result.branch || ''}\n${result.stat || ''}\n${result.log || ''}\n\`\`\``}
+							chatMessageLocation={undefined}
+							isApplyEnabled={false}
+							isLinkDetectionEnabled={true}
+						/>
+					</SmallProseWrapper>
+				</ToolChildrenWrapper>
+			}
+			else if (toolMessage.type === 'tool_error') {
+				const { result } = toolMessage
+				componentParams.bottomChildren = <BottomChildren title='Error'>
+					<CodeChildren>
+						{result}
+					</CodeChildren>
+				</BottomChildren>
+			}
+
+			return <ToolHeaderWrapper {...componentParams} />
+		},
+	},
+	'get_git_diff': {
+		resultWrapper: ({ toolMessage }) => {
+			const accessor = useAccessor()
+
+			const { desc1, desc1Info } = toolNameToDesc(toolMessage.name, toolMessage.params, accessor)
+			const title = getTitle(toolMessage)
+			const icon = null
+
+			if (toolMessage.type === 'tool_request') return null
+			if (toolMessage.type === 'running_now') return null
+
+			const isError = false
+			const isRejected = toolMessage.type === 'rejected'
+			const { params } = toolMessage
+			const componentParams: ToolHeaderParams = { title, desc1, desc1Info, isError, icon, isRejected, duration: durationOfToolMessage(toolMessage) }
+
+			if (toolMessage.type === 'success') {
+				const { result } = toolMessage
+				componentParams.children = <ToolChildrenWrapper>
+					<SmallProseWrapper>
+						<ChatMarkdownRender
+							string={`\`\`\`diff\n${result.diff}\n\`\`\``}
+							chatMessageLocation={undefined}
+							isApplyEnabled={false}
+							isLinkDetectionEnabled={true}
+						/>
+					</SmallProseWrapper>
+				</ToolChildrenWrapper>
+			}
+			else if (toolMessage.type === 'tool_error') {
+				const { result } = toolMessage
+				componentParams.bottomChildren = <BottomChildren title='Error'>
+					<CodeChildren>
+						{result}
+					</CodeChildren>
+				</BottomChildren>
+			}
+
+			return <ToolHeaderWrapper {...componentParams} />
+		},
+	},
 };
 
 
@@ -2543,6 +2672,10 @@ const _ChatBubble = ({ threadId, chatMessage, currCheckpointIdx, isCommitted, me
 		const isBuiltInTool = isABuiltinToolName(toolName)
 		const ToolResultWrapper = isBuiltInTool ? builtinToolNameToComponent[toolName]?.resultWrapper as ResultWrapper<ToolName>
 			: MCPToolWrapper as ResultWrapper<ToolName>
+
+		// record the start time when a tool begins running, so its elapsed duration
+		// can be displayed once it finishes. #ui
+		recordToolStart(chatMessage)
 
 		if (ToolResultWrapper)
 			return <>

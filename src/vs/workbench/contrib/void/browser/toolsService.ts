@@ -6,6 +6,9 @@ import { createDecorator, IInstantiationService } from '../../../../platform/ins
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js'
 import { QueryBuilder } from '../../../services/search/common/queryBuilder.js'
 import { ISearchService } from '../../../services/search/common/search.js'
+import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js'
+import { IMainProcessService } from '../../../../platform/ipc/common/mainProcessService.js'
+import { IVoidSCMService } from '../common/voidSCMTypes.js'
 import { IEditCodeService } from './editCodeServiceInterface.js'
 import { ITerminalToolService } from './terminalToolService.js'
 import { LintErrorItem, BuiltinToolCallParams, BuiltinToolResultType, BuiltinToolName } from '../common/toolsServiceTypes.js'
@@ -143,7 +146,7 @@ export class ToolsService implements IToolsService {
 
 	constructor(
 		@IFileService fileService: IFileService,
-		@IWorkspaceContextService workspaceContextService: IWorkspaceContextService,
+		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService,
 		@ISearchService searchService: ISearchService,
 		@IInstantiationService instantiationService: IInstantiationService,
 		@IVoidModelService voidModelService: IVoidModelService,
@@ -153,8 +156,10 @@ export class ToolsService implements IToolsService {
 		@IDirectoryStrService private readonly directoryStrService: IDirectoryStrService,
 		@IMarkerService private readonly markerService: IMarkerService,
 		@IVoidSettingsService private readonly voidSettingsService: IVoidSettingsService,
+		@IMainProcessService mainProcessService: IMainProcessService,
 	) {
 		const queryBuilder = instantiationService.createInstance(QueryBuilder);
+		const voidSCM = ProxyChannel.toService<IVoidSCMService>(mainProcessService.getChannel('void-channel-scm'));
 
 		this.validateParams = {
 			read_file: (params: RawToolParamsObj) => {
@@ -228,6 +233,14 @@ export class ToolsService implements IToolsService {
 				} = params
 				const uri = validateURI(uriUnknown)
 				return { uri }
+			},
+
+			get_git_status: () => {
+				return {}
+			},
+
+			get_git_diff: () => {
+				return {}
 			},
 
 			// ---
@@ -394,6 +407,24 @@ export class ToolsService implements IToolsService {
 				return { result: { lintErrors } }
 			},
 
+			get_git_status: async () => {
+				const repoPath = this._getWorkspaceRepoPath()
+				if (!repoPath) { throw new Error('No git repository root found in the current workspace.') }
+				const [branch, stat, log] = await Promise.all([
+					voidSCM.gitBranch(repoPath),
+					voidSCM.gitStat(repoPath),
+					voidSCM.gitLog(repoPath),
+				])
+				return { result: { branch, stat, log } }
+			},
+
+			get_git_diff: async () => {
+				const repoPath = this._getWorkspaceRepoPath()
+				if (!repoPath) { throw new Error('No git repository root found in the current workspace.') }
+				const diff = await voidSCM.gitSampledDiffs(repoPath)
+				return { result: { diff } }
+			},
+
 			// ---
 
 			create_file_or_folder: async ({ uri, isFolder }) => {
@@ -505,6 +536,16 @@ export class ToolsService implements IToolsService {
 					stringifyLintErrors(result.lintErrors)
 					: 'No lint errors found.'
 			},
+			get_git_status: (params, result) => {
+				const parts = [`Branch: ${result.branch || '(detached)'}`]
+				if (result.stat) parts.push(`Changes:\n${result.stat}`)
+				else parts.push('No changes in the working tree.')
+				if (result.log) parts.push(`Recent commits:\n${result.log}`)
+				return parts.join('\n\n')
+			},
+			get_git_diff: (params, result) => {
+				return result.diff || 'No working tree changes to show.'
+			},
 			// ---
 			create_file_or_folder: (params, result) => {
 				return `URI ${params.uri.fsPath} successfully created.`
@@ -585,6 +626,14 @@ export class ToolsService implements IToolsService {
 
 		if (!lintErrors.length) return { lintErrors: null }
 		return { lintErrors, }
+	}
+
+	// returns the first workspace folder path, used as the git repository root for
+	// the get_git_status / get_git_diff tools.
+	private _getWorkspaceRepoPath(): string | null {
+		const folders = this.workspaceContextService.getWorkspace().folders
+		if (!folders.length) return null
+		return folders[0].uri.fsPath
 	}
 
 

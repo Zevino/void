@@ -14,11 +14,11 @@ import { ILLMMessageService } from '../common/sendLLMMessageService.js';
 import { chat_userMessageContent, isABuiltinToolName } from '../common/prompt/prompts.js';
 import { AnthropicReasoning, getErrorMessage, RawToolCallObj, RawToolParamsObj } from '../common/sendLLMMessageTypes.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
-import { FeatureName, ModelSelection, ModelSelectionOptions } from '../common/voidSettingsTypes.js';
+import { ChatMode, FeatureName, ModelSelection, ModelSelectionOptions } from '../common/voidSettingsTypes.js';
 import { IVoidSettingsService } from '../common/voidSettingsService.js';
 import { approvalTypeOfBuiltinToolName, BuiltinToolCallParams, ToolCallParams, ToolName, ToolResult } from '../common/toolsServiceTypes.js';
 import { IToolsService } from './toolsService.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
+import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
 import { ChatMessage, CheckpointEntry, CodespanLocationLink, StagingSelectionItem, ToolMessage } from '../common/chatThreadServiceTypes.js';
 import { Position } from '../../../../editor/common/core/position.js';
@@ -53,6 +53,26 @@ const AGENT_MAX_STEPS = 25
 // max number of consecutive tool-call failures (tool_error / invalid_params)
 // before the agent loop stops, to avoid an infinite tool-retry loop. #3
 const AGENT_MAX_CONSECUTIVE_TOOL_FAILURES = 5
+
+// cap the number of characters of a single tool result that is fed back to the
+// LLM, to avoid O(n²) token growth on long results (e.g. large file reads, long
+// terminal output). #8
+const AGENT_TOOL_RESULT_MAX_CHARS = 20000
+
+// number of lightweight retries for transient tool-execution errors (e.g. a
+// flaky IO tool or a momentarily unavailable MCP server). Param-validation
+// errors and user interruptions are NOT retried. #7
+const AGENT_TOOL_RETRIES = 2
+
+// truncate an over-long tool result string, keeping the beginning and end, and
+// signalling to the model that it was truncated. #8
+const truncateToolResult = (str: string): string => {
+	if (str.length <= AGENT_TOOL_RESULT_MAX_CHARS) return str
+	const keep = Math.floor(AGENT_TOOL_RESULT_MAX_CHARS / 2)
+	const head = str.slice(0, keep)
+	const tail = str.slice(str.length - keep)
+	return `${head}\n...\n[TRUNCATED - result was ${str.length} chars; only showing the first and last ${keep} chars each]\n${tail}`
+}
 
 
 const findStagingSelectionIndex = (currentSelections: StagingSelectionItem[] | undefined, newSelection: StagingSelectionItem): number | null => {
@@ -621,8 +641,8 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 		// compute these below
 		let toolParams: ToolCallParams<ToolName>
-		let toolResult: ToolResult<ToolName>
-		let toolResultStr: string
+		let toolResult: ToolResult<ToolName> = undefined as unknown as ToolResult<ToolName>
+		let toolResultStr = ''
 
 		// Check if it's a built-in tool
 		const isBuiltInTool = isABuiltinToolName(toolName)
@@ -656,10 +676,6 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 					return { awaitingUserApproval: true }
 				}
 			}
-			}
-			else {
-			toolParams = opts.validatedParams
-			}
 
 			// once params are determined (both preapproved and non-preapproved paths),
 			// add a checkpoint for file-editing tools so the change can be reverted. #5
@@ -671,6 +687,11 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 
 
+		}
+		else {
+			toolParams = opts.validatedParams
+		}
+
 		// 3. call the tool
 		// this._setStreamState(threadId, { isRunning: 'tool' }, 'merge')
 		const runningTool = { role: 'tool', type: 'running_now', name: toolName, params: toolParams, content: '(value not received yet...)', result: null, id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName } as const
@@ -678,41 +699,69 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 
 		let interrupted = false
-		let resolveInterruptor: (r: () => void) => void = () => { }
-		const interruptorPromise = new Promise<() => void>(res => { resolveInterruptor = res })
-		try {
 
-			// set stream state
-			this._setStreamState(threadId, { isRunning: 'tool', interrupt: interruptorPromise, toolInfo: { toolName, toolParams, id: toolId, content: 'interrupted...', rawParams: opts.unvalidatedToolParams, mcpServerName } })
+		// lightweight retry for transient tool-execution errors. Param-validation
+		// errors and user interruptions are NOT retried. #7
+		let toolError: unknown
+		let nToolRetries = 0
+		while (nToolRetries <= AGENT_TOOL_RETRIES) {
+			// a fresh interruptor promise per attempt so retries are interruptible
+			let resolveInterruptor: (r: () => void) => void = () => { }
+			const interruptorPromise = new Promise<() => void>(res => { resolveInterruptor = res })
+			try {
 
-			if (isBuiltInTool) {
-				const { result, interruptTool } = await this._toolsService.callTool[toolName](toolParams as any)
-				const interruptor = () => { interrupted = true; interruptTool?.() }
-				resolveInterruptor(interruptor)
+				// set stream state
+				this._setStreamState(threadId, { isRunning: 'tool', interrupt: interruptorPromise, toolInfo: { toolName, toolParams, id: toolId, content: 'interrupted...', rawParams: opts.unvalidatedToolParams, mcpServerName } })
 
-				toolResult = await result
+				if (isBuiltInTool) {
+					const { result, interruptTool } = await this._toolsService.callTool[toolName](toolParams as any)
+					const interruptor = () => { interrupted = true; interruptTool?.() }
+					resolveInterruptor(interruptor)
+
+					toolResult = await result
+				}
+				else {
+					const mcpTools = this._mcpService.getMCPTools()
+					const mcpTool = mcpTools?.find(t => t.name === toolName)
+					if (!mcpTool) { throw new Error(`MCP tool ${toolName} not found`) }
+
+					// thread a real cancellation signal so interrupting the agent can
+					// actually cancel the underlying MCP call (sends CancelledNotification). #4
+					const mcpAbortController = new AbortController()
+					const mcpCancellationSource = new CancellationTokenSource()
+					mcpAbortController.signal.addEventListener('abort', () => mcpCancellationSource.cancel())
+					resolveInterruptor(() => { interrupted = true; mcpAbortController.abort() })
+
+					toolResult = (await this._mcpService.callMCPTool({
+						serverName: mcpTool.mcpServerName ?? 'unknown_mcp_server',
+						toolName: toolName,
+						params: toolParams
+					}, mcpCancellationSource.token)).result
+				}
+
+				if (interrupted) { return { interrupted: true } } // the tool result is added where we interrupt, not here
+
+				// success — clear any prior error and break out of the retry loop
+				toolError = undefined
+				break
 			}
-			else {
-				const mcpTools = this._mcpService.getMCPTools()
-				const mcpTool = mcpTools?.find(t => t.name === toolName)
-				if (!mcpTool) { throw new Error(`MCP tool ${toolName} not found`) }
+			catch (error) {
+				resolveInterruptor(() => { }) // resolve for the sake of it
+				if (interrupted) { return { interrupted: true } } // the tool result is added where we interrupt, not here
 
-				resolveInterruptor(() => { })
-
-				toolResult = (await this._mcpService.callMCPTool({
-					serverName: mcpTool.mcpServerName ?? 'unknown_mcp_server',
-					toolName: toolName,
-					params: toolParams
-				})).result
+				toolError = error
+				nToolRetries += 1
+				if (nToolRetries <= AGENT_TOOL_RETRIES) {
+					// reset the interruptor promise so the next attempt wires it up fresh
+					continue
+				}
+				break
 			}
-
-			if (interrupted) { return { interrupted: true } } // the tool result is added where we interrupt, not here
 		}
-		catch (error) {
-			resolveInterruptor(() => { }) // resolve for the sake of it
-			if (interrupted) { return { interrupted: true } } // the tool result is added where we interrupt, not here
 
-			const errorMessage = getErrorMessage(error)
+		// if the tool never succeeded after retries, surface the error
+		if (toolError !== undefined) {
+			const errorMessage = getErrorMessage(toolError)
 			this._updateLatestTool(threadId, { role: 'tool', type: 'tool_error', params: toolParams, result: errorMessage, name: toolName, content: errorMessage, id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName })
 			return {}
 		}
@@ -732,11 +781,59 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 			return {}
 		}
 
-		// 5. add to history and keep going
-		this._updateLatestTool(threadId, { role: 'tool', type: 'success', params: toolParams, result: toolResult, name: toolName, content: toolResultStr, id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName })
+		// 5. add to history and keep going. Truncate over-long results so the
+		// context doesn't grow unboundedly across agent rounds. #8
+		this._updateLatestTool(threadId, { role: 'tool', type: 'success', params: toolParams, result: toolResult, name: toolName, content: truncateToolResult(toolResultStr), id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName })
 		return {}
 	};
 
+	// Executes a batch of tool calls (possibly from a single LLM round) one after
+	// another. Decouples tool execution from the agent loop, so the loop only
+	// decides "should I continue" while this method owns "how each tool runs".
+	// #2 #6
+	private _runToolCalls = async (
+		threadId: string,
+		toolCalls: RawToolCallObj[],
+		opts: { chatMode: ChatMode, nMessagesSent: number, consecutiveToolFailures: number },
+	): Promise<{ interrupted?: boolean, isRunningWhenEnd?: 'awaiting_user', consecutiveToolFailures: number, stopped?: boolean }> => {
+		const { chatMode, consecutiveToolFailures: consecutiveToolFailuresIn } = opts
+		let consecutiveToolFailures = consecutiveToolFailuresIn
+		let isRunningWhenEnd: 'awaiting_user' | undefined
+		const mcpTools = this._mcpService.getMCPTools()
+
+		for (const singleToolCall of toolCalls) {
+			const mcpTool = mcpTools?.find(t => t.name === singleToolCall.name)
+
+			const { awaitingUserApproval, interrupted } = await this._runToolCall(threadId, singleToolCall.name, singleToolCall.id, mcpTool?.mcpServerName, { preapproved: false, unvalidatedToolParams: singleToolCall.rawParams })
+			if (interrupted) {
+				this._setStreamState(threadId, undefined)
+				return { interrupted: true, consecutiveToolFailures }
+			}
+
+			// track consecutive tool failures to break an infinite retry loop. #3
+			const lastToolMsg = this.state.allThreads[threadId]?.messages.at(-1)
+			const failed = lastToolMsg?.role === 'tool' && (lastToolMsg.type === 'tool_error' || lastToolMsg.type === 'invalid_params')
+			if (failed) {
+				consecutiveToolFailures += 1
+				if (consecutiveToolFailures >= AGENT_MAX_CONSECUTIVE_TOOL_FAILURES) {
+					this._addMessageToThread(threadId, { role: 'assistant', displayContent: `Stopping after ${consecutiveToolFailures} consecutive tool failures.`, reasoning: '', anthropicReasoning: null })
+					this._setStreamState(threadId, undefined)
+					this._addUserCheckpoint({ threadId })
+					this._metricsService.capture('Agent Loop Done (Tool Failures)', { nMessagesSent: opts.nMessagesSent, consecutiveToolFailures, chatMode })
+					return { stopped: true, consecutiveToolFailures }
+				}
+			}
+			else {
+				consecutiveToolFailures = 0
+			}
+
+			if (awaitingUserApproval) { isRunningWhenEnd = 'awaiting_user' }
+
+			this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative, for clarity
+		}
+
+		return { isRunningWhenEnd, consecutiveToolFailures }
+	};
 
 
 
@@ -902,42 +999,18 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 				this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative for clarity
 
-				// call tool(s) if there are any. Multiple tool calls in one round are
-				// executed sequentially. #2
+				// call tool(s) if there are any. Tool execution is delegated to a
+				// dedicated batch method, decoupling "which tools are allowed" (from
+				// availableTools) from "how tool calls execute". #2 #6
 				if (toolCall && toolCall.length > 0) {
-					const mcpTools = this._mcpService.getMCPTools()
-
-					for (const singleToolCall of toolCall) {
-						const mcpTool = mcpTools?.find(t => t.name === singleToolCall.name)
-
-						const { awaitingUserApproval, interrupted } = await this._runToolCall(threadId, singleToolCall.name, singleToolCall.id, mcpTool?.mcpServerName, { preapproved: false, unvalidatedToolParams: singleToolCall.rawParams })
-						if (interrupted) {
-							this._setStreamState(threadId, undefined)
-							return
-						}
-
-						// track consecutive tool failures to break an infinite retry loop. #3
-						const lastToolMsg = this.state.allThreads[threadId]?.messages.at(-1)
-						const failed = lastToolMsg?.role === 'tool' && (lastToolMsg.type === 'tool_error' || lastToolMsg.type === 'invalid_params')
-						if (failed) {
-							consecutiveToolFailures += 1
-							if (consecutiveToolFailures >= AGENT_MAX_CONSECUTIVE_TOOL_FAILURES) {
-								this._addMessageToThread(threadId, { role: 'assistant', displayContent: `Stopping after ${consecutiveToolFailures} consecutive tool failures.`, reasoning: '', anthropicReasoning: null })
-								this._setStreamState(threadId, undefined)
-								this._addUserCheckpoint({ threadId })
-								this._metricsService.capture('Agent Loop Done (Tool Failures)', { nMessagesSent, consecutiveToolFailures, chatMode })
-								return
-							}
-						}
-						else {
-							consecutiveToolFailures = 0
-						}
-
-						if (awaitingUserApproval) { isRunningWhenEnd = 'awaiting_user' }
-						else { shouldSendAnotherMessage = true }
-
-						this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative, for clarity
+					const { interrupted, stopped, isRunningWhenEnd: resIsRunningWhenEnd, consecutiveToolFailures: resConsecutiveToolFailures } = await this._runToolCalls(threadId, toolCall, { chatMode, nMessagesSent, consecutiveToolFailures })
+					if (interrupted || stopped) {
+						this._setStreamState(threadId, undefined)
+						return
 					}
+					consecutiveToolFailures = resConsecutiveToolFailures
+					if (resIsRunningWhenEnd === 'awaiting_user') { isRunningWhenEnd = 'awaiting_user'; shouldSendAnotherMessage = false }
+					else { shouldSendAnotherMessage = true }
 				}
 
 			} // end while (attempts)

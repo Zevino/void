@@ -267,6 +267,18 @@ export const builtinTools: {
 		},
 	},
 
+	get_git_status: {
+		name: 'get_git_status',
+		description: `Returns the current git branch, a summary (git diff --stat) of the working tree changes, and the last few non-merge commits. Use this to understand what has changed in the repo before editing.`,
+		params: {},
+	},
+
+	get_git_diff: {
+		name: 'get_git_diff',
+		description: `Returns sampled diffs (unified=0, no color) of the most significantly changed files in the working tree. Use this to inspect the actual content of uncommitted changes.`,
+		params: {},
+	},
+
 	// --- editing (create/delete) ---
 
 	create_file_or_folder: {
