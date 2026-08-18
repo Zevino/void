@@ -21,6 +21,13 @@ export const MAX_DIRSTR_CHARS_TOTAL_TOOL = 20_000
 export const MAX_DIRSTR_RESULTS_TOTAL_BEGINNING = 100
 export const MAX_DIRSTR_RESULTS_TOTAL_TOOL = 100
 
+// The directory tree shown in the SYSTEM message is scaffolding context: it gives the
+// model a rough map of the repo. It doesn't need to be the full 20k chars on EVERY
+// request — a smaller snapshot saves tokens, and the model can use `get_dir_tree` /
+// `ls_dir` tools to drill into specific folders when it actually needs detail. #token-opt
+export const MAX_DIRSTR_CHARS_TOTAL_SYSTEM = 8_000
+export const MAX_DIRSTR_CHARS_TOTAL_SYSTEM_MESSAGE = `...Directory overview truncated (showing the first ${MAX_DIRSTR_CHARS_TOTAL_SYSTEM} chars). Use the get_dir_tree or ls_dir tools to inspect specific folders.`
+
 // tool info
 export const MAX_FILE_CHARS_PAGE = 500_000
 export const MAX_CHILDREN_URIs_PAGE = 500
@@ -466,9 +473,17 @@ ${openedURIs.join('\n') || 'NO OPENED FILES'}${''/* separator */}${mode === 'age
 </system_info>`)
 
 
+	// Optimization A: cap the directory tree in the SYSTEM message. It is scaffolding
+	// context (a rough repo map), not the primary content — a full 20k chars on every
+	// request is wasteful. Truncate to a smaller snapshot and point the model at the
+	// directory tools for anything deeper. #token-opt
+	const systemDirectoryStr = directoryStr.length > MAX_DIRSTR_CHARS_TOTAL_SYSTEM
+		? directoryStr.slice(0, MAX_DIRSTR_CHARS_TOTAL_SYSTEM) + '\n' + MAX_DIRSTR_CHARS_TOTAL_SYSTEM_MESSAGE
+		: directoryStr
+
 	const fsInfo = (`Here is an overview of the user's file system:
 <files_overview>
-${directoryStr}
+${systemDirectoryStr}
 </files_overview>`)
 
 

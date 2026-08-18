@@ -362,6 +362,21 @@ const prepareOpenAIOrAnthropicMessages = ({
 		alreadyTrimmedIdxes.add(trimIdx)
 	}
 
+	// Optimization C: if the budget is still over after every candidate message has been
+	// trimmed down to the floor, DROP the lowest-value placeholder messages entirely.
+	// Keeping 120-char stubs for the whole history adds noise (and tokens) without signal.
+	// We keep the first 2 and last 4 messages (mirrors the weight() protection) and always
+	// keep the system message. Iterating backwards keeps indices stable during splice.
+	if (remainingCharsToTrim > 0) {
+		for (let idx = messages.length - 1 - 4; idx >= 2; idx--) {
+			if (remainingCharsToTrim <= 0) break
+			const m = messages[idx]
+			if (m.role === 'system') continue
+			remainingCharsToTrim -= m.content.length
+			messages.splice(idx, 1)
+		}
+	}
+
 	// ================ system message hack ================
 	const newSysMsg = messages.shift()!.content
 

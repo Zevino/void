@@ -1,0 +1,14 @@
+[
+	{
+		"id": "deepseek",
+		"providerName": "deepseek",
+		"modelName": "deepseek-chat",
+		"apiKey": "env:DEEPSEEK_API_KEY"
+	},
+	{
+		"id": "openai",
+		"providerName": "openAI",
+		"modelName": "gpt-4o-mini",
+		"apiKey": "env:OPENAI_API_KEY"
+	}
+]
