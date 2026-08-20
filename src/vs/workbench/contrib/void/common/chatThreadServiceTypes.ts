@@ -5,7 +5,7 @@
 
 import { URI } from '../../../../base/common/uri.js';
 import { VoidFileSnapshot } from './editCodeServiceTypes.js';
-import { AnthropicReasoning, RawToolParamsObj } from './sendLLMMessageTypes.js';
+import { AnthropicReasoning, LLMUsage, RawToolParamsObj } from './sendLLMMessageTypes.js';
 import { ToolCallParams, ToolName, ToolResult } from './toolsServiceTypes.js';
 
 export type ToolMessage<T extends ToolName> = {
@@ -63,6 +63,7 @@ export type ChatMessage =
 		reasoning: string; // reasoning from the LLM, used for step-by-step thinking
 
 		anthropicReasoning: AnthropicReasoning[] | null; // anthropic reasoning
+		usage?: LLMUsage; // token/cost usage captured from the provider for this message
 	}
 	| ToolMessage<ToolName>
 	| DecorativeCanceledTool

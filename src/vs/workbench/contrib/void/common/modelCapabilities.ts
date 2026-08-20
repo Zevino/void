@@ -461,6 +461,13 @@ const extensiveModelOptionsFallback: VoidStaticProviderInfo['modelOptionsFallbac
 
 	if (lower.includes('deepseek-r1') || lower.includes('deepseek-reasoner')) return toFallback(openSourceModelOptions_assumingOAICompat, 'deepseekR1')
 	if (lower.includes('deepseek') && lower.includes('v2')) return toFallback(openSourceModelOptions_assumingOAICompat, 'deepseekCoderV2')
+	// DeepSeek-V4 系列（V4-Flash / V4-Pro 等）原生支持 OpenAI-compatible function calling
+	if (lower.includes('deepseek') && lower.includes('v4')) return {
+		...toFallback(openSourceModelOptions_assumingOAICompat, 'deepseekR1'),
+		specialToolFormat: 'openai-style',
+		contextWindow: 1_000_000,
+		reservedOutputTokenSpace: 384_000,
+	}
 	if (lower.includes('deepseek')) return toFallback(openSourceModelOptions_assumingOAICompat, 'deepseekCoderV3')
 
 	if (lower.includes('llama3')) return toFallback(openSourceModelOptions_assumingOAICompat, 'llama3')
@@ -968,6 +975,7 @@ const geminiSettings: VoidStaticProviderInfo = {
 const deepseekModelOptions = {
 	'deepseek-v4-flash': {
 		...openSourceModelOptions_assumingOAICompat.deepseekR1, // 支持思考模式
+		specialToolFormat: 'openai-style', // DeepSeek-V4 原生支持 OpenAI-compatible function calling
 		contextWindow: 1_000_000,
 		reservedOutputTokenSpace: 384_000,
 		cost: { cache_read: .014, input: .42, output: 1.26 }, // 高峰时段人民币换算：输入0.3元/百万≈$0.42，输出9元/百万≈$1.26，缓存命中0.1元≈$0.014
@@ -975,6 +983,7 @@ const deepseekModelOptions = {
 	},
 	'deepseek-v4-pro': {
 		...openSourceModelOptions_assumingOAICompat.deepseekR1, // 支持思考模式
+		specialToolFormat: 'openai-style', // DeepSeek-V4 原生支持 OpenAI-compatible function calling
 		contextWindow: 1_000_000,
 		reservedOutputTokenSpace: 384_000,
 		cost: { cache_read: .042, input: 1.26, output: 3.78 }, // 高峰时段：输入0.9元≈$1.26，输出27元≈$3.78，缓存命中0.3元≈$0.042

@@ -259,7 +259,7 @@ const prepareOpenAIOrAnthropicMessages = ({
 	supportsAnthropicReasoning: boolean,
 	contextWindow: number,
 	reservedOutputTokenSpace: number | null | undefined,
-}): { messages: AnthropicOrOpenAILLMMessage[], separateSystemMessage: string | undefined } => {
+}): { messages: AnthropicOrOpenAILLMMessage[], separateSystemMessage: string | undefined, tokenSavings?: { placeholderDeletedTokens: number } } => {
 
 	reservedOutputTokenSpace = Math.max(
 		contextWindow * 1 / 2, // reserve at least 1/4 of the token window length
@@ -377,6 +377,20 @@ const prepareOpenAIOrAnthropicMessages = ({
 		}
 	}
 
+	// ================ token savings (best-effort) ================
+	// Estimate how many tokens were saved by trimming + dropping placeholder
+	// messages: the difference between the original total length and the final
+	// total length, converted at CHARS_PER_TOKEN. Only reported when we actually
+	// trimmed/dropped something.
+	let tokenSavings: { placeholderDeletedTokens: number } | undefined
+	{
+		const finalTotalLen = messages.reduce((acc, m) => acc + m.content.length, 0)
+		const savedChars = Math.max(0, totalLen - finalTotalLen)
+		if (savedChars > 0) {
+			tokenSavings = { placeholderDeletedTokens: Math.ceil(savedChars / CHARS_PER_TOKEN) }
+		}
+	}
+
 	// ================ system message hack ================
 	const newSysMsg = messages.shift()!.content
 
@@ -451,6 +465,7 @@ const prepareOpenAIOrAnthropicMessages = ({
 	return {
 		messages: llmMessages,
 		separateSystemMessage: separateSystemMessageStr,
+		tokenSavings,
 	} as const
 }
 
@@ -516,7 +531,7 @@ const prepareMessages = (params: {
 	contextWindow: number,
 	reservedOutputTokenSpace: number | null | undefined,
 	providerName: ProviderName
-}): { messages: LLMChatMessage[], separateSystemMessage: string | undefined } => {
+}): { messages: LLMChatMessage[], separateSystemMessage: string | undefined, tokenSavings?: { placeholderDeletedTokens: number } } => {
 
 	const specialFormat = params.specialToolFormat // this is just for ts stupidness
 
@@ -525,7 +540,7 @@ const prepareMessages = (params: {
 		const res = prepareOpenAIOrAnthropicMessages({ ...params, specialToolFormat: specialFormat === 'gemini-style' ? 'anthropic-style' : undefined })
 		const messages = res.messages as AnthropicLLMChatMessage[]
 		const messages2 = prepareGeminiMessages(messages)
-		return { messages: messages2, separateSystemMessage: res.separateSystemMessage }
+		return { messages: messages2, separateSystemMessage: res.separateSystemMessage, tokenSavings: res.tokenSavings }
 	}
 
 	return prepareOpenAIOrAnthropicMessages({ ...params, specialToolFormat: specialFormat })
@@ -536,8 +551,8 @@ const prepareMessages = (params: {
 
 export interface IConvertToLLMMessageService {
 	readonly _serviceBrand: undefined;
-	prepareLLMSimpleMessages: (opts: { simpleMessages: SimpleLLMMessage[], systemMessage: string, modelSelection: ModelSelection | null, featureName: FeatureName }) => { messages: LLMChatMessage[], separateSystemMessage: string | undefined }
-	prepareLLMChatMessages: (opts: { chatMessages: ChatMessage[], chatMode: ChatMode, modelSelection: ModelSelection | null }) => Promise<{ messages: LLMChatMessage[], separateSystemMessage: string | undefined }>
+	prepareLLMSimpleMessages: (opts: { simpleMessages: SimpleLLMMessage[], systemMessage: string, modelSelection: ModelSelection | null, featureName: FeatureName }) => { messages: LLMChatMessage[], separateSystemMessage: string | undefined, tokenSavings?: { placeholderDeletedTokens: number } }
+	prepareLLMChatMessages: (opts: { chatMessages: ChatMessage[], chatMode: ChatMode, modelSelection: ModelSelection | null }) => Promise<{ messages: LLMChatMessage[], separateSystemMessage: string | undefined, tokenSavings?: { placeholderDeletedTokens: number } }>
 	prepareFIMMessage(opts: { messages: LLMFIMMessage, }): { prefix: string, suffix: string, stopTokens: string[] }
 }
 
@@ -669,7 +684,7 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 		const isReasoningEnabled = getIsReasoningEnabledState(featureName, providerName, modelName, modelSelectionOptions, overridesOfModel)
 		const reservedOutputTokenSpace = getReservedOutputTokenSpace(providerName, modelName, { isReasoningEnabled, overridesOfModel })
 
-		const { messages, separateSystemMessage } = prepareMessages({
+		const { messages, separateSystemMessage, tokenSavings } = prepareMessages({
 			messages: simpleMessages,
 			systemMessage,
 			aiInstructions,
@@ -680,7 +695,7 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 			reservedOutputTokenSpace,
 			providerName,
 		})
-		return { messages, separateSystemMessage };
+		return { messages, separateSystemMessage, tokenSavings };
 	}
 	prepareLLMChatMessages: IConvertToLLMMessageService['prepareLLMChatMessages'] = async ({ chatMessages, chatMode, modelSelection }) => {
 		if (modelSelection === null) return { messages: [], separateSystemMessage: undefined }
@@ -706,7 +721,7 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 		const reservedOutputTokenSpace = getReservedOutputTokenSpace(providerName, modelName, { isReasoningEnabled, overridesOfModel })
 		const llmMessages = this._chatMessagesToSimpleMessages(chatMessages)
 
-		const { messages, separateSystemMessage } = prepareMessages({
+		const { messages, separateSystemMessage, tokenSavings } = prepareMessages({
 			messages: llmMessages,
 			systemMessage,
 			aiInstructions,
@@ -717,7 +732,7 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 			reservedOutputTokenSpace,
 			providerName,
 		})
-		return { messages, separateSystemMessage };
+		return { messages, separateSystemMessage, tokenSavings };
 	}
 
 

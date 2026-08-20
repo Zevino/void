@@ -78,9 +78,18 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 					flex items-center px-2 py-1.5
 					cursor-pointer
 				'
+				role="button"
+				tabIndex={0}
 				onClick={() => {
 					commandService.executeCommand(VOID_CTRL_L_ACTION_ID)
 					setClickState('clickedOption');
+				}}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						commandService.executeCommand(VOID_CTRL_L_ACTION_ID)
+						setClickState('clickedOption');
+					}
 				}}
 			>
 				<span>Add to Chat</span>
@@ -98,9 +107,18 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 					flex items-center px-2 py-1.5
 					cursor-pointer
 				'
+				role="button"
+				tabIndex={0}
 				onClick={() => {
 					commandService.executeCommand(VOID_CTRL_K_ACTION_ID)
 					setClickState('clickedOption');
+				}}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						commandService.executeCommand(VOID_CTRL_K_ACTION_ID)
+						setClickState('clickedOption');
+					}
 				}}
 			>
 				<span className='ml-1'>Edit Inline</span>
@@ -117,8 +135,17 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 				flex items-center px-0.5
 				cursor-pointer
 			'
+			role="button"
+			tabIndex={0}
+			aria-label="More options"
 			onClick={() => {
 				setClickState('clickedMore');
+			}}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					setClickState('clickedMore');
+				}
 			}}
 		>
 			<MoreVertical className="w-4" />
@@ -132,9 +159,18 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 				flex items-center px-2 py-1.5
 				cursor-pointer
 			'
+			role="button"
+			tabIndex={0}
 			onClick={() => {
 				commandService.executeCommand(VOID_OPEN_SETTINGS_ACTION_ID);
 				setClickState('clickedOption');
+			}}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					commandService.executeCommand(VOID_OPEN_SETTINGS_ACTION_ID);
+					setClickState('clickedOption');
+				}
 			}}
 		>
 			Disable Suggestions?
@@ -147,8 +183,17 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 				flex items-center px-0.5
 				cursor-pointer
 			'
+			role="button"
+			tabIndex={0}
+			aria-label="Back"
 			onClick={() => {
 				setClickState('init');
+			}}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					setClickState('init');
+				}
 			}}
 		>
 			<MoreVertical className="w-4" />

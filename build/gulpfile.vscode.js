@@ -430,6 +430,20 @@ function packageTask(platform, arch, sourceFolderName, destinationFolderName, op
 				.pipe(rename('bin/' + product.applicationName)));
 		}
 
+		// Explicitly rename the main executable on Windows so the process name shown in
+		// Task Manager is "Voidly" instead of "Electron". gulp-electron normally performs
+		// this automatically (win32.js renameApp using package.json's name), but we make it
+		// deterministic here. Child processes (GPU, renderer, utility) reuse this same
+		// executable, so they will show the renamed name too. This is a no-op if the
+		// executable was already renamed upstream.
+		if (platform === 'win32') {
+			result = result.pipe(rename(function (filePath) {
+				if (filePath.dirname === '.' && filePath.basename === 'electron' && filePath.extname === '.exe') {
+					filePath.basename = product.nameShort;
+				}
+			}));
+		}
+
 		result = inlineMeta(result, {
 			targetPaths: bootstrapEntryPoints,
 			packageJsonFn: () => packageJsonContents,

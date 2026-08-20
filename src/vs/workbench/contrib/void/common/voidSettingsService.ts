@@ -492,14 +492,18 @@ class VoidSettingsService extends Disposable implements IVoidSettingsService {
 	}
 
 	setOverridesOfModel = async (providerName: ProviderName, modelName: string, overrides: Partial<ModelOverrides> | undefined) => {
+		// `this.state.overridesOfModel[providerName]` may be missing if state was
+		// loaded from older persisted storage before this provider existed.
+		const overridesAtProvider: Record<string, Partial<ModelOverrides> | undefined> = this.state.overridesOfModel[providerName] ?? {};
+
 		const newState: VoidSettingsState = {
 			...this.state,
 			overridesOfModel: {
 				...this.state.overridesOfModel,
 				[providerName]: {
-					...this.state.overridesOfModel[providerName],
+					...overridesAtProvider,
 					[modelName]: overrides === undefined ? undefined : {
-						...this.state.overridesOfModel[providerName][modelName],
+						...overridesAtProvider[modelName],
 						...overrides
 					},
 				}

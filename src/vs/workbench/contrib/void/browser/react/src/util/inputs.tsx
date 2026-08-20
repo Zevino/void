@@ -753,11 +753,12 @@ export const VoidInputBox2 = forwardRef<HTMLTextAreaElement, InputBox2Props>(fun
 
 			disabled={!isEnabled}
 
-			className={`w-full resize-none max-h-[500px] overflow-y-auto text-void-fg-1 placeholder:text-void-fg-3 ${className}`}
+			className={`w-full resize-none max-h-[500px] overflow-y-auto text-void-fg-1 placeholder:text-void-fg-3 outline-none focus:outline-none ${className}`}
 			style={{
 				// defaultInputBoxStyles
 				background: asCssVariable(inputBackground),
-				color: asCssVariable(inputForeground)
+				color: asCssVariable(inputForeground),
+				outline: 'none',
 				// inputBorder: asCssVariable(inputBorder),
 			}}
 
@@ -1014,6 +1015,7 @@ export const VoidSlider = ({
 	step = 1,
 	className = '',
 	width = 200,
+	ariaLabel = 'Slider',
 }: {
 	value: number;
 	onChange: (value: number) => void;
@@ -1024,6 +1026,7 @@ export const VoidSlider = ({
 	step?: number;
 	className?: string;
 	width?: number;
+	ariaLabel?: string;
 }) => {
 	// Calculate percentage for position
 	const percentage = ((value - min) / (max - min)) * 100;
@@ -1078,8 +1081,46 @@ export const VoidSlider = ({
 		onChange(clampedValue);
 	};
 
+	// Keyboard support for the ARIA slider: arrows step by `step`, Home/End jump to min/max.
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (disabled) return;
+
+		let newValue = value;
+		switch (e.key) {
+			case 'ArrowLeft':
+			case 'ArrowDown':
+				newValue = Math.max(min, value - step);
+				break;
+			case 'ArrowRight':
+			case 'ArrowUp':
+				newValue = Math.min(max, value + step);
+				break;
+			case 'Home':
+				newValue = min;
+				break;
+			case 'End':
+				newValue = max;
+				break;
+			default:
+				return;
+		}
+
+		e.preventDefault();
+		onChange(newValue);
+	};
+
 	return (
-		<div className={`inline-flex items-center flex-shrink-0 ${className}`}>
+		<div
+			className={`inline-flex items-center flex-shrink-0 ${className}`}
+			role="slider"
+			tabIndex={disabled ? -1 : 0}
+			aria-valuemin={min}
+			aria-valuemax={max}
+			aria-valuenow={value}
+			aria-label={ariaLabel}
+			aria-disabled={disabled}
+			onKeyDown={handleKeyDown}
+		>
 			{/* Outer container with padding to account for thumb overhang */}
 			<div className={`relative flex-shrink-0 ${disabled ? 'opacity-25' : ''}`}
 				style={{
@@ -1170,17 +1211,29 @@ export const VoidSwitch = ({
 	onChange,
 	size = 'md',
 	disabled = false,
+	ariaLabel = 'Toggle',
 	...props
 }: {
 	value: boolean;
 	onChange: (value: boolean) => void;
 	disabled?: boolean;
 	size?: 'xxs' | 'xs' | 'sm' | 'sm+' | 'md';
+	ariaLabel?: string;
 }) => {
 	return (
 		<label className="inline-flex items-center" {...props}>
 			<div
+				role="switch"
+				aria-checked={value}
+				aria-label={ariaLabel}
+				tabIndex={disabled ? -1 : 0}
 				onClick={() => !disabled && onChange(!value)}
+				onKeyDown={(e) => {
+					if (e.key === ' ' || e.key === 'Enter') {
+						e.preventDefault();
+						if (!disabled) onChange(!value);
+					}
+				}}
 				className={`
 			cursor-pointer
 			relative inline-flex items-center rounded-full transition-colors duration-200 ease-in-out

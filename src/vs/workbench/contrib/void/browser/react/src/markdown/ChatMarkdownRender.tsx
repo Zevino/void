@@ -96,6 +96,16 @@ const Codespan = ({ text, className, onClick, tooltip }: { text: string, classNa
 	return <code
 		className={`font-mono font-medium rounded-sm bg-void-bg-1 px-1 ${className}`}
 		onClick={onClick}
+		{...(onClick ? {
+			role: 'button',
+			tabIndex: 0,
+			onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					onClick();
+				}
+			},
+		} : {})}
 		{...tooltip ? {
 			'data-tooltip-id': 'void-tooltip',
 			'data-tooltip-content': tooltip,

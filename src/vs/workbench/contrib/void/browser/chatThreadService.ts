@@ -12,7 +12,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
 import { ILLMMessageService } from '../common/sendLLMMessageService.js';
 import { chat_userMessageContent, isABuiltinToolName } from '../common/prompt/prompts.js';
-import { AnthropicReasoning, getErrorMessage, RawToolCallObj, RawToolParamsObj } from '../common/sendLLMMessageTypes.js';
+import { AnthropicReasoning, getErrorMessage, LLMUsage, RawToolCallObj, RawToolParamsObj } from '../common/sendLLMMessageTypes.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { ChatMode, FeatureName, ModelSelection, ModelSelectionOptions } from '../common/voidSettingsTypes.js';
 import { IVoidSettingsService } from '../common/voidSettingsService.js';
@@ -147,6 +147,13 @@ export type ThreadType = {
 
 	messages: ChatMessage[];
 	filesWithUserChanges: Set<string>;
+
+	// cumulative token/cost usage across all assistant messages in this thread.
+	// optional so old persisted threads (without the field) load without errors.
+	usage?: { promptTokens: number; completionTokens: number; totalTokens: number; estimatedCostUsd?: number };
+	// tokens saved by trimming/dropping placeholder messages on the most recent
+	// message preparation pass. optional for backward compatibility.
+	lastTokenSavings?: { placeholderDeletedTokens: number };
 
 	// this doesn't need to go in a state object, but feels right
 	state: {
@@ -895,11 +902,14 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 			this._setStreamState(threadId, { isRunning: 'idle', interrupt: idleInterruptor })
 
 			const chatMessages = this.state.allThreads[threadId]?.messages ?? []
-			const { messages, separateSystemMessage } = await this._convertToLLMMessagesService.prepareLLMChatMessages({
+			const { messages, separateSystemMessage, tokenSavings } = await this._convertToLLMMessagesService.prepareLLMChatMessages({
 				chatMessages,
 				modelSelection,
 				chatMode
 			})
+			// record how many tokens were saved by trimming/dropping placeholder
+			// messages on this preparation pass (optional field, best-effort)
+			if (tokenSavings) this._setThreadTokenSavings(threadId, tokenSavings)
 
 			if (interruptedWhenIdle) {
 				this._setStreamState(threadId, undefined)
@@ -913,7 +923,7 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 				nAttempts += 1
 
 				type ResTypes =
-					| { type: 'llmDone', toolCall?: RawToolCallObj[], info: { fullText: string, fullReasoning: string; anthropicReasoning: AnthropicReasoning[] | null } }
+					| { type: 'llmDone', toolCall?: RawToolCallObj[], info: { fullText: string, fullReasoning: string; anthropicReasoning: AnthropicReasoning[] | null }, usage?: LLMUsage }
 					| { type: 'llmError', error?: { message: string; fullError: Error | null; } }
 					| { type: 'llmAborted' }
 
@@ -932,8 +942,8 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 					onText: ({ fullText, fullReasoning, toolCall }) => {
 						this._setStreamState(threadId, { isRunning: 'LLM', llmInfo: { displayContentSoFar: fullText, reasoningSoFar: fullReasoning, toolCallSoFar: toolCall ?? null }, interrupt: Promise.resolve(() => { if (llmCancelToken) this._llmMessageService.abort(llmCancelToken) }) })
 					},
-					onFinalMessage: async ({ fullText, fullReasoning, toolCall, anthropicReasoning, }) => {
-						resMessageIsDonePromise({ type: 'llmDone', toolCall, info: { fullText, fullReasoning, anthropicReasoning } }) // resolve with tool calls
+					onFinalMessage: async ({ fullText, fullReasoning, toolCall, anthropicReasoning, usage }) => {
+						resMessageIsDonePromise({ type: 'llmDone', toolCall, info: { fullText, fullReasoning, anthropicReasoning }, usage }) // resolve with tool calls
 					},
 					onError: async (error) => {
 						resMessageIsDonePromise({ type: 'llmError', error: error })
@@ -993,9 +1003,9 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 				}
 
 				// llm res success
-				const { toolCall, info } = llmRes
+				const { toolCall, info, usage } = llmRes
 
-				this._addMessageToThread(threadId, { role: 'assistant', displayContent: info.fullText, reasoning: info.fullReasoning, anthropicReasoning: info.anthropicReasoning })
+				this._addMessageToThread(threadId, { role: 'assistant', displayContent: info.fullText, reasoning: info.fullReasoning, anthropicReasoning: info.anthropicReasoning, usage }, usage)
 
 				this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative for clarity
 
@@ -1793,7 +1803,18 @@ We only need to do it for files that were edited since `from`, ie files between 
 	}
 
 
-	private _addMessageToThread(threadId: string, message: ChatMessage) {
+	// accumulate a single message's usage into the thread-level cumulative usage.
+	private _accumulateUsage(prev: ThreadType['usage'], next: LLMUsage): ThreadType['usage'] {
+		const p = prev ?? { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+		return {
+			promptTokens: p.promptTokens + (next.promptTokens ?? 0),
+			completionTokens: p.completionTokens + (next.completionTokens ?? 0),
+			totalTokens: p.totalTokens + (next.totalTokens ?? 0),
+			estimatedCostUsd: (p.estimatedCostUsd ?? 0) + (next.estimatedCostUsd ?? 0),
+		}
+	}
+
+	private _addMessageToThread(threadId: string, message: ChatMessage, usage?: LLMUsage) {
 		const { allThreads } = this.state
 		const oldThread = allThreads[threadId]
 		if (!oldThread) return // should never happen
@@ -1807,6 +1828,8 @@ We only need to do it for files that were edited since `from`, ie files between 
 					...oldThread.messages,
 					message
 				],
+				// accumulate usage into the thread-level cumulative total (optional field)
+				...(usage ? { usage: this._accumulateUsage(oldThread.usage, usage) } : {}),
 			}
 		}
 		this._storeAllThreads(newThreads)
@@ -1921,6 +1944,22 @@ We only need to do it for files that were edited since `from`, ie files between 
 			}
 		})
 
+	}
+
+	// set thread-level token savings (top-level field, not part of thread.state)
+	private _setThreadTokenSavings(threadId: string, tokenSavings: { placeholderDeletedTokens: number }): void {
+		const thread = this.state.allThreads[threadId]
+		if (!thread) return
+
+		this._setState({
+			allThreads: {
+				...this.state.allThreads,
+				[thread.id]: {
+					...thread,
+					lastTokenSavings: tokenSavings,
+				}
+			}
+		})
 	}
 
 	// set thread.state

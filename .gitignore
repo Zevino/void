@@ -28,3 +28,24 @@ product.overrides.json
 .tool-versions
 src/vs/workbench/contrib/void/browser/react/out/**
 src/vs/workbench/contrib/void/browser/react/src2/**
+
+# deepwork state
+.slim/deepwork/
+
+# dev/build runtime logs & temp files (never commit)
+*.log
+_wat_*/
+_wat_*
+_yamlcheck.cjs
+process.stdout.write(d))
+.workbuddy/
+void_runtime.log
+void_stdout.log
+watch_run.log
+watch_react.log
+buildreact.log
+code_bat.log
+code_launch.log
+compile_full.log
+eval-test-report.json
+eval-test.config.json

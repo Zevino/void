@@ -14,7 +14,8 @@ import { Tool as GeminiTool, FunctionDeclaration, GoogleGenAI, ThinkingConfig, S
 import { GoogleAuth } from 'google-auth-library'
 /* eslint-enable */
 
-import { AnthropicLLMChatMessage, GeminiLLMChatMessage, LLMChatMessage, LLMFIMMessage, ModelListParams, OllamaModelResponse, OnError, OnFinalMessage, OnText, RawToolCallObj, RawToolParamsObj } from '../../common/sendLLMMessageTypes.js';
+import { AnthropicLLMChatMessage, GeminiLLMChatMessage, LLMChatMessage, LLMFIMMessage, LLMUsage, ModelListParams, OllamaModelResponse, OnError, OnFinalMessage, OnText, RawToolCallObj, RawToolParamsObj } from '../../common/sendLLMMessageTypes.js';
+import { estimateCostUsd } from '../../common/costEstimator.js';
 import { ChatMode, displayInfoOfProviderName, isOpenAICompatibleProviderName, ModelSelectionOptions, OpenAICompatibleProviderName, OverridesOfModel, ProviderName, SettingsOfProvider } from '../../common/voidSettingsTypes.js';
 import { getSendableReasoningInfo, getModelCapabilities, getProviderCapabilities, defaultProviderSettings, getReservedOutputTokenSpace } from '../../common/modelCapabilities.js';
 import { extractReasoningWrapper, extractXMLToolsWrapper } from './extractGrammar.js';
@@ -56,6 +57,27 @@ export type ListParams_Internal<ModelResponse> = ModelListParams<ModelResponse>
 
 
 const invalidApiKeyMessage = (providerName: ProviderName) => `Invalid ${displayInfoOfProviderName(providerName).title} API key.`
+
+// ------------ USAGE NORMALIZATION ------------
+// Providers expose token counts under different field names. Normalize into the
+// shared `LLMUsage` shape, mapping:
+//   prompt_tokens / input_tokens / prompt_eval_count -> promptTokens
+//   completion_tokens / output_tokens / eval_count     -> completionTokens
+//   total_tokens (or the sum of both)                  -> totalTokens
+// Returns `undefined` when nothing is available so callers don't fabricate data.
+const toLLMUsage = (raw: { promptTokens?: number; completionTokens?: number; totalTokens?: number }): LLMUsage | undefined => {
+	const { promptTokens, completionTokens, totalTokens } = raw
+	if (promptTokens === undefined && completionTokens === undefined && totalTokens === undefined) return undefined
+	const resolvedTotal = totalTokens ?? ((promptTokens !== undefined && completionTokens !== undefined) ? promptTokens + completionTokens : undefined)
+	return { promptTokens, completionTokens, totalTokens: resolvedTotal }
+}
+
+// fills `estimatedCostUsd` (best-effort) onto a normalized usage object.
+const withEstimatedCost = (usage: LLMUsage | undefined, modelName: string): LLMUsage | undefined => {
+	if (!usage) return undefined
+	const estimatedCostUsd = estimateCostUsd(modelName, usage.promptTokens, usage.completionTokens)
+	return estimatedCostUsd === undefined ? usage : { ...usage, estimatedCostUsd }
+}
 
 // ------------ OPENAI-COMPATIBLE (HELPERS) ------------
 
@@ -338,6 +360,8 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	const nativeToolsObj = potentialTools && specialToolFormat === 'openai-style' ?
 		{ tools: potentialTools } as const
 		: {}
+	// DEBUG: print what tool format we're using right now
+	console.log('[sendLLM] provider=' + providerName + ' model=' + modelName_ + ' specialToolFormat=' + JSON.stringify(specialToolFormat) + ' willUseNativeTools=' + (potentialTools && specialToolFormat === 'openai-style'))
 
 	// instance
 	const openai: OpenAI = await newOpenAICompatibleSDK({ providerName, settingsOfProvider })
@@ -349,6 +373,8 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 		model: modelName,
 		messages: messages as any,
 		stream: true,
+		// required for OpenAI-compatible providers to include usage in the final chunk
+		stream_options: { include_usage: true },
 		...nativeToolsObj,
 		...includeInPayload,
 		// only send the token field if we actually know a space to reserve
@@ -389,6 +415,10 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	let fullReasoningSoFar: string = ''
 	let fullTextSoFar: string = ''
 
+	// OpenAI streams usage on the LAST chunk only (and only when stream_options
+	// include_usage is honored) — capture it defensively each iteration.
+	let usage: LLMUsage | undefined
+
 	openai.chat.completions
 		.create(options)
 		.then(async response => {
@@ -399,6 +429,16 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 				const deltaContent = chunk.choices[0]?.delta?.content
 				const newText = String(deltaContent ?? '')
 				fullTextSoFar += newText;
+
+				// capture usage if present on this chunk (fields may be null/absent)
+				const chunkUsage = (chunk as any).usage
+				if (chunkUsage && typeof chunkUsage === 'object') {
+					usage = toLLMUsage({
+						promptTokens: chunkUsage.prompt_tokens,
+						completionTokens: chunkUsage.completion_tokens,
+						totalTokens: chunkUsage.total_tokens,
+					})
+				}
 
 				// tool call (aggregate each parallel index separately — see `aggregateToolCalls`)
 				({ toolCallsByIndex, activeToolIndex } = aggregateToolCalls(toolCallsByIndex, chunk.choices[0]?.delta?.tool_calls ?? [], activeToolIndex))
@@ -438,7 +478,7 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 			}
 			else {
 				const toolCallObj = hasToolCall ? { toolCall: completedToolCalls } : {}
-				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, ...toolCallObj });
+				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, usage: withEstimatedCost(usage, modelName), ...toolCallObj });
 			}
 		})
 		// when error/fail - this catches errors of both .create() and .then(for await)
@@ -630,7 +670,14 @@ const sendAnthropicChat = async ({ messages, providerName, onText, onFinalMessag
 		const toolCalls: RawToolCallObj[] = tools.map(t => rawToolCallObjOfAnthropicParams(t)).filter(Boolean) as RawToolCallObj[]
 		const toolCallObj = toolCalls.length > 0 ? { toolCall: toolCalls } : {}
 
-		onFinalMessage({ fullText, fullReasoning, anthropicReasoning, ...toolCallObj })
+		// Anthropic reports usage on the final message as { input_tokens, output_tokens }
+		const anthropicUsage = (response as any)?.usage
+		const usage = anthropicUsage && typeof anthropicUsage === 'object' ? toLLMUsage({
+			promptTokens: anthropicUsage.input_tokens,
+			completionTokens: anthropicUsage.output_tokens,
+		}) : undefined
+
+		onFinalMessage({ fullText, fullReasoning, anthropicReasoning, usage: withEstimatedCost(usage, modelName), ...toolCallObj })
 	})
 	// on error
 	stream.on('error', (error) => {
@@ -730,11 +777,18 @@ const sendOllamaFIM = ({ messages, onFinalMessage, onError, settingsOfProvider, 
 	})
 		.then(async stream => {
 			_setAborter(() => stream.abort())
+			// Ollama reports token counts per chunk as prompt_eval_count / eval_count
+			let usage: LLMUsage | undefined
 			for await (const chunk of stream) {
 				const newText = chunk.response
 				fullText += newText
+				const promptEvalCount = (chunk as any)?.prompt_eval_count
+				const evalCount = (chunk as any)?.eval_count
+				if (promptEvalCount !== undefined || evalCount !== undefined) {
+					usage = toLLMUsage({ promptTokens: promptEvalCount, completionTokens: evalCount })
+				}
 			}
-			onFinalMessage({ fullText, fullReasoning: '', anthropicReasoning: null })
+			onFinalMessage({ fullText, fullReasoning: '', anthropicReasoning: null, usage: withEstimatedCost(usage, modelName) })
 		})
 		// when error/fail
 		.catch((error) => {
@@ -839,6 +893,8 @@ const sendGeminiChat = async ({
 	let toolParamsStr = ''
 	let toolId = ''
 
+	// Gemini surfaces usage on the final chunk via `usageMetadata`
+	let usage: LLMUsage | undefined
 
 	genAI.models.generateContentStream({
 		model: modelName,
@@ -857,6 +913,16 @@ const sendGeminiChat = async ({
 				// message
 				const newText = chunk.text ?? ''
 				fullTextSoFar += newText
+
+				// capture usage if present (usageMetadata: promptTokenCount / candidatesTokenCount / totalTokenCount)
+				const usageMetadata = (chunk as any)?.usageMetadata
+				if (usageMetadata && typeof usageMetadata === 'object') {
+					usage = toLLMUsage({
+						promptTokens: usageMetadata.promptTokenCount,
+						completionTokens: usageMetadata.candidatesTokenCount,
+						totalTokens: usageMetadata.totalTokenCount,
+					})
+				}
 
 				// tool call
 				const functionCalls = chunk.functionCalls
@@ -884,7 +950,7 @@ const sendGeminiChat = async ({
 				if (!toolId) toolId = generateUuid() // ids are empty, but other providers might expect an id
 				const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId)
 				const toolCallObj = toolCall ? { toolCall: [toolCall] } : {}
-				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, ...toolCallObj });
+				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, usage: withEstimatedCost(usage, modelName), ...toolCallObj });
 			}
 		})
 		.catch(error => {

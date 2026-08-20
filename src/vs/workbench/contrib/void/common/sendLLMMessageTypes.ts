@@ -91,8 +91,17 @@ export type RawToolCallObj = {
 
 export type AnthropicReasoning = ({ type: 'thinking'; thinking: any; signature: string; } | { type: 'redacted_thinking', data: any })
 
+// normalized token/cost usage captured from a provider's streaming response.
+// all fields are optional so we never break callers when a provider omits usage.
+export type LLMUsage = {
+	promptTokens?: number;
+	completionTokens?: number;
+	totalTokens?: number;
+	estimatedCostUsd?: number;
+}
+
 export type OnText = (p: { fullText: string; fullReasoning: string; toolCall?: RawToolCallObj[] }) => void
-export type OnFinalMessage = (p: { fullText: string; fullReasoning: string; toolCall?: RawToolCallObj[]; anthropicReasoning: AnthropicReasoning[] | null }) => void // id is tool_use_id. toolCall is now an array to support multiple tool calls per round (#2)
+export type OnFinalMessage = (p: { fullText: string; fullReasoning: string; toolCall?: RawToolCallObj[]; anthropicReasoning: AnthropicReasoning[] | null; usage?: LLMUsage }) => void // id is tool_use_id. toolCall is now an array to support multiple tool calls per round (#2)
 export type OnError = (p: { message: string; fullError: Error | null }) => void
 export type OnAbort = () => void
 export type AbortRef = { current: (() => void) | null }

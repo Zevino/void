@@ -31,6 +31,14 @@
 
 	--void-ring-color: #007FD4;
 	--void-link-color: #007FD4;
+
+	/* Keyboard focus visibility removed per user request — the blue outline
+	   clashed with the VoidChatArea's existing focus-within border treatment. */
+
+	/* Override VS Code's global textarea:focus blue outline inside the void UI */
+	textarea:focus {
+		outline: none;
+	}
 }
 
 .select-child-restyle select {
@@ -42,12 +50,6 @@
 .void-force-child-placeholder-void-fg-1 ::placeholder {
 	color: var(--void-fg-3);
 }
-
-* {
-	outline: none !important;
-}
-
-
 
 .inherit-bg-all-restyle > * {
 	background-color: inherit !important;

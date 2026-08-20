@@ -153,6 +153,68 @@ const findPartiallyWrittenToolTagAtEnd = (fullText: string, toolTags: string[]) 
 	return false
 }
 
+// Returns the trailing "<tagname-like" prefix at the end of `str` iff that
+// prefix is still a possible prefix of one of the `toolTags`. We only buffer
+// it when there's a real chance it grows into an actual tool tag, otherwise
+// we'd buffer forever on chunks like `<read_xyz` that will never close into a
+// real tool.
+const STRAY_TAG_PREFIX_AT_END = /<[A-Za-z0-9_]*$/
+const findPartialToolTagPrefixAtEnd = (fullText: string, toolTags: string[]): string | null => {
+	const m = fullText.match(STRAY_TAG_PREFIX_AT_END)
+	if (!m) return null
+	const prefix = m[0]
+	// Only buffer if it's still a prefix of at least one known tool tag.
+	for (const toolTag of toolTags) {
+		if (toolTag.startsWith(prefix) || toolTag === prefix) return prefix
+	}
+	return null
+}
+
+// Strip any stray, un-closed "<tagname-like" fragments left over in the visible
+// text after the real tool tags have been extracted. Models in XML-tool mode
+// sometimes emit duplicated/overlapping open tags like `<read<read_file>` or
+// `<<read_file>`; the scanner keeps the extra leading `<read` / `<` in fullText.
+// This sweeps the leftover fragments so the user never sees them.
+// A fragment is stripped when it looks like `<word` (letters/digits/underscore)
+// that is NOT immediately followed by `>` (i.e. it's not a complete, well-formed
+// open tag). We keep it if it's a genuine part of normal prose, guarded by the
+// `>`-follow check plus the fact that prose rarely contains a bare `<word` token.
+const stripStrayToolTagFragments = (text: string, toolTags: string[]): string => {
+	// Build a set of complete open tags so we can skip over them verbatim.
+	const tagSet = new Set(toolTags)
+	let out = ''
+	let i = 0
+	while (i < text.length) {
+		// check if a complete tool open tag starts here
+		let matchedTag: string | null = null
+		for (const tag of tagSet) {
+			if (text.startsWith(tag, i)) { matchedTag = tag; break }
+		}
+		if (matchedTag !== null) {
+			out += matchedTag
+			i += matchedTag.length
+			continue
+		}
+		// detect a stray `<word` fragment
+		if (text[i] === '<') {
+			let j = i + 1
+			while (j < text.length && /[A-Za-z0-9_]/.test(text[j])) j++
+			const word = text.slice(i, j)
+			// it's a stray fragment if it's a `<` followed by at least one
+			// word char AND the char right after `word` is not `>` (i.e. it's
+			// an incomplete open tag, not a real one we already matched above).
+			if (j > i + 1 && (j >= text.length || text[j] !== '>')) {
+				console.log('[extractGrammar] stripped stray tag fragment:', JSON.stringify(word))
+				i = j // drop the whole `<word` fragment
+				continue
+			}
+		}
+		out += text[i]
+		i++
+	}
+	return out
+}
+
 const findIndexOfAny = (fullText: string, matches: string[]) => {
 	for (const str of matches) {
 		const idx = fullText.indexOf(str);
@@ -303,9 +365,22 @@ export const extractXMLToolsWrapper = (
 			const combined = openToolTagBuffer + newText
 			// ensure the code below doesn't run if only half a tag has been written
 			const isPartial = findPartiallyWrittenToolTagAtEnd(combined, toolOpenTags)
+			// Stray `<tagname-like` prefix at the end (e.g. `<<read_`, `<read_`,
+			// `<read<read_file>`) used to leak into the visible text. Buffer
+			// them here too — but only when the prefix is still a possible
+			// prefix of a real tool tag, otherwise it would buffer forever on
+			// never-to-be-completed fragments like `<read_xyz`.
+			const strayPrefix = isPartial ? null : findPartialToolTagPrefixAtEnd(combined, toolOpenTags)
 			if (isPartial) {
 				// console.log('--- partial!!!')
 				openToolTagBuffer = combined
+			}
+			else if (strayPrefix !== null) {
+				// commit safely before the stray `<`, then buffer the rest.
+				const safeToShow = combined.substring(0, combined.length - strayPrefix.length)
+				fullText += safeToShow
+				openToolTagBuffer = strayPrefix
+				scanIdx = trueFullText.length - strayPrefix.length
 			}
 			// if no tooltag is partially written at the end, attempt to get the index
 			else {
@@ -371,6 +446,12 @@ export const extractXMLToolsWrapper = (
 		fullText = fullText.trimEnd()
 		// surface all completed tool calls (array) so the agent loop can run them. #2
 		const toolCall = allToolCalls.length > 0 ? allToolCalls : latestToolCall ? [latestToolCall] : undefined
+
+		console.log('[extractGrammar] BEFORE strip:', JSON.stringify(fullText))
+		console.log('[extractGrammar] toolOpenTags:', JSON.stringify(toolOpenTags))
+		console.log('[extractGrammar] toolCalls:', JSON.stringify(toolCall))
+		fullText = stripStrayToolTagFragments(fullText, toolOpenTags)
+		console.log('[extractGrammar] AFTER strip:', JSON.stringify(fullText))
 
 		// console.log('final message!!!', trueFullText)
 		// console.log('----- returning ----\n', fullText)

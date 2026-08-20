@@ -28,6 +28,10 @@ export interface IDirectoryStrService {
 	getDirectoryStrTool(uri: URI): Promise<string>
 	getAllDirectoriesStr(opts: { cutOffMessage: string }): Promise<string>
 
+	// like getAllDirectoriesStr, but also reports how many characters were cut off
+	// by the directory-tree truncation (best-effort estimate), converted to tokens.
+	getAllDirectoriesStrWithSavings(opts: { cutOffMessage: string }): Promise<{ str: string, truncatedChars: number, truncatedTokens: number }>
+
 	getAllURIsInDirectory(uri: URI, opts: { maxResults: number }): Promise<URI[]>
 
 }
@@ -435,11 +439,20 @@ class DirectoryStrService extends Disposable implements IDirectoryStrService {
 	}
 
 	async getAllDirectoriesStr({ cutOffMessage, }: { cutOffMessage: string, }) {
+		const { str } = await this._getAllDirectoriesStrWithSavings({ cutOffMessage })
+		return str
+	}
+
+	async getAllDirectoriesStrWithSavings({ cutOffMessage, }: { cutOffMessage: string, }) {
+		return this._getAllDirectoriesStrWithSavings({ cutOffMessage })
+	}
+
+	private async _getAllDirectoriesStrWithSavings({ cutOffMessage, }: { cutOffMessage: string, }): Promise<{ str: string, truncatedChars: number, truncatedTokens: number }> {
 		let str: string = '';
 		let cutOff = false;
 		const folders = this.workspaceContextService.getWorkspace().folders;
 		if (folders.length === 0)
-			return '(NO WORKSPACE OPEN)';
+			return { str: '(NO WORKSPACE OPEN)', truncatedChars: 0, truncatedTokens: 0 };
 
 		// Use START_MAX_ITEMS_PER_DIR if not specified
 		const startMaxItemsPerDir = START_MAX_ITEMS_PER_DIR;
@@ -488,8 +501,13 @@ class DirectoryStrService extends Disposable implements IDirectoryStrService {
 			}
 		}
 
+		// best-effort estimate of how many characters were cut off: the unused
+		// portion of the total char budget. Only meaningful when we actually cut off.
+		const truncatedChars = cutOff ? Math.max(0, MAX_DIRSTR_CHARS_TOTAL_BEGINNING - str.length) : 0
+		const truncatedTokens = Math.ceil(truncatedChars / 4) // assume abysmal chars per token, matching convertToLLMMessageService
+
 		const ans = cutOff ? `${str.trimEnd()}\n${cutOffMessage}` : str
-		return ans
+		return { str: ans, truncatedChars, truncatedTokens }
 	}
 }
 
