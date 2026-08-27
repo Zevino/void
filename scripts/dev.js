@@ -54,7 +54,7 @@ const WATCH_PATTERNS = [
 function killOldWatch() {
   if (!isWin) {
     WATCH_PATTERNS.forEach((p) => {
-      try { spawnSync('pkill', ['-f', p], { stdio: 'ignore' }); } catch (_) {}
+      try { spawnSync('pkill', ['-f', p], { stdio: 'ignore' }); } catch (_) { }
     });
     return;
   }
@@ -102,7 +102,7 @@ function killAllChildren() {
         process.kill(-p.pid, 'SIGKILL'); // 杀进程组
       }
       console.log(`  已清理 ${p._voidLabel} (PID ${p.pid})`);
-    } catch (_) {}
+    } catch (_) { }
   });
   children.length = 0;
 }
@@ -114,12 +114,14 @@ process.on('exit', killAllChildren);
 let watchProcess = null;
 if (!skipWatch) {
   const watchLog = path.join(root, 'watch_run.log');
-  const watchOut = fs.openSync(watchLog, 'w');
   console.log(`[2/5] 启动 npm run watch（日志 → watch_run.log）`);
-  watchProcess = spawn(isWin ? 'npm.cmd' : 'npm', ['run', 'watch'], {
+  // 注意：不能用 fs.openSync 的 fd 传子进程 stdio（日志会丢输出，见 AGENTS.md 坑位 4）。
+  // 也不能用 spawn('cmd.exe', [args数组])——node 会把含引号的 arg re-quote 成 \"，cmd 解析直接失败。
+  // 正确姿势：整条命令放 file 参数 + shell:true（node 包一层 cmd /d /s /c "..."，/s 剥首尾引号）。
+  watchProcess = spawn(`npm run watch > "${watchLog}" 2>&1`, {
     cwd: root,
     env: watchEnv,
-    stdio: ['ignore', watchOut, watchOut],
+    stdio: 'ignore',
     detached: true,
     shell: true,
   });
@@ -135,15 +137,24 @@ let reactWatchProcess = null;
 if (!skipReact) {
   const reactCwd = path.join(root, 'src', 'vs', 'workbench', 'contrib', 'void', 'browser', 'react');
   const reactLog = path.join(root, 'watch_react.log');
-  const reactOut = fs.openSync(reactLog, 'w');
   console.log(`[3/5] 启动 React watch（日志 → watch_react.log）`);
   // 注意：build.js 用 import.meta.url，必须用 node 直接跑（不能走 npm run watchreact，因为 cd 链有引号坑）
-  reactWatchProcess = spawn(isWin ? 'node.exe' : 'node', ['build.js', '--watch'], {
+  // 同样不能用 fs.openSync fd 传 stdio（坑位 4），用 cmd 重定向；也不走 cross-spawn npx（坑位：npx 在
+  // detached 子进程里静默失败），改用 cmd /c 直接调用本地 .bin。
+  const reactBin = path.join(root, 'node_modules', '.bin');
+  // Windows 的 env 键是 'Path'（{...process.env} 展开后大小写敏感，读 .PATH 会得到 undefined）
+  const basePath = watchEnv.Path || watchEnv.PATH || '';
+  const reactEnv = { ...watchEnv };
+  delete reactEnv.PATH;
+  delete reactEnv.Path;
+  reactEnv.Path = `${reactBin}${path.delimiter}${basePath}`;
+  // 同 watch：整条命令放 file + shell:true（避免 node 对 args 的 re-quote 破坏 cmd 解析）
+  reactWatchProcess = spawn(`node build.js --watch > "${reactLog}" 2>&1`, {
     cwd: reactCwd,
-    env: watchEnv,
-    stdio: ['ignore', reactOut, reactOut],
+    env: reactEnv,
+    stdio: 'ignore',
     detached: true,
-    shell: false,
+    shell: true,
   });
   registerChild(reactWatchProcess, 'react watch (scope-tailwind + tsup)');
 } else {
@@ -188,7 +199,7 @@ function waitForFiles(files, timeoutMs = 90_000, pollMs = 1000) {
     console.log('\n已启动 watch 进程。Ctrl+C 退出并清理子进程。');
     // 不启动窗口，但保持进程不退出（让 watch 继续跑）
     // 阻塞式等待 SIGINT
-    return new Promise(() => {});
+    return new Promise(() => { });
   }
 
   console.log(`[4/5] 等待 watch 产物生成（最长 90s）...`);
@@ -202,7 +213,7 @@ function waitForFiles(files, timeoutMs = 90_000, pollMs = 1000) {
   const electronProc = spawn(
     isWin ? path.join(root, 'scripts', 'code.bat') : './scripts/code.sh',
     ['--user-data-dir', path.join(root, '.tmp', 'user-data'),
-     '--extensions-dir', path.join(root, '.tmp', 'extensions')],
+      '--extensions-dir', path.join(root, '.tmp', 'extensions')],
     {
       cwd: root,
       env,
@@ -221,5 +232,5 @@ function waitForFiles(files, timeoutMs = 90_000, pollMs = 1000) {
   console.log('Ctrl+C 退出会清理所有子进程。');
 
   // 阻塞，等 SIGINT
-  await new Promise(() => {});
+  await new Promise(() => { });
 })();

@@ -36,6 +36,9 @@ type SimpleLLMMessage = {
 	role: 'assistant';
 	content: string;
 	anthropicReasoning: AnthropicReasoning[] | null;
+	// OpenAI-compatible reasoning models (DeepSeek, QwQ, etc.) require the previous
+	// turn's `reasoning_content` to be echoed back on the assistant message.
+	reasoningContent: string | null;
 }
 
 
@@ -77,7 +80,14 @@ const prepareMessages_openai_tools = (messages: SimpleLLMMessage[]): AnthropicOr
 		const currMsg = messages[i]
 
 		if (currMsg.role !== 'tool') {
-			newMessages.push(currMsg)
+			if (currMsg.role === 'assistant') {
+				// Echo back reasoning_content for OpenAI-compatible reasoning models
+				// (DeepSeek, QwQ, etc.), which reject the request otherwise with 400.
+				const { anthropicReasoning: _a, reasoningContent: _r, ...rest } = currMsg
+				newMessages.push({ ...rest, reasoning_content: _r ?? undefined })
+			} else {
+				newMessages.push(currMsg)
+			}
 			continue
 		}
 
@@ -643,6 +653,9 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 					role: m.role,
 					content: m.displayContent,
 					anthropicReasoning: m.anthropicReasoning,
+					// OpenAI-compatible reasoning models require the previous turn's
+					// reasoning to be echoed back; store it so it can be re-attached below.
+					reasoningContent: m.reasoning ?? null,
 				})
 			}
 			else if (m.role === 'tool') {

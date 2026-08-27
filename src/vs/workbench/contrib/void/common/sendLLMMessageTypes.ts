@@ -46,6 +46,10 @@ export type OpenAILLMChatMessage = {
 } | {
 	role: 'assistant',
 	content: string | (AnthropicReasoning | { type: 'text'; text: string })[];
+	// OpenAI-compatible reasoning models (DeepSeek, QwQ, etc.) require the previous
+	// turn's `reasoning_content` to be echoed back on the assistant message, or they
+	// reject the request with 400 "reasoning_content ... must be passed back to the API".
+	reasoning_content?: string | null;
 	tool_calls?: { type: 'function'; id: string; function: { name: string; arguments: string; } }[];
 } | {
 	role: 'tool',
