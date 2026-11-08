@@ -40,10 +40,12 @@ const args = parseCLIArgs();
 // Configure static command line arguments
 const argvConfig = configureCommandlineSwitchesSync(args);
 
-// Voidly: blank / garbled regions that only repaint after a window resize were
-// caused by showing the window before its first paint, not by GPU compositing.
-// Fixed in windowImpl.ts via the `ready-to-show` event, so hardware
-// acceleration stays enabled. Pass `--disable-gpu` manually to opt out.
+// Voidly: blank / garbled regions that only repaint after a window resize on
+// some multi-adapter machines are mitigated in windowImpl.ts by forcing one
+// recomposite (webContents.invalidate()) after the first paint, while keeping
+// the window visible immediately (themed backgroundColor) so opening folders
+// feels as fast as VS Code. Hardware acceleration stays enabled. Pass
+// `--disable-gpu` manually to opt out.
 //
 // Note: never combine `--disable-gpu` with app.disableHardwareAcceleration();
 // the latter additionally tears down the GPU process and deadlocks the renderer

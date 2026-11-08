@@ -219,7 +219,7 @@ export abstract class BaseWindow extends Disposable implements IBaseWindow {
 		super();
 	}
 
-	protected applyState(state: IWindowState, hasMultipleDisplays = electron.screen.getAllDisplays().length > 0, reveal = true): void {
+	protected applyState(state: IWindowState, hasMultipleDisplays = electron.screen.getAllDisplays().length > 0): void {
 
 		// TODO@electron (Electron 4 regression): when running on multiple displays where the target display
 		// to open the window has a larger resolution than the primary display, the window will not size
@@ -246,20 +246,19 @@ export abstract class BaseWindow extends Disposable implements IBaseWindow {
 
 		if (state.mode === WindowMode.Maximized || state.mode === WindowMode.Fullscreen) {
 
-			// Voidly: main code windows defer this entirely to the `ready-to-show`
-			// handler (see CodeWindow ctor) because on Windows and Linux `maximize()`
-			// may itself reveal the window before the first paint. Auxiliary windows
-			// keep the original behaviour: maximize then show to reduce flicker from
-			// the default window size to maximized or fullscreen.
-			if (reveal) {
-				this._win?.maximize();
+			// this call may or may not show the window, depends
+			// on the platform: currently on Windows and Linux will
+			// show the window as active. To be on the safe side,
+			// we show the window at the end of this block.
+			this._win?.maximize();
 
-				if (state.mode === WindowMode.Fullscreen) {
-					this.setFullScreen(true, true);
-				}
-
-				this._win?.show();
+			if (state.mode === WindowMode.Fullscreen) {
+				this.setFullScreen(true, true);
 			}
+
+			// to reduce flicker from the default window size
+			// to maximize or fullscreen, we only show after
+			this._win?.show();
 		}
 	}
 
@@ -587,13 +586,14 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 				v8CacheOptions: this.environmentMainService.useCodeCache ? 'bypassHeatCheck' : 'none',
 			});
 
-			// Voidly: always create the window hidden and reveal it only once the
-			// renderer has painted its first frame (`ready-to-show`). Showing the
-			// window before first paint was the root cause of blank / stale frames
-			// that only repainted after a window resize
-			// (https://github.com/voideditor/void/issues/594, #696).
-			options.show = false;
-
+			// Voidly: 窗口随创建立即显示（上游行为）。背景色由 defaultBrowserWindowOptions
+			// 用主题底色提供，所以提前 show 只会看到一整块主题色，不会闪白。
+			// 之前曾用 `show:false` + `ready-to-show` 延迟到首帧才显示来规避部分多显卡
+			// 机器上「窗口局部不重绘、resize 后才恢复」的问题（voideditor#594/#696），
+			// 但这让每次开窗都要等整个工作台首帧绘制完成，右键打开文件夹的体感速度
+			// 明显慢于 VS Code。现在改为立即显示 + 首帧后 invalidate() 主动重合成
+			// 一次画面，两个问题都覆盖。
+			//
 			// Create the browser window
 			mark('code/willCreateCodeBrowserWindow');
 			this._win = new electron.BrowserWindow(options);
@@ -602,34 +602,16 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 			this._id = this._win.id;
 			this.setWin(this._win, options);
 
-			// Reveal the window once the first frame is ready (no visual flash).
-			// This is the core fix for blank / stale frames that previously only
-			// repainted after a manual window resize.
-			let windowRevealed = false;
-			const revealWindow = () => {
-				if (windowRevealed || !this._win || this._win.isDestroyed()) {
+			// 首帧就绪后强制重合成一次：消除提前 show 在个别 GPU 上留下的局部不重绘区域
+			this._register(Event.fromNodeEventEmitter(this._win, 'ready-to-show')(() => {
+				if (!this._win || this._win.isDestroyed()) {
 					return;
 				}
-				windowRevealed = true;
+				this._win.webContents.invalidate();
+			}));
 
-				this._win.show();
-
-				// Apply maximized / fullscreen state after showing
-				if (this.windowState.mode === WindowMode.Maximized) {
-					this._win.maximize();
-				} else if (this.windowState.mode === WindowMode.Fullscreen) {
-					this.setFullScreen(true, true);
-				}
-			};
-			this._register(Event.fromNodeEventEmitter(this._win, 'ready-to-show')(revealWindow));
-
-			// Safety net: if the first frame never arrives (e.g. renderer hang
-			// before paint), reveal the window after a grace period so the user
-			// is never stuck with an invisible, un-interactable window.
-			this._register(new RunOnceScheduler(revealWindow, 10000)).schedule();
-
-			// Apply some state after window creation (reveal is handled by `ready-to-show`)
-			this.applyState(this.windowState, hasMultipleDisplays, false);
+			// Apply some state after window creation
+			this.applyState(this.windowState, hasMultipleDisplays);
 
 			this._lastFocusTime = Date.now(); // since we show directly, we need to set the last focus time too
 		}
