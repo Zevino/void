@@ -28,6 +28,13 @@ jobs:
       NODE_OPTIONS: '--max-old-space-size=8192'
       GYP_MSVS_VERSION: '2022'
       npm_config_msvs_version: '2022'
+      # The packaging task downloads the electron zip inline (@electron/get).
+      # A single flaky connection to github.com/electron releases kills the
+      # whole 30-min build with `RequestError: read ECONNRESET` (seen on
+      # 2026-11-08 in the voidly-v1.99.95 run). Route it through npmmirror,
+      # which serves byte-identical zips + SHASUMS256.txt, so @electron/get's
+      # own checksum validation still passes.
+      ELECTRON_MIRROR: 'https://npmmirror.com/mirrors/electron/'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
