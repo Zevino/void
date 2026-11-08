@@ -15,7 +15,7 @@
 //     { "id": "openai",   "providerName": "openAI",    "modelName": "gpt-4o-mini",     "apiKey": "<...>" }
 //   ]
 //
-// `providerName` must be a Void ProviderName. `apiKey` may reference an env var by
+// `providerName` must be a Voidly ProviderName. `apiKey` may reference an env var by
 // prefixing it with `env:` (e.g. "env:DEEPSEEK_API_KEY") to avoid hardcoding secrets.
 //
 // Output: a JSON report comparing each model on each task (steps, tool calls, pass/fail,

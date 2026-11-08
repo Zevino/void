@@ -111,7 +111,7 @@ export const defaultTasks: EvalTask[] = [
 	{
 		id: 'edit-file',
 		description: 'Make a small edit using the edit_file tool',
-		prompt: 'In /repo/README.md, add a line "This repo is evaluated by Void\'s harness." Use a tool to edit the file.',
+		prompt: 'In /repo/README.md, add a line "This repo is evaluated by Voidly\'s harness." Use a tool to edit the file.',
 		executeTool: makeMockExecutor(defaultFakeFS()),
 		score: checkReadThenEdit('/repo/README.md', '/repo/README.md'),
 	},

@@ -40,7 +40,7 @@ export class MetricsMainService extends Disposable implements IMetricsService {
 	private _initProperties: object = {}
 
 
-	// helper - looks like this is stored in a .vscdb file in ~/Library/Application Support/Void
+	// helper - looks like this is stored in a .vscdb file in ~/Library/Application Support/Voidly
 	private _memoStorage(key: string, target: StorageTarget, setValIfNotExist?: string) {
 		const currVal = this._appStorage.get(key, StorageScope.APPLICATION)
 		if (currVal !== undefined) return currVal
@@ -119,10 +119,10 @@ export class MetricsMainService extends Disposable implements IMetricsService {
 		}
 
 		// Always opt out, regardless of the stored setting
-		console.log('Force opting out of all Void metrics for privacy.')
+		console.log('Force opting out of all Voidly metrics for privacy.')
 		this.client.optOut()
 
-		console.log('Void posthog metrics info (Supressed): [Privacy Protected]')
+		console.log('Voidly posthog metrics info (Supressed): [Privacy Protected]')
 	}
 
 

@@ -86,7 +86,7 @@ const withEstimatedCost = (usage: LLMUsage | undefined, modelName: string): LLMU
 // headers to include on every request so the provider recognizes our traffic
 const openRouterHeaders = {
 	'HTTP-Referer': 'https://voideditor.com', // Optional, for including your app on openrouter.ai rankings.
-	'X-Title': 'Void', // Optional. Shows in rankings on openrouter.ai.
+	'X-Title': 'Voidly', // Optional. Shows in rankings on openrouter.ai.
 }
 
 // how long (ms) we wait before aborting a request; and how many times we retry on transient failures
@@ -217,7 +217,7 @@ const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName }: { se
 
 	const oaiProviderName = providerName as Exclude<ProviderName, 'anthropic' | 'gemini'>
 	const config = openAICompatibleProviderConfigs[oaiProviderName]
-	if (!config) throw new Error(`Void providerName was invalid: ${providerName}.`)
+	if (!config) throw new Error(`Voidly providerName was invalid: ${providerName}.`)
 
 	// microsoftAzure uses a different SDK/client
 	if (config.isAzure) {
@@ -474,7 +474,7 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 			}
 			const hasToolCall = completedToolCalls.length > 0
 			if (!fullTextSoFar && !fullReasoningSoFar && !hasToolCall) {
-				onError({ message: 'Void: Response from model was empty.', fullError: null })
+				onError({ message: 'Voidly: Response from model was empty.', fullError: null })
 			}
 			else {
 				const toolCallObj = hasToolCall ? { toolCall: completedToolCalls } : {}
@@ -729,7 +729,7 @@ const sendMistralFIM = ({ messages, onFinalMessage, onError, settingsOfProvider,
 // ------------ OLLAMA ------------
 const newOllamaSDK = ({ endpoint }: { endpoint: string }) => {
 	// if endpoint is empty, normally ollama will send to 11434, but we want it to fail - the user should type it in
-	if (!endpoint) throw new Error(`Ollama Endpoint was empty (please enter ${defaultProviderSettings.ollama.endpoint} in Void if you want the default url).`)
+	if (!endpoint) throw new Error(`Ollama Endpoint was empty (please enter ${defaultProviderSettings.ollama.endpoint} in Voidly if you want the default url).`)
 	const ollama = new Ollama({ host: endpoint })
 	return ollama
 }
@@ -945,7 +945,7 @@ const sendGeminiChat = async ({
 
 			// on final
 			if (!fullTextSoFar && !fullReasoningSoFar && !toolName) {
-				onError({ message: 'Void: Response from model was empty.', fullError: null })
+				onError({ message: 'Voidly: Response from model was empty.', fullError: null })
 			} else {
 				if (!toolId) toolId = generateUuid() // ids are empty, but other providers might expect an id
 				const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId)

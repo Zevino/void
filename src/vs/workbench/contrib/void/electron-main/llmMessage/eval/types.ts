@@ -6,7 +6,7 @@
 // LLM agent eval harness — types.
 //
 // This is a HEADLESS eval harness for comparing how different LLM providers/models
-// drive Void's agent (tool calling + loop decisions). It is intentionally free of
+// drive Voidly's agent (tool calling + loop decisions). It is intentionally free of
 // editor/UI dependencies so it can run from a plain node/electron script.
 //
 // It reuses the REAL sendLLMMessage (provider SDKs + streaming + native tool calls),
