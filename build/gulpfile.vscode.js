@@ -384,7 +384,20 @@ function packageTask(platform, arch, sourceFolderName, destinationFolderName, op
 			.pipe(util.skipDirectories())
 			.pipe(util.fixWin32DirectoryPermissions())
 			.pipe(filter(['**', '!**/.github/**'], { dot: true })) // https://github.com/microsoft/vscode/issues/116523
-			.pipe(electron({ ...config, platform, arch: arch === 'armhf' ? 'arm' : arch, ffmpegChromium: false }))
+			// Voidly: 优先复用 .build/electron 里已下载好的二进制（`npm run electron` 会
+			// 校验 checksums 后写入，dev 流程也用它），避免打包时内联下载——@electron/get
+			// 没有重试，CI 上一次网络重置（ECONNRESET）就会废掉整个构建（2026-11 实测两次）。
+			// 版本不匹配或缺失时回退到原来的内联下载。
+			.pipe((() => {
+				let installedVersion = null;
+				try {
+					installedVersion = fs.readFileSync(path.join(root, '.build', 'electron', 'version'), 'utf8').trim();
+				} catch (e) { /* 未下载过 */ }
+				if (installedVersion === config.version) {
+					return vfs.src('.build/electron/**', { base: '.build/electron', dot: true });
+				}
+				return electron({ ...config, platform, arch: arch === 'armhf' ? 'arm' : arch, ffmpegChromium: false });
+			})())
 			.pipe(filter(['**', '!LICENSE', '!version'], { dot: true }));
 
 		if (platform === 'linux') {

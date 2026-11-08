@@ -67,6 +67,18 @@ jobs:
         shell: powershell
         run: npm run buildreact
 
+      # Pre-download the electron binary into .build/electron (checksum-verified).
+      # The packaging task then reuses it instead of doing an inline @electron/get
+      # download, which has no retry and fails the whole build on one network reset.
+      - name: Download Electron binary
+        shell: powershell
+        run: |
+          node build/lib/electron.js 2>&1 | Tee-Object -FilePath electron-download.log
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::Electron download failed - see electron-download.log"
+            Exit $LASTEXITCODE
+          }
+
       # Package Windows x64. The gulp task compiles src->out-build internally,
       # so the separate `npm run compile` step was redundant and is removed.
       # Output goes to <workspace-parent>/VSCode-win32-x64 (gulpfile quirk).
@@ -162,6 +174,7 @@ jobs:
         with:
           name: build-logs
           path: |
+            electron-download.log
             packaging.log
             inno-updater.log
             setup.log
