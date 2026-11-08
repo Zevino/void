@@ -380,25 +380,37 @@ function packageTask(platform, arch, sourceFolderName, destinationFolderName, op
 			all = es.merge(all, shortcut, policyDest);
 		}
 
-		let result = all
+		// Voidly: 优先复用 .build/electron 里已下载好的二进制（`npm run electron` 会
+		// 校验 checksums 后写入，dev 流程也用它），避免打包时内联下载——@electron/get
+		// 没有重试，CI 上一次网络重置（ECONNRESET）就会废掉整个构建（2026-11 实测两次）。
+		// 版本不匹配或缺失时回退到原来的内联下载。
+		//
+		// 注意：复用路径必须把 electron 文件作为独立源 es.merge 进来，不能把 vfs.src
+		// （Readable）接进 .pipe() 链中间——pipe 的目标必须是可写流，接 Readable 会在
+		// 管道构建时直接抛 TypeError（2026-11-08 v1.99.97 首次重跑踩过）。
+		const appFiles = all
 			.pipe(util.skipDirectories())
 			.pipe(util.fixWin32DirectoryPermissions())
-			.pipe(filter(['**', '!**/.github/**'], { dot: true })) // https://github.com/microsoft/vscode/issues/116523
-			// Voidly: 优先复用 .build/electron 里已下载好的二进制（`npm run electron` 会
-			// 校验 checksums 后写入，dev 流程也用它），避免打包时内联下载——@electron/get
-			// 没有重试，CI 上一次网络重置（ECONNRESET）就会废掉整个构建（2026-11 实测两次）。
-			// 版本不匹配或缺失时回退到原来的内联下载。
-			.pipe((() => {
-				let installedVersion = null;
-				try {
-					installedVersion = fs.readFileSync(path.join(root, '.build', 'electron', 'version'), 'utf8').trim();
-				} catch (e) { /* 未下载过 */ }
-				if (installedVersion === config.version) {
-					return vfs.src('.build/electron/**', { base: '.build/electron', dot: true });
-				}
-				return electron({ ...config, platform, arch: arch === 'armhf' ? 'arm' : arch, ffmpegChromium: false });
-			})())
-			.pipe(filter(['**', '!LICENSE', '!version'], { dot: true }));
+			.pipe(filter(['**', '!**/.github/**'], { dot: true })); // https://github.com/microsoft/vscode/issues/116523
+
+		let installedVersion = null;
+		try {
+			installedVersion = fs.readFileSync(path.join(root, '.build', 'electron', 'version'), 'utf8').trim();
+		} catch (e) { /* 未下载过 */ }
+		const reuseElectronDist = installedVersion === config.version;
+
+		let result;
+		if (reuseElectronDist) {
+			result = es.merge(
+				appFiles,
+				vfs.src('.build/electron/**', { base: '.build/electron', dot: true })
+			);
+		} else {
+			result = appFiles
+				.pipe(electron({ ...config, platform, arch: arch === 'armhf' ? 'arm' : arch, ffmpegChromium: false }));
+		}
+
+		result = result.pipe(filter(['**', '!LICENSE', '!version'], { dot: true }));
 
 		if (platform === 'linux') {
 			result = es.merge(result, gulp.src('resources/completions/bash/code', { base: '.' })
