@@ -5,6 +5,7 @@ import { IResolvedTextEditorModel, ITextModelService } from '../../../../editor/
 import { registerSingleton, InstantiationType } from '../../../../platform/instantiation/common/extensions.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { ITextFileService } from '../../../services/textfile/common/textfiles.js';
+import { FileOperationError, FileOperationResult, IFileService } from '../../../../platform/files/common/files.js';
 
 type VoidModelType = {
 	model: ITextModel | null;
@@ -31,6 +32,7 @@ class VoidModelService extends Disposable implements IVoidModelService {
 	constructor(
 		@ITextModelService private readonly _textModelService: ITextModelService,
 		@ITextFileService private readonly _textFileService: ITextFileService,
+		@IFileService private readonly _fileService: IFileService,
 	) {
 		super();
 	}
@@ -44,12 +46,19 @@ class VoidModelService extends Disposable implements IVoidModelService {
 	initializeModel = async (uri: URI) => {
 		try {
 			if (uri.fsPath in this._modelRefOfURI) return;
+			// .voidrules (and other optional files) may not exist — skip silently
+			// instead of letting createModelReference throw a nonexistent-file error.
+			if (!(await this._fileService.exists(uri))) return;
 			const editorModelRef = await this._textModelService.createModelReference(uri);
 			// Keep a strong reference to prevent disposal
 			this._modelRefOfURI[uri.fsPath] = editorModelRef;
 		}
 		catch (e) {
-			console.log('InitializeModel error:', e)
+			// Optional files like .voidrules may not exist - don't spam the console.
+			const isNotFound = e instanceof FileOperationError && e.fileOperationResult === FileOperationResult.FILE_NOT_FOUND;
+			if (!isNotFound) {
+				console.log('InitializeModel error:', e)
+			}
 		}
 	};
 

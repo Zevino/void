@@ -38,8 +38,12 @@ React components are bundled into the browser process via tsup (see `browser/rea
 `npm run dev` 脚本逻辑（`scripts/dev.js`）：
 1. 关闭 CodeBuddy safe-delete 拦截（`CODEBUDDY_SAFE_DELETE_ENABLED=0`）。
 2. 清理旧的 `npm run watch` 进程树，释放 `watch_run.log` 文件锁。
-3. 后台启动 `npm run watch` 编译（日志 → `watch_run.log`）。
-4. 打开 Voidly Dev 窗口（隔离 `user-data` / `extensions` 到 `.tmp/`，日志 → `void_runtime.log`）。
+3. 后台启动 `npm run watch` 编译（日志 → `watch_run.log`，**进程树降为 BelowNormal 优先级**，编译期间 UI 不卡）。
+4. 等待首轮编译完成：解析 `watch_run.log` 中 `[watch-client]` / `[watch-extensions]` 的 `Finished compilation` 标记（日志采集失效时退回产物指纹静默检测），每 30s 打印进度。此前只等 90s 就开窗，窗口会开在半成品 `out/` 上（启动 Error/卡顿的根源）。
+5. 内置扩展产物自检：扫描 `extensions/*/package.json` 的 `main`（require 语义，需补 `.js`），缺失的自动跑 `gulp compile-extension:<name>` 补编。
+6. 打开 Voidly Dev 窗口（隔离 `user-data` / `extensions` 到 `.tmp/`，日志 → `void_runtime.log`）。
+
+加 `-- --now` 可跳过第 4/5 步立即开窗（已知产物完整时用）。
 
 改完代码后，在开发者窗口内按 `Ctrl+R` 重载即可（watch 会自动重编译）。
 
@@ -113,9 +117,16 @@ Services are registered with `registerSingleton` and injected via `@IServiceName
 - **原因**：`cmd.exe /c "cd /d \"...\" && code.bat ..."` 在 `shell:false` 时引号丢失。
 - **修复**：改为 `spawn(code.bat 绝对路径, [...], { shell: true })`，并去掉多余 `cd`（已设 `cwd`）。
 
-### 4. `watch_run.log` EBUSY 文件锁
-- **现象**：`fs.openSync` 报 `EBUSY`，因上次的 `npm run watch` 进程仍占用日志文件。
+### 4. `watch_run.log` EBUSY 文件锁 / 0 字节
+- **现象 1**：`fs.openSync` 报 `EBUSY`，因上次的 `npm run watch` 进程仍占用日志文件。
 - **修复**：`dev.js` 启动前先 `killOldWatch()` 终止旧进程树。
+- **现象 2（2026-11 修正）**：`watch_run.log` 恒为 0 字节。真正原因不是 fd stdio，而是 **`spawn` 的 `detached: true`**——Windows 下 detached 会让整棵进程树的 stdout/stderr 写不进任何文件（fd 和 cmd 内联重定向都试过，都是 0 字节；矩阵复现确认）。去掉 `detached` + fd stdio 即正常，Ctrl+C 清理由 `killAllChildren`（taskkill /T）兜底。
+
+### 5. Electron 版本错位：node_modules=44 vs `.build/electron`=34
+- **现象**：类型检查按 Electron 44 的 typings 过，但运行时报 `SyntaxError: The requested module 'electron' does not provide an export named 'ClipboardItem'` 之类。
+- **原因**：`.npmrc`/`package.json` 已升到 44（`node_modules/electron` = 44.0.0），但 `.build/electron/` 里的运行时二进制没重新下载（`version` 文件 = 34.3.2，CDP 报 Chrome/132 可验证）。
+- **现状**：`nativeHostMainService.ts` 的剪贴板已做双版本运行时兼容（探测 `electron.ClipboardItem`），34/44 二进制都能跑。
+- **彻底收尾**：跑 `npm run electron` 重新下载 44 二进制后，44 分支自然生效。
 
 ## Common Pitfalls
 

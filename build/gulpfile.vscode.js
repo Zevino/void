@@ -226,7 +226,7 @@ function computeChecksum(filename) {
 function packageTask(platform, arch, sourceFolderName, destinationFolderName, opts) {
 	opts = opts || {};
 
-	const destination = path.join(path.dirname(root), destinationFolderName);
+	const destination = path.join(buildRoot, destinationFolderName);
 	platform = platform || process.platform;
 
 	return () => {
@@ -455,7 +455,7 @@ function packageTask(platform, arch, sourceFolderName, destinationFolderName, op
 }
 
 function patchWin32DependenciesTask(destinationFolderName) {
-	const cwd = path.join(path.dirname(root), destinationFolderName);
+	const cwd = path.join(buildRoot, destinationFolderName);
 
 	return async () => {
 		const deps = await glob('**/*.node', { cwd, ignore: 'extensions/node_modules/@parcel/watcher/**' });
@@ -483,7 +483,9 @@ function patchWin32DependenciesTask(destinationFolderName) {
 	};
 }
 
-const buildRoot = path.dirname(root);
+const buildRoot = process.env['VSCODE_BUILD_ROOT']
+	? path.resolve(process.env['VSCODE_BUILD_ROOT'])
+	: path.dirname(root);
 
 const BUILD_TARGETS = [
 	{ platform: 'win32', arch: 'x64' },

@@ -39,6 +39,16 @@ const portable = configurePortable(product);
 const args = parseCLIArgs();
 // Configure static command line arguments
 const argvConfig = configureCommandlineSwitchesSync(args);
+
+// Voidly: blank / garbled regions that only repaint after a window resize were
+// caused by showing the window before its first paint, not by GPU compositing.
+// Fixed in windowImpl.ts via the `ready-to-show` event, so hardware
+// acceleration stays enabled. Pass `--disable-gpu` manually to opt out.
+//
+// Note: never combine `--disable-gpu` with app.disableHardwareAcceleration();
+// the latter additionally tears down the GPU process and deadlocks the renderer
+// on multi-adapter machines (dialog buttons stop responding to mouse/keyboard).
+
 // Enable sandbox globally unless
 // 1) disabled via command line using either
 //    `--no-sandbox` or `--disable-chromium-sandbox` argument.

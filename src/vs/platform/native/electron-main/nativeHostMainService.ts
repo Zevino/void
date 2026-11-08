@@ -5,7 +5,11 @@
 
 import * as fs from 'fs';
 import { exec } from 'child_process';
-import { app, BrowserWindow, clipboard, Display, Menu, MessageBoxOptions, MessageBoxReturnValue, OpenDevToolsOptions, OpenDialogOptions, OpenDialogReturnValue, powerMonitor, SaveDialogOptions, SaveDialogReturnValue, screen, shell, webContents } from 'electron';
+// 注意：不要把 `ClipboardItem` 放进命名导入——Electron 34（当前安装版本）没有这个导出，
+// ESM 命名导入会在模块加载时直接抛 SyntaxError，拖垮整个 nativeHostMainService 的加载。
+// 44 才有的 API 一律走 `electron` 命名空间动态访问（见下方 Clipboard 区域的运行时探测）。
+import { app, BrowserWindow, clipboard, Display, Menu, MessageBoxOptions, MessageBoxReturnValue, nativeImage, OpenDevToolsOptions, OpenDialogOptions, OpenDialogReturnValue, powerMonitor, SaveDialogOptions, SaveDialogReturnValue, screen, shell, webContents } from 'electron';
+import * as electron from 'electron';
 import { arch, cpus, freemem, loadavg, platform, release, totalmem, type } from 'os';
 import { promisify } from 'util';
 import { memoize } from '../../../base/common/decorators.js';
@@ -52,6 +56,45 @@ import { randomPath } from '../../../base/common/extpath.js';
 export interface INativeHostMainService extends AddFirstParameterToFunctions<ICommonNativeHostService, Promise<unknown> /* only methods, not events */, number | undefined /* window ID */> { }
 
 export const INativeHostMainService = createDecorator<INativeHostMainService>('nativeHostMainService');
+
+// Electron 44 专有剪贴板 API 的局部类型断言（v34 typings 里没有这些成员，直接访问会编译报错；
+// 运行时是否可用以 electron.ClipboardItem 是否存在为准，见 isElectron44Clipboard）。
+interface Electron44ClipboardItem {
+	readonly types: string[];
+	getType(mime: string): Promise<Blob>;
+}
+
+interface Electron44ClipboardLike {
+	read(): Promise<Electron44ClipboardItem[]>;
+	write(items: unknown[]): Promise<unknown>;
+	selection?: Electron.Clipboard;
+}
+
+// Electron 34 旧同步剪贴板 API 的局部类型断言。仓库的 typings 已是 44（node_modules/electron
+// = 44.0.0），这些成员在 44 typings 里不存在，但 .build/electron 的运行时二进制仍是 34.3.2，
+// 运行时探测到旧 API 时走这些成员（升级 44 二进制后该分支自然成为死代码，仍可编译）。
+interface Electron34ClipboardLike {
+	readText(type?: 'selection' | 'clipboard'): Promise<string>;
+	writeText(text: string, type?: 'selection' | 'clipboard'): Promise<void>;
+	readImage(): { toPNG(): Buffer };
+	readFindText(): string;
+	writeFindText(text: string): void;
+	readBuffer(format: string): Buffer;
+	writeBuffer(format: string, buffer: Buffer, type?: 'selection' | 'clipboard'): void;
+	has(mimetype: string, type?: 'selection' | 'clipboard'): boolean;
+}
+
+function electron44ClipboardItemCtor(): (new (data: Record<string, string | Blob>) => Electron44ClipboardItem) | undefined {
+	return (electron as typeof electron & { ClipboardItem?: new (data: Record<string, string | Blob>) => Electron44ClipboardItem }).ClipboardItem;
+}
+
+function clipboard44(): Electron44ClipboardLike {
+	return clipboard as unknown as Electron44ClipboardLike;
+}
+
+function clipboard34(): Electron34ClipboardLike {
+	return clipboard as unknown as Electron34ClipboardLike;
+}
 
 export class NativeHostMainService extends Disposable implements INativeHostMainService {
 
@@ -746,36 +789,124 @@ export class NativeHostMainService extends Disposable implements INativeHostMain
 
 	//#region Clipboard
 
+	// Electron 44 rearchitected the clipboard module to align with the W3C
+	// Clipboard API: all read/write methods are now async, the optional
+	// `type` parameter was removed (Linux selection lives on
+	// `clipboard.selection`), and raw OS formats must be wrapped in the
+	// `electron application/osclipboard;format="..."` custom MIME type.
+	// See https://www.electronjs.org/docs/latest/breaking-changes
+	//
+	// 双版本兼容：当前仓库安装的仍是 Electron 34（.build/electron/version = 34.3.2），
+	// .npmrc 里目标版本是 44。以下实现按运行时能力分派——检测到 44 的 ClipboardItem
+	// 就走新 API，否则走 34 的同步 API（`type` 参数透传）。两个分支都能通过 v34 的
+	// 官方 typings 编译（44 专有 API 通过局部接口断言访问）。
+
+	private static readonly OSCLIPBOARD_FORMAT_PREFIX = 'electron application/osclipboard;format=';
+	private static readonly FINDTEXT_FORMAT = 'electron application/findtext';
+
+	private get isElectron44Clipboard(): boolean {
+		return typeof electron44ClipboardItemCtor() === 'function';
+	}
+
+	private getClipboard(type?: 'selection' | 'clipboard'): Electron.Clipboard {
+		if (this.isElectron44Clipboard) {
+			// 44：`type` 参数已移除，Linux selection 是独立对象
+			return (type === 'selection' && isLinux ? clipboard44().selection : undefined) ?? clipboard;
+		}
+		// 34：type 参数由各方法透传
+		return clipboard;
+	}
+
+	private osClipboardFormat(format: string): string {
+		return `${NativeHostMainService.OSCLIPBOARD_FORMAT_PREFIX}"${format}"`;
+	}
+
+	private async readClipboardBlob(format: string): Promise<Blob | undefined> {
+		const items = await clipboard44().read();
+		for (const item of items) {
+			if (item.types.includes(format)) {
+				const value = await item.getType(format);
+				if (value instanceof Blob) {
+					return value;
+				}
+			}
+		}
+		return undefined;
+	}
+
 	async readClipboardText(windowId: number | undefined, type?: 'selection' | 'clipboard'): Promise<string> {
-		return clipboard.readText(type);
+		if (this.isElectron44Clipboard) {
+			return this.getClipboard(type).readText();
+		}
+		return clipboard34().readText(type);
 	}
 
 	async readImage(): Promise<Uint8Array> {
-		return clipboard.readImage().toPNG();
+		if (this.isElectron44Clipboard) {
+			const items = await clipboard44().read();
+			for (const item of items) {
+				const imageFormat = item.types.find(candidate => candidate === 'image/png' || candidate.startsWith('image/'));
+				if (imageFormat) {
+					const blob = await item.getType(imageFormat);
+					if (blob instanceof Blob) {
+						// Normalise to PNG like the old `clipboard.readImage().toPNG()` did
+						return nativeImage.createFromBuffer(Buffer.from(await blob.arrayBuffer())).toPNG();
+					}
+				}
+			}
+			return new Uint8Array(0);
+		}
+		return clipboard34().readImage().toPNG();
 	}
 
 	async writeClipboardText(windowId: number | undefined, text: string, type?: 'selection' | 'clipboard'): Promise<void> {
-		return clipboard.writeText(text, type);
+		if (this.isElectron44Clipboard) {
+			return this.getClipboard(type).writeText(text);
+		}
+		return clipboard34().writeText(text, type);
 	}
 
 	async readClipboardFindText(windowId: number | undefined,): Promise<string> {
-		return clipboard.readFindText();
+		if (this.isElectron44Clipboard) {
+			const blob = await this.readClipboardBlob(NativeHostMainService.FINDTEXT_FORMAT);
+			return blob ? await blob.text() : '';
+		}
+		return clipboard34().readFindText();
 	}
 
 	async writeClipboardFindText(windowId: number | undefined, text: string): Promise<void> {
-		return clipboard.writeFindText(text);
+		if (this.isElectron44Clipboard) {
+			const ClipboardItem = electron44ClipboardItemCtor()!;
+			return clipboard44().write([new ClipboardItem({ [NativeHostMainService.FINDTEXT_FORMAT]: text })]) as Promise<void>;
+		}
+		return clipboard34().writeFindText(text);
 	}
 
 	async writeClipboardBuffer(windowId: number | undefined, format: string, buffer: VSBuffer, type?: 'selection' | 'clipboard'): Promise<void> {
-		return clipboard.writeBuffer(format, Buffer.from(buffer.buffer), type);
+		if (this.isElectron44Clipboard) {
+			const ClipboardItem = electron44ClipboardItemCtor()!;
+			const target = (type === 'selection' && isLinux ? clipboard44().selection ?? clipboard : clipboard) as unknown as Electron44ClipboardLike;
+			return target.write([new ClipboardItem({ [this.osClipboardFormat(format)]: new Blob([buffer.buffer]) })]) as Promise<void>;
+		}
+		return clipboard34().writeBuffer(format, Buffer.from(buffer.buffer), type);
 	}
 
 	async readClipboardBuffer(windowId: number | undefined, format: string): Promise<VSBuffer> {
-		return VSBuffer.wrap(clipboard.readBuffer(format));
+		if (this.isElectron44Clipboard) {
+			const blob = await this.readClipboardBlob(this.osClipboardFormat(format));
+			if (blob) {
+				return VSBuffer.wrap(new Uint8Array(await blob.arrayBuffer()));
+			}
+			return VSBuffer.wrap(new Uint8Array(0));
+		}
+		return VSBuffer.wrap(clipboard34().readBuffer(format));
 	}
 
 	async hasClipboard(windowId: number | undefined, format: string, type?: 'selection' | 'clipboard'): Promise<boolean> {
-		return clipboard.has(format, type);
+		if (this.isElectron44Clipboard) {
+			return this.getClipboard(type).has(this.osClipboardFormat(format));
+		}
+		return clipboard34().has(format, type);
 	}
 
 	//#endregion
