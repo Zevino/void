@@ -401,8 +401,12 @@ function packageTask(platform, arch, sourceFolderName, destinationFolderName, op
 
 		let result;
 		if (reuseElectronDist) {
+			// 复刻 gulp-electron 的布局契约：electron 二进制在包根目录，应用文件全部
+			// 重排到 resources/app/ 下（Electron 以 resources/app 为应用根）。
 			result = es.merge(
-				appFiles,
+				appFiles.pipe(rename(f => {
+					f.dirname = f.dirname === '' ? 'resources/app' : `resources/app/${f.dirname}`;
+				})),
 				vfs.src('.build/electron/**', { base: '.build/electron', dot: true })
 			);
 		} else {
