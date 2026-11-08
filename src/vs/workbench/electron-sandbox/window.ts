@@ -141,6 +141,36 @@ export class NativeWindow extends BaseWindow {
 		// Layout
 		this._register(addDisposableListener(mainWindow, EventType.RESIZE, () => this.layoutService.layout()));
 
+		// Voidly: 白条自愈。最大化状态下切换主题（或最大化与启动竞态）时，WorkbenchLayout 可能
+		// 以陈旧的 clientArea 给主容器钉死显式像素尺寸（见 WorkbenchLayout.layout 的
+		// `size(mainContainer, w, h)`），底部会留下一段未绘制的空白，直到下一次手动 resize
+		// 才恢复。DOM 的 resize 事件在这些场景下不会再次到来，所以这里在主题切换 /
+		// 最大化变化之后以及启动后短暂校验「容器实际尺寸 vs 视口尺寸」，偏差超阈值就重新
+		// layout，把布局自动纠正回来。
+		const selfHealLayout = (delayMs: number) => {
+			setTimeout(() => {
+				try {
+					const container = this.layoutService.mainContainer;
+					if (!container) {
+						return;
+					}
+					const diverged =
+						mainWindow.innerHeight - container.clientHeight > 50 ||
+						mainWindow.innerWidth - container.clientWidth > 50;
+					if (diverged) {
+						this.logService.trace(`[Voidly] workbench container ${container.clientWidth}x${container.clientHeight} diverged from viewport ${mainWindow.innerWidth}x${mainWindow.innerHeight}, relayouting`);
+						this.layoutService.layout();
+					}
+				} catch (e) {
+					this.logService.trace(`[Voidly] selfHealLayout failed: ${e}`);
+				}
+			}, delayMs);
+		};
+		this._register(this.themeService.onDidColorThemeChange(() => { selfHealLayout(300); selfHealLayout(1500); }));
+		this._register(this.layoutService.onDidChangeWindowMaximized(() => { selfHealLayout(150); selfHealLayout(800); }));
+		selfHealLayout(5000);
+		selfHealLayout(12000);
+
 		// React to editor input changes
 		this._register(this.editorService.onDidActiveEditorChange(() => this.updateTouchbarMenu()));
 
