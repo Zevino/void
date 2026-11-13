@@ -32,7 +32,7 @@ import { toDisposable } from '../../../../base/common/lifecycle.js';
 
 class VoidSettingsInput extends EditorInput {
 
-	static readonly ID: string = 'workbench.input.void.settings';
+	static readonly ID: string = 'workbench.input.voidly.settings';
 
 	static readonly RESOURCE = URI.from({ // I think this scheme is invalid, it just shuts up TS
 		scheme: 'void',  // Custom scheme for our editor (try Schemas.https)
@@ -60,7 +60,7 @@ class VoidSettingsInput extends EditorInput {
 
 
 class VoidSettingsPane extends EditorPane {
-	static readonly ID = 'workbench.test.myCustomPane';
+	static readonly ID = 'workbench.editor.voidlySettingsPane';
 
 	// private _scrollbar: DomScrollableElement | undefined;
 
@@ -118,7 +118,7 @@ Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane
 
 
 // register the gear on the top right
-export const VOID_TOGGLE_SETTINGS_ACTION_ID = 'workbench.action.toggleVoidSettings'
+export const VOID_TOGGLE_SETTINGS_ACTION_ID = 'workbench.action.toggleVoidlySettings'
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
@@ -167,7 +167,7 @@ registerAction2(class extends Action2 {
 
 
 
-export const VOID_OPEN_SETTINGS_ACTION_ID = 'workbench.action.openVoidSettings'
+export const VOID_OPEN_SETTINGS_ACTION_ID = 'workbench.action.openVoidlySettings'
 registerAction2(class extends Action2 {
 	constructor() {
 		super({

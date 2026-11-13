@@ -101,7 +101,7 @@ class SidebarViewPane extends ViewPane {
 // const voidViewIcon = registerIcon('void-view-icon', voidThemeIcon, localize('voidViewIcon', 'View icon of the Voidly chat view.'));
 
 // called VIEWLET_ID in other places for some reason
-export const VOID_VIEW_CONTAINER_ID = 'workbench.view.void'
+export const VOID_VIEW_CONTAINER_ID = 'workbench.view.voidly'
 export const VOID_VIEW_ID = VOID_VIEW_CONTAINER_ID
 
 // Register view container
@@ -149,7 +149,7 @@ viewsRegistry.registerViews([{
 
 
 // open sidebar
-export const VOID_OPEN_SIDEBAR_ACTION_ID = 'void.openSidebar'
+export const VOID_OPEN_SIDEBAR_ACTION_ID = 'voidly.openSidebar'
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
@@ -164,7 +164,7 @@ registerAction2(class extends Action2 {
 });
 
 export class SidebarStartContribution implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.startupVoidSidebar';
+	static readonly ID = 'workbench.contrib.startupVoidlySidebar';
 	constructor(
 		@ICommandService private readonly commandService: ICommandService,
 	) {
