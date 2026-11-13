@@ -509,6 +509,12 @@ function patchWin32DependenciesTask(destinationFolderName) {
 				}
 			});
 		}));
+
+		// Apply the Voidly brand icon to the packaged Windows application executable.
+		// This is separate from the Inno Setup installer icon below.
+		const appIcon = path.join(root, 'resources', 'win32', 'voidly.ico');
+		const appExecutable = path.join(cwd, `${product.nameShort}.exe`);
+		await rcedit(appExecutable, { icon: appIcon });
 	};
 }
 
