@@ -216,11 +216,11 @@ export const SidebarChat = () => {
 		key={'messages' + chatThreadsState.currentThreadId} // force rerender on all children if id changes
 		scrollContainerRef={scrollContainerRef}
 		className={`
-			flex flex-col
-			px-4 py-4 space-y-4
-			w-full h-full
+			flex min-h-0 flex-1 flex-col gap-5
+			px-4 py-5
+			w-full
 			overflow-x-hidden
-			overflow-y-auto
+			overflow-y-auto overscroll-contain
 			${previousMessagesHTML.length === 0 && !displayContentSoFar ? 'hidden' : ''}
 		`}
 	>
@@ -320,12 +320,12 @@ export const SidebarChat = () => {
 
 
 
-	const threadPageInput = <div key={'input' + chatThreadsState.currentThreadId}>
+	const threadPageInput = <div key={'input' + chatThreadsState.currentThreadId} className='shrink-0 border-t border-void-border-2 bg-void-bg-1'>
 		<TokenSavingsHint />
 		<div className='px-4'>
 			<CommandBarInChat />
 		</div>
-		<div className='px-2 pb-2'>
+		<div className='px-3 pt-2 pb-3'>
 			{inputChatArea}
 		</div>
 		<SessionUsageFooter />
@@ -339,7 +339,7 @@ export const SidebarChat = () => {
 
 	const landingPageContent = <div
 		ref={sidebarRef}
-		className='w-full h-full max-h-full flex flex-col overflow-auto px-4'
+		className='w-full h-full min-h-0 flex flex-col overflow-y-auto overscroll-contain px-4 py-3 bg-void-bg-0'
 	>
 		<ErrorBoundary>
 			{landingPageInput}
@@ -374,7 +374,7 @@ export const SidebarChat = () => {
 	// </div>
 	const threadPageContent = <div
 		ref={sidebarRef}
-		className='w-full h-full flex flex-col overflow-hidden'
+		className='w-full h-full min-h-0 flex flex-col overflow-hidden bg-void-bg-0'
 	>
 
 		<ErrorBoundary>

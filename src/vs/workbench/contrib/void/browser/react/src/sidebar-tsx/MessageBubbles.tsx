@@ -174,7 +174,7 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 		className={`
         relative ml-auto group
         ${mode === 'edit' ? 'w-full max-w-full'
-				: mode === 'display' ? `self-end w-fit max-w-full whitespace-pre-wrap` : '' // user words should be pre
+				: mode === 'display' ? `self-end w-fit max-w-[88%] whitespace-pre-wrap` : '' // user words should be pre
 			}
 
         ${isCheckpointGhost && !isMsgAfterCheckpoint ? 'opacity-50 pointer-events-none' : ''}
@@ -185,9 +185,9 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 		<div
 			// style chatbubble according to role
 			className={`
-            text-left rounded-lg max-w-full
+            text-left rounded-2xl max-w-full border border-void-border-2 shadow-sm
             ${mode === 'edit' ? ''
-					: mode === 'display' ? 'p-2 flex flex-col bg-void-bg-1 text-void-fg-1 overflow-x-auto cursor-pointer' : ''
+					: mode === 'display' ? 'px-3 py-2.5 flex flex-col bg-void-bg-1 text-void-fg-1 overflow-x-auto cursor-pointer' : ''
 				}
         `}
 			onClick={() => { if (mode === 'display') { onOpenEdit() } }}
@@ -434,7 +434,7 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 	}
 
 	return <div
-		className={`relative group ${isCheckpointGhost ? 'opacity-50' : ''}`}
+		className={`relative group space-y-2 ${isCheckpointGhost ? 'opacity-50' : ''}`}
 	>
 		{/* tool call timeline */}
 		{toolCalls.length > 0 && <ToolCallTimeline toolCalls={toolCalls} />}
@@ -473,7 +473,7 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 		    Designed after Cursor-style chat footers — sits below the message body so it is visible without hover. */}
 		<div
 			className="
-				mt-1.5 flex items-center gap-1
+				mt-2 flex items-center gap-1 opacity-75 group-hover:opacity-100 focus-within:opacity-100 transition-opacity
 				select-none
 			"
 		>
