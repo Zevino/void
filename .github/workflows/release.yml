@@ -60,7 +60,9 @@ jobs:
           fi
 
           if git diff --quiet "$FROM_SHA" "$HEAD_SHA" -- . \
+            ':(exclude)*.md' \
             ':(exclude)**/*.md' \
+            ':(exclude)*.mdx' \
             ':(exclude)**/*.mdx' \
             ':(exclude)docs/**' \
             ':(exclude)documentation/**' \
