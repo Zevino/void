@@ -61,7 +61,7 @@ export const roundRangeToLines = (range: IRange | null | undefined, options: { e
 
 
 
-const VOID_OPEN_SIDEBAR_ACTION_ID = 'void.sidebar.open'
+const VOID_OPEN_SIDEBAR_ACTION_ID = 'voidly.sidebar.open'
 registerAction2(class extends Action2 {
 	constructor() {
 		super({ id: VOID_OPEN_SIDEBAR_ACTION_ID, title: localize2('voidOpenSidebar', 'Voidly: Open Sidebar'), f1: true });
@@ -144,7 +144,7 @@ registerAction2(class extends Action2 {
 
 
 // New chat keybind + menu button
-const VOID_CMD_SHIFT_L_ACTION_ID = 'void.cmdShiftL'
+const VOID_CMD_SHIFT_L_ACTION_ID = 'voidly.cmdShiftL'
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
@@ -209,7 +209,7 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'void.historyAction',
+			id: 'voidly.historyAction',
 			title: 'View Past Chats',
 			icon: { id: 'history' },
 			menu: [{ id: MenuId.ViewTitle, group: 'navigation', when: ContextKeyExpr.equals('view', VOID_VIEW_ID), }]
@@ -239,7 +239,7 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'void.settingsAction',
+			id: 'voidly.settingsAction',
 			title: `Voidly's Settings`,
 			icon: { id: 'settings-gear' },
 			menu: [{ id: MenuId.ViewTitle, group: 'navigation', when: ContextKeyExpr.equals('view', VOID_VIEW_ID), }]
