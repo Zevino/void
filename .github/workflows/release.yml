@@ -79,8 +79,6 @@ jobs:
     name: Build Windows x64
     needs: detect-changes
     if: needs.detect-changes.outputs.build_required == 'true'
-
-    name: Build Windows x64
     runs-on: windows-2022
     permissions:
       contents: read
