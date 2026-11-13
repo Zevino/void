@@ -224,8 +224,8 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 	// data-tooltip-content={`Last modified ${formatTime(new Date(pastThread.lastModified))}`}
 	// data-tooltip-place='top'
 	>
-		<span className='opacity-60'>{numMessages}</span>
-		{` `}
+		<span className='opacity-60'>{numMessages} messages</span>
+		<span className='mx-1 opacity-40'>·</span>
 		{formatDate(new Date(pastThread.lastModified))}
 		{/* {` messages `} */}
 	</span>
@@ -233,7 +233,8 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 	return <div
 		key={pastThread.id}
 		className={`
-			py-1 px-2 rounded text-sm bg-zinc-700/5 hover:bg-zinc-700/10 dark:bg-zinc-300/5 dark:hover:bg-zinc-300/10 cursor-pointer opacity-80 hover:opacity-100
+			group flex w-full items-center gap-3 rounded-xl border border-void-border-2 bg-void-bg-1 px-3 py-3 text-left text-sm
+			transition-all duration-150 hover:border-void-border-3 hover:bg-void-bg-2 hover:shadow-sm
 		`}
 		onClick={() => {
 			chatThreadsService.switchToThread(pastThread.id);
