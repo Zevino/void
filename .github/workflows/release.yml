@@ -5,10 +5,29 @@ on:
   pull_request:
     branches:
       - main
-  # Build main continuously; publish a GitHub Release only for tag pushes.
+    # Skip the expensive Windows build for documentation-only changes.
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.mdx'
+      - 'docs/**'
+      - 'documentation/**'
+      - 'LICENSE'
+      - 'LICENSE.*'
+      - 'NOTICE'
+      - '.github/ISSUE_TEMPLATE/**'
+  # Build main only when build-relevant files change; publish releases for tags.
   push:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.mdx'
+      - 'docs/**'
+      - 'documentation/**'
+      - 'LICENSE'
+      - 'LICENSE.*'
+      - 'NOTICE'
+      - '.github/ISSUE_TEMPLATE/**'
     tags:
       - '*'
   workflow_dispatch:
