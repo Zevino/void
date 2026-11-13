@@ -425,18 +425,33 @@ const toInlineCompletions = ({ autocompletionMatchup, autocompletion, prefixAndS
 type PrefixAndSuffixInfo = { prefix: string, suffix: string, prefixLines: string[], suffixLines: string[], prefixToTheLeftOfCursor: string, suffixToTheRightOfCursor: string }
 const getPrefixAndSuffixInfo = (model: ITextModel, position: Position): PrefixAndSuffixInfo => {
 
-	const fullText = model.getValue(EndOfLinePreference.LF);
+	// Keep the full prefix for cache matching, but do not copy the entire document.
+	// Completion context only needs the 25 lines around the cursor.
+	const lineNumber = position.lineNumber;
+	const lineCount = model.getLineCount();
+	const firstContextLine = Math.max(1, lineNumber - 24);
+	const lastContextLine = Math.min(lineCount, lineNumber + 24);
 
-	const cursorOffset = model.getOffsetAt(position)
-	const prefix = fullText.substring(0, cursorOffset)
-	const suffix = fullText.substring(cursorOffset)
+	const prefix = model.getValueInRange(
+		new Range(1, 1, lineNumber, position.column),
+		EndOfLinePreference.LF
+	);
 
+	const prefixLines: string[] = [];
+	for (let line = firstContextLine; line <= lineNumber; line++) {
+		const lineContent = model.getLineContent(line);
+		prefixLines.push(line === lineNumber ? lineContent.substring(0, position.column - 1) : lineContent);
+	}
 
-	const prefixLines = prefix.split(_ln)
-	const suffixLines = suffix.split(_ln)
+	const suffixLines: string[] = [];
+	for (let line = lineNumber; line <= lastContextLine; line++) {
+		const lineContent = model.getLineContent(line);
+		suffixLines.push(line === lineNumber ? lineContent.substring(position.column - 1) : lineContent);
+	}
+	const suffix = suffixLines.join(_ln);
 
-	const prefixToTheLeftOfCursor = prefixLines.slice(-1)[0] ?? ''
-	const suffixToTheRightOfCursor = suffixLines[0] ?? ''
+	const prefixToTheLeftOfCursor = prefixLines[prefixLines.length - 1] ?? '';
+	const suffixToTheRightOfCursor = suffixLines[0] ?? '';
 
 	return { prefix, suffix, prefixLines, suffixLines, prefixToTheLeftOfCursor, suffixToTheRightOfCursor }
 
@@ -537,9 +552,9 @@ const getCompletionOptions = (prefixAndSuffix: PrefixAndSuffixInfo, relevantCont
 
 	let { prefix, suffix, prefixToTheLeftOfCursor, suffixToTheRightOfCursor, suffixLines, prefixLines } = prefixAndSuffix
 
-	// trim prefix and suffix to not be very large
-	suffixLines = suffix.split(_ln).slice(0, 25)
-	prefixLines = prefix.split(_ln).slice(-25)
+	// getPrefixAndSuffixInfo already bounds these line arrays to 25 lines.
+	// Keep the full prefix in PrefixAndSuffixInfo for cache matching; only trim
+	// the prompt context sent to the model.
 	prefix = prefixLines.join(_ln)
 	suffix = suffixLines.join(_ln)
 
