@@ -242,7 +242,7 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 		onMouseEnter={() => setHoveredIdx(idx)}
 		onMouseLeave={() => setHoveredIdx(null)}
 	>
-		<div className="flex items-center justify-between gap-1">
+		<div className="flex min-w-0 flex-1 items-center justify-between gap-3">
 			<span className="flex items-center gap-2 min-w-0 overflow-hidden">
 				{/* spinner */}
 				{isRunning === 'LLM' || isRunning === 'tool' || isRunning === 'idle' ? <LoaderCircle className="animate-spin bg-void-stroke-1 flex-shrink-0 flex-grow-0" size={14} />
@@ -251,7 +251,7 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 						:
 						null}
 				{/* name */}
-				<span className="truncate overflow-hidden text-ellipsis"
+				<span className="truncate overflow-hidden text-ellipsis font-medium text-void-fg-1"
 					data-tooltip-id='void-tooltip'
 					data-tooltip-content={numMessages + ' messages'}
 					data-tooltip-place='top'
