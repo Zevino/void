@@ -64,7 +64,7 @@ jobs:
 
       - name: Configure npm cache & install
         shell: powershell
-        run: npm ci --no-audit --no-fund
+        run: npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
       # Build Void's React subproject (required; gulp does NOT cover this).
       - name: Build React products
@@ -137,7 +137,7 @@ jobs:
           }
           $setupOut = Join-Path "dist" "VoidlySetup-x64-$version.exe"
           Copy-Item -Path $setupSrc -Destination $setupOut -Force
-          Write-Host "Created $setupOut ($([math]]::Round((Get-Item $setupOut).Length/1MB,1)) MB)"
+          Write-Host "Created $setupOut ($([math]::Round((Get-Item $setupOut).Length/1MB,1)) MB)"
 
       # Only tagged builds need to transfer large binaries to the release job.
       - name: Upload release files
