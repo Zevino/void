@@ -8,6 +8,12 @@ on:
       - main
     tags:
       - '*'
+    # Documentation-only and workflow-only changes do not need a Windows package.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/workflows/**'
+      - 'LICENSE*'
   workflow_dispatch:
 
 permissions:
