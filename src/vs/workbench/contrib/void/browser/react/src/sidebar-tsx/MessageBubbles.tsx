@@ -174,7 +174,7 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 		className={`
         relative ml-auto group
         ${mode === 'edit' ? 'w-full max-w-full'
-				: mode === 'display' ? `self-end w-fit max-w-full whitespace-pre-wrap` : '' // user words should be pre
+				: mode === 'display' ? `self-end w-fit max-w-[88%] whitespace-pre-wrap` : '' // user words should be pre
 			}
 
         ${isCheckpointGhost && !isMsgAfterCheckpoint ? 'opacity-50 pointer-events-none' : ''}
@@ -185,9 +185,9 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 		<div
 			// style chatbubble according to role
 			className={`
-            text-left rounded-lg max-w-full
+            text-left rounded-2xl max-w-full border border-void-border-2 shadow-sm transition-colors hover:border-void-border-3
             ${mode === 'edit' ? ''
-					: mode === 'display' ? 'p-2 flex flex-col bg-void-bg-1 text-void-fg-1 overflow-x-auto cursor-pointer' : ''
+					: mode === 'display' ? 'px-4 py-3 flex flex-col bg-void-bg-1 text-void-fg-1 overflow-x-auto cursor-pointer leading-6' : ''
 				}
         `}
 			onClick={() => { if (mode === 'display') { onOpenEdit() } }}
@@ -434,7 +434,7 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 	}
 
 	return <div
-		className={`relative group ${isCheckpointGhost ? 'opacity-50' : ''}`}
+		className={`relative group space-y-2 ${isCheckpointGhost ? 'opacity-50' : ''}`}
 	>
 		{/* tool call timeline */}
 		{toolCalls.length > 0 && <ToolCallTimeline toolCalls={toolCalls} />}
@@ -457,7 +457,7 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 
 		{/* assistant message */}
 		{chatMessage.displayContent &&
-			<div>
+			<div className='min-w-0 rounded-xl px-1 py-1 text-void-fg-1'>
 				<ProseWrapper>
 					<ChatMarkdownRender
 						string={chatMessage.displayContent || ''}
@@ -473,7 +473,7 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 		    Designed after Cursor-style chat footers — sits below the message body so it is visible without hover. */}
 		<div
 			className="
-				mt-1.5 flex items-center gap-1
+				mt-3 flex items-center gap-1.5 border-t border-void-border-2/70 pt-2 opacity-70 group-hover:opacity-100 focus-within:opacity-100 transition-opacity
 				select-none
 			"
 		>
@@ -483,9 +483,9 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 				onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCopy() }}
 				className="
 					inline-flex items-center gap-1
-					h-6 px-1.5
+					h-7 px-2
 					text-[11px] text-void-fg-3
-					bg-void-bg-1 border border-void-border-1 rounded-md
+					bg-void-bg-1 border border-void-border-2 rounded-lg transition-colors hover:bg-void-bg-2
 					hover:brightness-110 hover:text-void-fg-2
 				"
 			>

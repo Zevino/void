@@ -3,6 +3,7 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 import React, { Fragment, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUpRight, Bug, Code2, FileText, Sparkles } from 'lucide-react';
 
 import { useAccessor, useChatThreadsState, useChatThreadsStreamState, useSettingsState } from '../util/services.js';
 import { ErrorDisplay } from './ErrorDisplay.js';
@@ -216,11 +217,11 @@ export const SidebarChat = () => {
 		key={'messages' + chatThreadsState.currentThreadId} // force rerender on all children if id changes
 		scrollContainerRef={scrollContainerRef}
 		className={`
-			flex flex-col
-			px-4 py-4 space-y-4
-			w-full h-full
+			flex min-h-0 flex-1 flex-col gap-5
+			px-4 py-5
+			w-full
 			overflow-x-hidden
-			overflow-y-auto
+			overflow-y-auto overscroll-contain
 			${previousMessagesHTML.length === 0 && !displayContentSoFar ? 'hidden' : ''}
 		`}
 	>
@@ -265,6 +266,7 @@ export const SidebarChat = () => {
 	}, [onSubmit, onAbort, isRunning])
 
 	const inputChatArea = <VoidChatArea
+		className='rounded-2xl border-void-border-2 bg-void-bg-1 shadow-lg shadow-black/5 focus-within:border-void-border-3'
 		featureName='Chat'
 		onSubmit={() => onSubmit()}
 		onAbort={onAbort}
@@ -278,7 +280,7 @@ export const SidebarChat = () => {
 	>
 		<VoidInputBox2
 			enableAtToMention
-			className={`min-h-[81px] px-0.5 py-0.5`}
+			className={`min-h-[96px] px-1 py-1`}
 			placeholder={`@ to mention, ${keybindingString ? `${keybindingString} to add a selection. ` : ''}Enter instructions...`}
 			onChangeText={onChangeText}
 			onKeyDown={onKeyDown}
@@ -294,68 +296,79 @@ export const SidebarChat = () => {
 	const isLandingPage = previousMessages.length === 0
 
 
-	const initiallySuggestedPromptsHTML = <div className='flex flex-col gap-2 w-full text-nowrap text-void-fg-3 select-none'>
-		{[
-			'Summarize my codebase',
-			'How do types work in Rust?',
-			'Create a .voidrules file for me'
-		].map((text, index) => (
-			<div
-				key={index}
-				role="button"
-				tabIndex={0}
-				className='py-1 px-2 rounded text-sm bg-zinc-700/5 hover:bg-zinc-700/10 dark:bg-zinc-300/5 dark:hover:bg-zinc-300/10 cursor-pointer opacity-80 hover:opacity-100'
-				onClick={() => onSubmit(text)}
-				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault();
-						onSubmit(text);
-					}
-				}}
+	const promptCards = [
+		{ title: 'Understand this codebase', detail: 'Map the architecture and key files', prompt: 'Summarize my codebase', icon: <Code2 size={16} /> },
+		{ title: 'Find and fix a bug', detail: 'Trace an issue and suggest a fix', prompt: 'Help me find and fix a bug in this project', icon: <Bug size={16} /> },
+		{ title: 'Create documentation', detail: 'Turn code into clear documentation', prompt: 'Create useful documentation for this project', icon: <FileText size={16} /> },
+	]
+
+	const initiallySuggestedPromptsHTML = <div className='grid grid-cols-1 gap-2 w-full'>
+		{promptCards.map((item) => (
+			<button
+				key={item.title}
+				type='button'
+				onClick={() => onSubmit(item.prompt)}
+				className='group flex items-center gap-3 rounded-xl border border-void-border-2 bg-void-bg-1 px-3 py-3 text-left transition-all hover:border-void-border-3 hover:bg-void-bg-2 focus:outline-none focus:ring-1 focus:ring-void-border-3'
 			>
-				{text}
-			</div>
+				<span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-void-bg-2 text-void-fg-2 group-hover:text-void-fg-1'>{item.icon}</span>
+				<span className='min-w-0 flex-1'>
+					<span className='block text-sm font-medium text-void-fg-1'>{item.title}</span>
+					<span className='mt-0.5 block truncate text-xs text-void-fg-3'>{item.detail}</span>
+				</span>
+				<ArrowUpRight size={15} className='shrink-0 text-void-fg-4 opacity-0 transition-opacity group-hover:opacity-100' />
+			</button>
 		))}
 	</div>
 
 
-
-	const threadPageInput = <div key={'input' + chatThreadsState.currentThreadId}>
+	const threadPageInput = <div key={'input' + chatThreadsState.currentThreadId} className='shrink-0 border-t border-void-border-2 bg-void-bg-1'>
 		<TokenSavingsHint />
 		<div className='px-4'>
 			<CommandBarInChat />
 		</div>
-		<div className='px-2 pb-2'>
+		<div className='px-3 pt-2 pb-3'>
 			{inputChatArea}
 		</div>
 		<SessionUsageFooter />
 	</div>
 
-	const landingPageInput = <div>
-		<div className='pt-8'>
-			{inputChatArea}
-		</div>
+	const landingPageInput = <div className='mt-7'>
+		{inputChatArea}
 	</div>
 
 	const landingPageContent = <div
 		ref={sidebarRef}
-		className='w-full h-full max-h-full flex flex-col overflow-auto px-4'
+		className='w-full h-full min-h-0 flex flex-col overflow-y-auto overscroll-contain bg-void-bg-0'
 	>
-		<ErrorBoundary>
-			{landingPageInput}
-		</ErrorBoundary>
-
-		{Object.keys(chatThreadsState.allThreads).length > 1 ? // show if there are threads
+		<div className='px-4 pt-7 pb-5'>
+			<div className='mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-void-fg-3'>
+				<span className='flex size-7 items-center justify-center rounded-lg bg-void-bg-2 text-void-fg-1'><Sparkles size={15} /></span>
+				Voidly Agent
+			</div>
+			<h2 className='text-2xl font-semibold tracking-tight text-void-fg-1'>What are we building today?</h2>
+			<p className='mt-2 max-w-md text-sm leading-6 text-void-fg-3'>Explore your code, solve problems, and turn ideas into working software.</p>
 			<ErrorBoundary>
-				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Previous Threads</div>
-				<PastThreadsList />
+				{landingPageInput}
 			</ErrorBoundary>
-			:
-			<ErrorBoundary>
-				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Suggestions</div>
-				{initiallySuggestedPromptsHTML}
-			</ErrorBoundary>
-		}
+			<div className='mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-void-fg-4'>
+				<span>Enter to send</span><span>Shift + Enter for a new line</span><span>@ to add context</span>
+			</div>
+		</div>
+		<div className='border-t border-void-border-2 px-4 py-5'>
+			<div className='mb-3 flex items-center justify-between'>
+				<span className='text-xs font-semibold uppercase tracking-wider text-void-fg-3'>Start with an idea</span>
+				<span className='text-[11px] text-void-fg-4'>Suggested tasks</span>
+			</div>
+			{initiallySuggestedPromptsHTML}
+		</div>
+		{Object.keys(chatThreadsState.allThreads).length > 1 ?
+			<div className='border-t border-void-border-2 px-4 py-5'>
+				<div className='mb-3 flex items-center justify-between'>
+					<span className='text-xs font-semibold uppercase tracking-wider text-void-fg-3'>Recent conversations</span>
+				</div>
+				<ErrorBoundary><PastThreadsList /></ErrorBoundary>
+			</div>
+			: null}
 	</div>
 
 
@@ -374,7 +387,7 @@ export const SidebarChat = () => {
 	// </div>
 	const threadPageContent = <div
 		ref={sidebarRef}
-		className='w-full h-full flex flex-col overflow-hidden'
+		className='w-full h-full min-h-0 flex flex-col overflow-hidden bg-void-bg-0'
 	>
 
 		<ErrorBoundary>

@@ -224,8 +224,8 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 	// data-tooltip-content={`Last modified ${formatTime(new Date(pastThread.lastModified))}`}
 	// data-tooltip-place='top'
 	>
-		<span className='opacity-60'>{numMessages}</span>
-		{` `}
+		<span className='opacity-60'>{numMessages} messages</span>
+		<span className='mx-1 opacity-40'>·</span>
 		{formatDate(new Date(pastThread.lastModified))}
 		{/* {` messages `} */}
 	</span>
@@ -233,7 +233,8 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 	return <div
 		key={pastThread.id}
 		className={`
-			py-1 px-2 rounded text-sm bg-zinc-700/5 hover:bg-zinc-700/10 dark:bg-zinc-300/5 dark:hover:bg-zinc-300/10 cursor-pointer opacity-80 hover:opacity-100
+			group flex w-full items-center gap-3 rounded-xl border border-void-border-2 bg-void-bg-1 px-3 py-3 text-left text-sm
+			transition-all duration-150 hover:border-void-border-3 hover:bg-void-bg-2 hover:shadow-sm
 		`}
 		onClick={() => {
 			chatThreadsService.switchToThread(pastThread.id);
@@ -241,7 +242,7 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 		onMouseEnter={() => setHoveredIdx(idx)}
 		onMouseLeave={() => setHoveredIdx(null)}
 	>
-		<div className="flex items-center justify-between gap-1">
+		<div className="flex min-w-0 flex-1 items-center justify-between gap-3">
 			<span className="flex items-center gap-2 min-w-0 overflow-hidden">
 				{/* spinner */}
 				{isRunning === 'LLM' || isRunning === 'tool' || isRunning === 'idle' ? <LoaderCircle className="animate-spin bg-void-stroke-1 flex-shrink-0 flex-grow-0" size={14} />
@@ -250,7 +251,7 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 						:
 						null}
 				{/* name */}
-				<span className="truncate overflow-hidden text-ellipsis"
+				<span className="truncate overflow-hidden text-ellipsis font-medium text-void-fg-1"
 					data-tooltip-id='void-tooltip'
 					data-tooltip-content={numMessages + ' messages'}
 					data-tooltip-place='top'

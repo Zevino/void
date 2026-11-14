@@ -94,7 +94,7 @@ export const ToolHeaderWrapper = ({
 	const isDesc1Clickable = !!desc1OnClick
 
 	const desc1HTML = <span
-		className={`text-void-fg-4 text-xs italic truncate ml-2
+		className={`text-void-fg-3 text-xs truncate ml-2 opacity-80
 			${isDesc1Clickable ? 'cursor-pointer hover:brightness-125 transition-all duration-150' : ''}
 		`}
 		onClick={desc1OnClick}
@@ -117,7 +117,7 @@ export const ToolHeaderWrapper = ({
 	>{desc1}</span>
 
 	return (<div className=''>
-		<div className={`w-full border border-void-border-3 rounded px-2 py-1 bg-void-bg-3 overflow-hidden ${className}`}>
+		<div className={`w-full border border-void-border-2 rounded-lg px-3 py-2 bg-void-bg-1/70 shadow-sm overflow-hidden ${className}`}>
 			{/* header */}
 			<div className={`select-none flex items-center min-h-[24px]`}>
 				<div className={`flex items-center w-full gap-x-2 overflow-hidden justify-between ${isRejected ? 'line-through' : ''}`}>
@@ -703,9 +703,9 @@ export const InvalidTool = ({ toolName, message, mcpServerName }: { toolName: To
 	const accessor = useAccessor()
 	const title = getTitle({ name: toolName, type: 'invalid_params', mcpServerName })
 	const desc1 = 'Invalid parameters'
-	const icon = null
+	const icon = <AlertTriangle size={14} className='text-void-warning flex-shrink-0' />
 	const isError = true
-	const componentParams: ToolHeaderParams = { title, desc1, isError, icon }
+	const componentParams: ToolHeaderParams = { title, desc1, isError, icon, className: 'border-void-warning/30 bg-void-warning/5' }
 
 	componentParams.children = <ToolChildrenWrapper>
 		<CodeChildren className='bg-void-bg-3'>
@@ -1540,7 +1540,7 @@ export const ToolCallTimeline = ({ toolCalls }: { toolCalls: ToolCallTimelineIte
 	if (toolCalls.length === 0) return null
 	return (
 		<div
-			className='flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mb-1.5 select-none'
+			className='flex flex-wrap items-center gap-x-3 gap-y-1 mb-2 px-2.5 py-1.5 rounded-lg border border-void-border-2 bg-void-bg-1/60 select-none'
 			aria-label={`${toolCalls.length} tool call${toolCalls.length === 1 ? '' : 's'}`}
 		>
 			{toolCalls.map((tc, i) => (

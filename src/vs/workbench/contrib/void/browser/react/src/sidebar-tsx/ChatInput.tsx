@@ -295,10 +295,11 @@ export const VoidChatArea: React.FC<VoidChatAreaProps> = ({
 			className={`
 				gap-x-1
                 flex flex-col p-2 relative input text-left shrink-0
-                rounded-md
+                rounded-2xl
                 bg-void-bg-1
 				transition-all duration-200
-				border border-void-border-3 focus-within:border-void-border-3 hover:border-void-border-3
+				border border-void-border-2 shadow-sm
+				focus-within:border-void-border-3 focus-within:shadow-md
 				max-h-[80vh] overflow-y-auto
                 ${className}
             `}
@@ -333,12 +334,12 @@ export const VoidChatArea: React.FC<VoidChatAreaProps> = ({
 			</div>
 
 			{/* Bottom row */}
-			<div className='flex flex-row justify-between items-end gap-1'>
+			<div className='mt-2 flex flex-row justify-between items-end gap-3 border-t border-void-border-2/70 pt-2'>
 				{showModelDropdown && (
 					<div className='flex flex-col gap-y-1'>
 						<ReasoningOptionSlider featureName={featureName} />
 
-						<div className='flex items-center flex-wrap gap-x-2 gap-y-1 text-nowrap '>
+						<div className='flex items-center flex-wrap gap-x-2 gap-y-1 text-nowrap'>
 							{featureName === 'Chat' && <ChatModeDropdown className='text-xs text-void-fg-3 bg-void-bg-1 border border-void-border-2 rounded py-0.5 px-1' />}
 							<ModelDropdown featureName={featureName} className='text-xs text-void-fg-3 bg-void-bg-1 rounded' />
 						</div>
@@ -369,8 +370,8 @@ export const ButtonSubmit = ({ className, disabled, ...props }: ButtonProps & Re
 
 	return <button
 		type='button'
-		className={`rounded-full flex-shrink-0 flex-grow-0 flex items-center justify-center
-			${disabled ? 'bg-vscode-disabled-fg cursor-default' : 'bg-white cursor-pointer'}
+		className={`size-8 rounded-xl flex-shrink-0 flex-grow-0 flex items-center justify-center transition-all
+			${disabled ? 'bg-void-bg-2 text-void-fg-4 cursor-default' : 'bg-void-fg-1 text-void-bg-1 hover:opacity-90 active:scale-95 cursor-pointer'}
 			${className}
 		`}
 		// data-tooltip-id='void-tooltip'
@@ -378,19 +379,18 @@ export const ButtonSubmit = ({ className, disabled, ...props }: ButtonProps & Re
 		// data-tooltip-place='left'
 		{...props}
 	>
-		<IconArrowUp size={DEFAULT_BUTTON_SIZE} className="stroke-[2] p-[2px]" />
+		<IconArrowUp size={18} className="stroke-[2.5]" />
 	</button>
 }
 export const ButtonStop = ({ className, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) => {
 	return <button
-		className={`rounded-full flex-shrink-0 flex-grow-0 cursor-pointer flex items-center justify-center
-			bg-white
+		className={`size-8 rounded-xl flex-shrink-0 flex-grow-0 cursor-pointer flex items-center justify-center bg-void-bg-2 text-void-fg-1 hover:bg-void-bg-3 active:scale-95 transition-all
 			${className}
 		`}
 		type='button'
 		{...props}
 	>
-		<IconSquare size={DEFAULT_BUTTON_SIZE} className="stroke-[3] p-[7px]" />
+		<IconSquare size={15} className="stroke-[3]" />
 	</button>
 }
 export const getRelative = (uri: URI, accessor: ReturnType<typeof useAccessor>) => {
