@@ -66,7 +66,7 @@ suite('extractGrammar XML tool resolution', () => {
 			'<tool_call>customToolA>',
 			'  <arg>workspace path</arg>',
 			'</customToolA>',
-		].join('\\n')
+		].join('\n')
 
 		const tools = extractTools(xml, 'agent', makeTools(['customToolA']))
 		assert.ok(tools && tools.length === 1, 'expected wrapped tool call to be resolved')
