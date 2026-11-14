@@ -215,6 +215,18 @@ const stripStrayToolTagFragments = (text: string, toolTags: string[]): string =>
 	return out
 }
 
+// Some OpenAI-compatible models wrap XML tool calls in a lightweight envelope:
+//   <tool_call>ls_dir>
+//     <uri>...</uri>
+//   </ls_dir>
+// The native Voidly protocol uses <ls_dir> directly. Normalize only envelopes
+// whose tool name is currently available; unknown wrappers remain ordinary text.
+const normalizeToolCallEnvelopes = (text: string, toolNames: Set<string>): string => {
+	return text.replace(/<tool_call>\s*([A-Za-z0-9_.:-]+)\s*>/g, (match, toolName: string) => {
+		return toolNames.has(toolName) ? `<${toolName}>` : match
+	})
+}
+
 const findIndexOfAny = (fullText: string, matches: string[]) => {
 	for (const str of matches) {
 		const idx = fullText.indexOf(str);
@@ -334,6 +346,7 @@ export const extractXMLToolsWrapper = (
 	if (!tools) return { newOnText: onText, newOnFinalMessage: onFinalMessage }
 
 	const toolOfToolName: ToolOfToolName = {}
+	const toolNames = new Set(tools.map(t => t.name))
 	const toolOpenTags = tools.map(t => `<${t.name}>`)
 	for (const t of tools) { toolOfToolName[t.name] = t }
 
@@ -355,7 +368,7 @@ export const extractXMLToolsWrapper = (
 	let scanIdx = 0
 
 	const newOnText: OnText = (params) => {
-		trueFullText = params.fullText
+		trueFullText = normalizeToolCallEnvelopes(params.fullText, toolNames)
 
 		// console.log('NEWTEXT', JSON.stringify(newText))
 

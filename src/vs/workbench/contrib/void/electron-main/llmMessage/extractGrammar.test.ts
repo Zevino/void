@@ -61,6 +61,19 @@ suite('extractGrammar XML tool resolution', () => {
 		assert.strictEqual(tools![1].name, 'customToolB')
 	})
 
+	test('normalizes a wrapped tool_call envelope', () => {
+		const xml = [
+			'<tool_call>customToolA>',
+			'  <arg>workspace path</arg>',
+			'</customToolA>',
+		].join('\n')
+
+		const tools = extractTools(xml, 'agent', makeTools(['customToolA']))
+		assert.ok(tools && tools.length === 1, 'expected wrapped tool call to be resolved')
+		assert.strictEqual(tools![0].name, 'customToolA')
+		assert.strictEqual(tools![0].rawParams.arg, 'workspace path')
+	})
+
 	test('a tool call after plain text is still resolved', () => {
 		const xml = 'some preamble text\n<customToolA>\n<arg>x</arg>\n</customToolA>'
 		const tools = extractTools(xml, 'agent', makeTools(['customToolA']))
