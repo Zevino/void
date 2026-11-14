@@ -222,7 +222,7 @@ const stripStrayToolTagFragments = (text: string, toolTags: string[]): string =>
 // The native Voidly protocol uses <ls_dir> directly. Normalize only envelopes
 // whose tool name is currently available; unknown wrappers remain ordinary text.
 const normalizeToolCallEnvelopes = (text: string, toolNames: Set<string>): string => {
-	return text.replace(/<tool_call>\\s*([A-Za-z0-9_.:-]+)\\s*>/g, (match, toolName: string) => {
+	return text.replace(/<tool_call>\s*([A-Za-z0-9_.:-]+)\s*>/g, (match, toolName: string) => {
 		return toolNames.has(toolName) ? `<${toolName}>` : match
 	})
 }
