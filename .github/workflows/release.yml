@@ -73,17 +73,52 @@ jobs:
         shell: powershell
         run: npm run buildreact
 
-      # Pre-download the electron binary into .build/electron (checksum-verified).
-      # The packaging task then reuses it instead of doing an inline @electron/get
-      # download, which has no retry and fails the whole build on one network reset.
+      # Pre-download Electron with bounded retries and a mirror fallback.
+      # Both mirrors serve the same upstream release assets; the repository's
+      # pinned checksum validation remains enabled by build/lib/electron.js.
       - name: Download Electron binary
         shell: powershell
         run: |
-          node build/lib/electron.js 2>&1 | Tee-Object -FilePath electron-download.log
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error::Electron download failed - see electron-download.log"
-            Exit $LASTEXITCODE
+          $ErrorActionPreference = 'Stop'
+          $log = 'electron-download.log'
+          $mirrors = @(
+            'https://npmmirror.com/mirrors/electron/',
+            'https://github.com/electron/electron/releases/download/',
+            'https://npmmirror.com/mirrors/electron/'
+          )
+          $downloaded = $false
+
+          for ($attempt = 0; $attempt -lt $mirrors.Count; $attempt++) {
+            $mirror = $mirrors[$attempt]
+            $number = $attempt + 1
+            Write-Host "Electron download attempt $number/$($mirrors.Count): $mirror"
+            "=== Attempt $number/$($mirrors.Count): $mirror ===" | Out-File -FilePath $log -Append -Encoding utf8
+            $env:ELECTRON_MIRROR = $mirror
+
+            & node build/lib/electron.js 2>&1 | ForEach-Object {
+              Write-Host $_
+              "$_" | Out-File -FilePath $log -Append -Encoding utf8
+            }
+
+            if ($LASTEXITCODE -eq 0) {
+              $downloaded = $true
+              break
+            }
+
+            Write-Warning "Electron download attempt $number failed (exit $LASTEXITCODE)."
+            if ($attempt -lt ($mirrors.Count - 1)) {
+              Start-Sleep -Seconds (5 * ($attempt + 1))
+            }
           }
+
+          if (-not $downloaded) {
+            Write-Host "::error::Electron download failed after all mirror attempts - see electron-download.log"
+            exit 1
+          }
+
+          # Keep the selected mirror explicit for any later Electron fetch in
+          # this job (normally the pre-downloaded archive is reused).
+          $env:ELECTRON_MIRROR = $mirrors[0]
 
       # Package Windows x64. The gulp task compiles src->out-build internally,
       # so the separate `npm run compile` step was redundant and is removed.
