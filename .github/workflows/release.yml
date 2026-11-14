@@ -1,8 +1,9 @@
 name: Release Voidly (Windows x64)
 
 on:
-  # Auto-build & publish a Windows x64 release on every push to main,
-  # and also on any tag push. Manual runs are always available.
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -16,66 +17,122 @@ on:
       - 'LICENSE*'
   workflow_dispatch:
 
+# Least privilege by default. Only the release job receives contents: write.
 permissions:
-  contents: write
+  contents: read
+
+# Avoid wasting Windows runners on superseded branch/PR builds. Keep tag
+# builds independent so publishing one version cannot cancel another.
+concurrency:
+  group: voidly-windows-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
+  # Always run a tiny diff check for PRs/pushes. Documentation-only changes
+  # complete this job quickly and skip the expensive Windows packaging job.
+  detect-changes:
+    name: Detect build-relevant changes
+    runs-on: ubuntu-latest
+    outputs:
+      build_required: ${{ steps.diff.outputs.build_required }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Check changed paths
+        id: diff
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" || "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "build_required=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            FROM_SHA="$BASE_SHA"
+          else
+            FROM_SHA="$BEFORE_SHA"
+          fi
+
+          if [[ -z "$FROM_SHA" || "$FROM_SHA" =~ ^0+$ ]]; then
+            echo "build_required=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git diff --quiet "$FROM_SHA" "$HEAD_SHA" -- . \
+            ':(exclude)*.md' \
+            ':(exclude)**/*.md' \
+            ':(exclude)*.mdx' \
+            ':(exclude)**/*.mdx' \
+            ':(exclude)docs/**' \
+            ':(exclude)documentation/**' \
+            ':(exclude)LICENSE' \
+            ':(exclude)LICENSE.*' \
+            ':(exclude)NOTICE' \
+            ':(exclude).github/ISSUE_TEMPLATE/**'; then
+            echo "Documentation-only change: skipping Windows packaging."
+            echo "build_required=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Build-relevant change detected."
+            echo "build_required=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build-windows-x64:
     name: Build Windows x64
+    needs: detect-changes
+    if: needs.detect-changes.outputs.build_required == 'true'
     runs-on: windows-2022
+    permissions:
+      contents: read
     env:
       # Disable CodeBuddy safe-delete shim (harmless on GitHub-hosted runners,
       # required when running locally under CodeBuddy). Without this, gulp's
       # rimraf batch deletes get blocked.
       CODEBUDDY_SAFE_DELETE_ENABLED: '0'
-      # VS Code-scale builds need a large heap; the default 2 GB cap makes the
-      # gulp packaging step OOM-crash after a few minutes. Mirror the local
-      # `--max-old-space-size=8192` used by the `gulp` npm script.
+      # VS Code-scale builds need a large heap; mirror the local gulp setting.
       NODE_OPTIONS: '--max-old-space-size=8192'
       GYP_MSVS_VERSION: '2022'
       npm_config_msvs_version: '2022'
-      # The packaging task downloads the electron zip inline (@electron/get).
-      # A single flaky connection to github.com/electron releases kills the
-      # whole 30-min build with `RequestError: read ECONNRESET` (seen on
-      # 2026-11-08 in the voidly-v1.99.95 run). Route it through npmmirror,
-      # which serves byte-identical zips + SHASUMS256.txt, so @electron/get's
-      # own checksum validation still passes.
+      # Use the mirror for Electron downloads; @electron/get still validates
+      # the downloaded archive against its checksum.
       ELECTRON_MIRROR: 'https://npmmirror.com/mirrors/electron/'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20.18.2'
           cache: 'npm'
 
       - name: Setup Python (needed by some native node-gyp deps)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
-      # windows-2022 ships Visual Studio 2022 + Windows SDK. Activating the MSVC
-      # dev environment explicitly makes node-gyp reliably pick up the compiler
-      # for native modules (node-pty, native-keymap, etc.) during the build.
+      # windows-2022 ships Visual Studio 2022 + Windows SDK.
       - name: Enable MSVC developer environment
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure npm cache & install
         shell: powershell
-        run: npm ci --no-audit --no-fund
+        run: npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
-      # Build Void's React subproject (required; gulp does NOT cover this)
+      # Build Void's React subproject (required; gulp does NOT cover this).
       - name: Build React products
         shell: powershell
         run: npm run buildreact
 
-      # Pre-download the electron binary into .build/electron (checksum-verified).
-      # The packaging task then reuses it instead of doing an inline @electron/get
-      # download, which has no retry and fails the whole build on one network reset.
+      # Pre-download Electron so packaging can reuse the checksum-verified file.
       - name: Download Electron binary
         shell: powershell
         run: |
@@ -85,14 +142,7 @@ jobs:
             Exit $LASTEXITCODE
           }
 
-      # Package Windows x64. The gulp task compiles src->out-build internally,
-      # so the separate `npm run compile` step was redundant and is removed.
-      # Output goes to <workspace-parent>/VSCode-win32-x64 (gulpfile quirk).
-      #
-      # We DO NOT silence stderr. The previous `> packaging.log 2>&1` hid the
-      # real failure reason behind a generic `NativeCommandError`, making the
-      # build impossible to diagnose. Logs are still captured (tee) and uploaded
-      # on failure, but the error is now visible inline.
+      # The gulp task compiles src->out-build internally.
       - name: Package Windows x64
         shell: powershell
         run: |
@@ -102,9 +152,7 @@ jobs:
             Exit $LASTEXITCODE
           }
 
-      # The Inno Setup script expects a `tools` directory inside the packaged
-      # app (inno_updater.exe + vcruntime140.dll). It is produced by a separate
-      # gulp task and is NOT a dependency of the setup tasks.
+      # This task creates the tools directory required by the Inno Setup script.
       - name: Build Inno Setup updater (tools dir)
         shell: powershell
         run: |
@@ -128,7 +176,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path "dist" | Out-Null
 
-          # Portable zip (from the gulp output dir, one level above workspace)
+          # Portable zip (from the gulp output dir, one level above workspace).
           $wsParent = [System.IO.Path]::GetDirectoryName($env:GITHUB_WORKSPACE)
           $appDir = Join-Path $wsParent "VSCode-win32-x64"
           if (-not (Test-Path $appDir)) {
@@ -141,7 +189,7 @@ jobs:
           Compress-Archive -Path "$appDir\*" -DestinationPath $zipOut -Force
           Write-Host "Created $zipOut ($([math]::Round((Get-Item $zipOut).Length/1MB,1)) MB)"
 
-          # System installer .exe (inside repo: .build/win32-x64/system-setup)
+          # System installer .exe (inside repo: .build/win32-x64/system-setup).
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           $setupSrc = ".build\win32-x64\system-setup\VSCodeSetup.exe"
           if (-not (Test-Path $setupSrc)) {
@@ -152,19 +200,53 @@ jobs:
           Copy-Item -Path $setupSrc -Destination $setupOut -Force
           Write-Host "Created $setupOut ($([math]::Round((Get-Item $setupOut).Length/1MB,1)) MB)"
 
+      # Only tagged builds need to transfer large binaries to the release job.
+      - name: Upload release files
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v5
+        with:
+          name: windows-x64-release-files
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: build-logs
+          path: |
+            electron-download.log
+            packaging.log
+            inno-updater.log
+            setup.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    name: Publish GitHub Release
+    needs: build-windows-x64
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release files
+        uses: actions/download-artifact@v5
+        with:
+          name: windows-x64-release-files
+          path: dist
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          # When triggered by a tag use the tag name; when triggered by a push
-          # to main (no tag) fall back to the short commit SHA so every push
-          # still produces a downloadable release.
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('ci-{0}', github.sha) }}
+          tag_name: ${{ github.ref_name }}
           files: |
             dist/Voidly-win32-x64.zip
             dist/VoidlySetup-x64-*.exe
-          name: Voidly ${{ github.ref_type == 'tag' && github.ref_name || format('ci-{0}', github.sha) }}
+          name: Voidly ${{ github.ref_name }}
           body: |
-            Voidly ${{ github.ref_type == 'tag' && github.ref_name || format('ci-{0}', github.sha) }} - Windows x64 build.
+            Voidly ${{ github.ref_name }} - Windows x64 build.
 
             - **VoidlySetup-x64-*.exe** — System installer
             - **Voidly-win32-x64.zip** — Portable build
@@ -173,14 +255,3 @@ jobs:
             Repository: https://github.com/Zevino/void
           draft: false
           prerelease: false
-
-      - name: Upload logs on failure
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: build-logs
-          path: |
-            electron-download.log
-            packaging.log
-            inno-updater.log
-            setup.log
